@@ -160,7 +160,8 @@ canvas {
   max-width: 300px;
 }
 
-.sprite-gallery {
+.sprite-gallery, 
+.texture-gallery {
   display: flex;
   flex-wrap: wrap;
   padding: 16px;

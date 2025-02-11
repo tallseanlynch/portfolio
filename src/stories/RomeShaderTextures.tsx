@@ -26,8 +26,17 @@ const RomeShaderTextures: React.FC = () => {
     return (
         <div className='texture-gallery-container'>
             <h1>Rome Shader Textures</h1>
-            <div className='sprite-gallery'>
-                {images.map((src, index) => (
+            <h2>Architecture & Trees</h2>
+            <div className='texture-gallery'>
+                {images.slice(0, 7).map((src, index) => (
+                    <div className='texture-container' key={index} >
+                        <img className='texture' src={src} alt={`Dynamic imported ${index}`} />
+                    </div>
+                ))}
+            </div>
+            <h2>Ground</h2>
+            <div className='texture-gallery'>
+                {images.slice(7, 8).map((src, index) => (
                     <div className='texture-container' key={index} >
                         <img className='texture' src={src} alt={`Dynamic imported ${index}`} />
                     </div>

@@ -45,8 +45,8 @@ const WaterShader: React.FC<WaterShaderProps> = ({
   const raycastPlaneRef = useRef<Mesh | null>(null);
 
   const [pattern1, pattern2] = useLoader(TextureLoader, [
-    'pattern-1-optimized.jpg',
-    'pattern-2-optimized.jpg'
+    '/water/pattern-1-optimized.jpg',
+    '/water/pattern-2-optimized.jpg'
   ]);
 
   const numberOfWaves = 80;

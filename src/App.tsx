@@ -16,41 +16,56 @@ interface SceneCounterState {
   sceneCounter: {
     value: number
   }
-}
+};
 
 const scenes = [
   memo(WaterShaderCanvas),
   memo(SnowShaderCanvas),
   memo(RomeShaderCanvas)
-]
+];
+
+const startingSceneMap = {
+  water: 0,
+  [0]: 'water',
+  snow: 1,
+  [1]: 'snow',
+  rome: 2,
+  [2]: 'rome'
+};
+
+type calculateSceneIndexType = {
+  startingSceneIndex: number;
+  sceneCounter: number;
+};
+
+const calculateSceneIndex = ({startingSceneIndex, sceneCounter}: calculateSceneIndexType): number => {
+  const modulusIndex = (startingSceneIndex + sceneCounter) % scenes.length;
+  const circularValue = modulusIndex > -1 ? modulusIndex : scenes.length + modulusIndex;
+  return circularValue;
+};
+
+const calculateStartingSceneParams = (): string => {
+  const urlString = window.location.href;
+  const url = new URL(urlString);
+  const searchParams = url.searchParams;
+  const sceneParam = searchParams.get('scene');
+  const startingSceneParam = sceneParam ? sceneParam : 'water';
+  return startingSceneParam;
+};
 
 const App = (): JSX.Element => {
   const sceneCounter = useSelector((state: SceneCounterState) => state.sceneCounter.value);
   const [startingSceneIndex, setStartingSceneIndex] = useState(0);
 
-  const startingSceneMap = {
-    water: 0,
-    [0]: 'water',
-    snow: 1,
-    [1]: 'snow',
-    rome: 2,
-    [2]: 'rome'
-  }
-
   useEffect(() => {
-    const urlString = window.location.href;
-    const url = new URL(urlString);
-    const searchParams = url.searchParams;
-    const sceneParam = searchParams.get('scene');
-    const startingSceneParam = sceneParam ? sceneParam : 'water';
-    setStartingSceneIndex(startingSceneMap[startingSceneParam]);
+    setStartingSceneIndex(startingSceneMap[calculateStartingSceneParams()]);
   }, [])
 
   useEffect(() => {
-    history.pushState(null, '', `?scene=${startingSceneMap[(startingSceneIndex + Math.abs(sceneCounter)) % scenes.length]}`)
+    history.pushState(null, '', `?scene=${startingSceneMap[calculateSceneIndex({startingSceneIndex, sceneCounter})]}`)
   }, [sceneCounter, startingSceneIndex])
 
-  const SceneToRender = scenes[(startingSceneIndex + Math.abs(sceneCounter)) % scenes.length]
+  const SceneToRender = scenes[calculateSceneIndex({startingSceneIndex, sceneCounter})];
 
   return (
     <>
