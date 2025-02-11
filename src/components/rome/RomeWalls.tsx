@@ -1,7 +1,4 @@
-import { 
-    whiteColor, 
-    blackColor
-} from "./romeColors";
+import { whiteColor } from "./romeColors";
 import { 
     DoubleSide,
     TextureLoader
@@ -13,7 +10,7 @@ const RomeWallMaterial0: React.FC = (): JSX.Element => {
 
     return (
         <meshStandardMaterial
-            color={blackColor}
+            color={whiteColor}
             map={wall0}
             transparent={true}
             alphaTest={0.5}
