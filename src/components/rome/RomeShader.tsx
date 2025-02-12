@@ -14,6 +14,7 @@ import { RomeGround } from './RomeGround';
 import { RomeTrees } from './RomeTrees';
 import { RomeBushes } from './RomeBushes';
 import { RomeLights } from './RomeLights';
+import { RomeRain } from './RomeRain';
 
 const RomeShader: React.FC = (): JSX.Element => {
 
@@ -23,6 +24,7 @@ const RomeShader: React.FC = (): JSX.Element => {
                 color={ambientLightColor}
                 intensity={1}
             />
+            <RomeRain />
             <RomeArch />
             <RomeWalls />
             <RomeGround />
