@@ -27,6 +27,7 @@ import {
     PlaneGeometry,
     Object3D
 } from 'three';
+import { isTouchDevice } from '../../assets/js/util';
 
 interface InsectsShaderProps {
     position: Vector3Type
@@ -48,30 +49,7 @@ interface InsectShaderCanvasProps {
     classNames?: string
 };
 
-// const WebSocketUI = () => {
-//     const [connected, setConnected] = useState<boolean>(false);
-
-//     const handleConnectClick = () => {
-//         setConnected(true);
-//     };
-
-//     const handleDisconnectClick = () => {
-//         setConnected(false);
-//     };
-
-//     return (
-//         <div className='controls-container'>
-//             <div className='web-socket-ui'>
-//                 {connected === false && <button onClick={handleConnectClick}>Connect</button>}
-//                 {connected === true && <button onClick={handleDisconnectClick}>Disconnect</button>}
-//             </div>
-//         </div>
-//     )
-// };
-
-//const skyColor = new Color(0x00bbff);
 const skyColorLight = new Color(0x89dffe);
-
 const positionCalc = new Vector3(0, 5, 0);
 const rotationCalc = new Euler(0, 0, 0);
 const cameraPositionCalc = new Vector3(0, 0, 0);
@@ -83,8 +61,9 @@ const insectPositionLocalCopy = new Vector3(0, 0, 0);
 const backDirToPlayerDirection = new Vector3(0, 0, 0);
 const mouseCoorCalc = new Vector2(0, 0);
 const normalizeMouseCoorCalc = new Vector2(0, 0);
+const deadZoneNormalizeMouseCoorCalc = new Vector2(0,0,);
 const normalizeMouseCoorScaled = new Vector2(0, 0);
-const movementRate = .025;
+const movementRate = .0125;
 
 const insectShader = {
     vertexShader: `
@@ -107,7 +86,7 @@ const insectShader = {
         void main() {
             vec2 uv = vUv - vec2(0.5, 0.5);
             vec4 finalColor = texture2D(wingTexture, vUv);
-            if(finalColor.a > 0.001) { 
+            if(finalColor.a > 0.001) {
                 finalColor = vec4(color, 1.0);
             }
             gl_FragColor = finalColor;
@@ -116,8 +95,8 @@ const insectShader = {
 }
 
 const InsectControls: React.FC = () => {
-    const butterflyWingTextureLeft = useLoader(TextureLoader, './insects/butterfly-wings.png')
-    const butterflyWingTextureRight = useLoader(TextureLoader, './insects/butterfly-wings-1.png')
+    const butterflyWingTextureLeft = useLoader(TextureLoader, './insects/butterfly-wings.png');
+    const butterflyWingTextureRight = useLoader(TextureLoader, './insects/butterfly-wings-1.png');
     const [mouseCoors, setMouseCoors] = useState<Vector2Type>([0, 0])
     const groupRef = useRef(null);
     const backDirMeshRef = useRef<Mesh | null>(null);
@@ -134,6 +113,7 @@ const InsectControls: React.FC = () => {
         s: false,
         d: false
     });
+    const touchEvents = isTouchDevice();
 
     useEffect(() => {
         const handleKeyDown = (keyboardEvent) => {
@@ -150,93 +130,215 @@ const InsectControls: React.FC = () => {
             }
         };
 
-        const handleMouseMove = (mouseEvent) => {
-            setMouseCoors([mouseEvent.clientX, mouseEvent.clientY])
+        const handleMouseMove = (mouseEvent: MouseEvent) => {
+            if(mouseEvent.buttons > 0) {
+                const leftMouseState = mouseEvent.clientX - (window.innerWidth / 2) < 0 && Math.abs(mouseEvent.clientX - (window.innerWidth / 2)) > 50;
+                const rightMouseState = mouseEvent.clientX - (window.innerWidth / 2) > 0 && Math.abs(mouseEvent.clientX - (window.innerWidth / 2)) > 50;
+    
+                if(controlsState.w === false) {
+                    setControlsState(prevState => ({
+                        ...prevState, 
+                        a: false,
+                        d: false
+                    }));    
+                } else {
+                    setControlsState(prevState => ({
+                        ...prevState, 
+                        a: leftMouseState,
+                        d: rightMouseState
+                    }));    
+                }
+            }
+            setMouseCoors([mouseEvent.clientX, mouseEvent.clientY]);
+        }
+
+        const handleTouchMove = (touchEvent: TouchEvent) => {
+            setMouseCoors([touchEvent.touches[0].clientX, touchEvent.touches[0].clientY]);
+
+            const leftTouchState = (touchEvent.touches[0].clientX - (window.innerWidth / 2) < 0) && (Math.abs(touchEvent.touches[0].clientX - (window.innerWidth / 2)) > 50);
+            const rightTouchState = (touchEvent.touches[0].clientX - (window.innerWidth / 2) > 0) && (Math.abs(touchEvent.touches[0].clientX - (window.innerWidth / 2)) > 50);
+
+            setControlsState(prevState => ({
+                ...prevState, 
+                w: true,
+                a: leftTouchState,
+                d: rightTouchState
+            }));
+
+            touchEvent.preventDefault();
+        }
+
+        const handleMouseDown = (mouseEvent) => {
+            const leftMouseState = mouseEvent.clientX - (window.innerWidth / 2) < 0 && Math.abs(mouseEvent.clientX - (window.innerWidth / 2)) > 50;
+            const rightMouseState = mouseEvent.clientX - (window.innerWidth / 2) > 0 && Math.abs(mouseEvent.clientX - (window.innerWidth / 2)) > 50;
+
+            setControlsState(prevState => ({
+                ...prevState, 
+                w: true,
+                a: leftMouseState,
+                d: rightMouseState
+            }));
+        }
+
+        const handleMouseUp = () => {
+            setControlsState(prevState => ({
+                ...prevState, 
+                w: false,
+                a: false,
+                d: false
+            }));
+        }
+
+        const handleTouchEnd = (touchEvent: TouchEvent) => {
+            setControlsState({
+                a: false,
+                w: false,
+                s: false,
+                d: false
+            });
+            touchEvent.preventDefault();
         }
 
         document.addEventListener('keydown', handleKeyDown);
         document.addEventListener('keyup', handleKeyUp);
         document.addEventListener('mousemove', handleMouseMove);
+        document.addEventListener('touchmove', handleTouchMove, {passive: false});
+        document.addEventListener('touchend', handleTouchEnd, {passive: false});
+        if(touchEvents === false) {
+            document.addEventListener('mousedown', handleMouseDown);
+            document.addEventListener('mouseup', handleMouseUp);    
+        }
 
         return () => {
             document.removeEventListener('keydown', handleKeyDown);
             document.removeEventListener('keyup', handleKeyUp);
             document.removeEventListener('mousemove', handleMouseMove);
-        };
-    }, []);
+            document.removeEventListener('touchmove', handleTouchMove);
+            document.removeEventListener('touchend', handleTouchEnd);
+            if(touchEvents === false) {
+                document.removeEventListener('mousedown', handleMouseDown);
+                document.removeEventListener('mouseup', handleMouseUp);    
+            }
+            };
+    }, [controlsState, touchEvents]);
+
+    const mouseCoorHeightModifier = touchEvents === true ? (window.innerHeight - 125) : (window.innerHeight / 2);
+    const deadZone = 0.1;
 
     useFrame(({ clock }) => {
+        // normalize coors
         mouseCoorCalc.set(mouseCoors[0], mouseCoors[1]);
         normalizeMouseCoorCalc.set(
             (mouseCoors[0] - window.innerWidth / 2) / (window.innerWidth / 2),
-            (mouseCoors[1] - window.innerHeight / 2) / (window.innerHeight / 2)
+            (mouseCoors[1] - mouseCoorHeightModifier) / mouseCoorHeightModifier
         );
-        normalizeMouseCoorScaled.copy(normalizeMouseCoorCalc).multiplyScalar(.5);
 
+        // handle deadzone in middle
+        deadZoneNormalizeMouseCoorCalc.copy(normalizeMouseCoorCalc);
+        const absXCoor = Math.abs(normalizeMouseCoorCalc.x);
+        if(absXCoor < deadZone) {
+            deadZoneNormalizeMouseCoorCalc.x = 0;        
+        } else {
+            if(normalizeMouseCoorCalc.x > 0) {
+                deadZoneNormalizeMouseCoorCalc.x = normalizeMouseCoorCalc.x - deadZone;
+            } else {
+                deadZoneNormalizeMouseCoorCalc.x = normalizeMouseCoorCalc.x + deadZone;
+            }
+        }
+        const absYCoor = Math.abs(normalizeMouseCoorCalc.y);
+        if(absYCoor < deadZone) {
+            deadZoneNormalizeMouseCoorCalc.y = 0;        
+        } else {
+            if(normalizeMouseCoorCalc.y > 0) {
+                deadZoneNormalizeMouseCoorCalc.y = normalizeMouseCoorCalc.y - deadZone;
+            } else {
+                deadZoneNormalizeMouseCoorCalc.y = normalizeMouseCoorCalc.y + deadZone;
+            }
+        }
+
+        // scale the mouth coor
+        normalizeMouseCoorScaled.copy(deadZoneNormalizeMouseCoorCalc).multiplyScalar(.25);
+
+        // apply all transformations using refs
         if (
             cameraPositionMeshRef && cameraPositionMeshRef.current &&
             backDirMeshRef && backDirMeshRef.current &&
             insectGroupRef && insectGroupRef.current
         ) {
-            cameraPositionCalc.copy(cameraPositionMeshRef.current.position)
+            // get position of camera reference mesh
+            cameraPositionCalc.copy(cameraPositionMeshRef.current.position);
             cameraPositionCalcWorld.copy(
                 cameraPositionMeshRef.current.localToWorld(cameraPositionCalc)
             );
 
-            backDirDiff.copy(backDirMeshRef.current.position)
+            // get position of back of insect for direction of movement
+            backDirDiff.copy(backDirMeshRef.current.position);
             backDirCalc.copy(
                 backDirMeshRef.current.localToWorld(backDirDiff)
             );
 
+            // place camera at camera reference mesh
             camera.position.copy(cameraPositionCalcWorld);
             if (camera.position.y < .1) {
                 camera.position.y = .1;
             }
+
+            // get insect position and have camera look at it
             insectPositionLocalCopy.copy(insectGroupRef.current.position);
             insectPositionWorldCalc.copy(
                 insectGroupRef.current.localToWorld(insectPositionLocalCopy)
             );
             camera.lookAt(insectPositionWorldCalc);
 
+            // create direction for insect to move
             backDirToPlayerDirection.copy(insectPositionWorldCalc).sub(backDirCalc).normalize().multiplyScalar(movementRate);
         }
 
+        // add player control transformations using controlsState
+        const touchDeviceDownDirectionModifier = (normalizeMouseCoorScaled.y > 0 && touchEvents === true) ? 5 : 2;
         if (controlsState.w) {
-            positionCalc.add(backDirToPlayerDirection)
+            positionCalc.add(backDirToPlayerDirection.multiplyScalar(2));
+            positionCalc.y += normalizeMouseCoorScaled.y * -1 * touchDeviceDownDirectionModifier;
         }
         if (controlsState.s) {
-            positionCalc.sub(backDirToPlayerDirection)
+            positionCalc.sub(backDirToPlayerDirection.multiplyScalar(2));
+            positionCalc.y += normalizeMouseCoorScaled.y * touchDeviceDownDirectionModifier;
         }
         if (controlsState.a) {
-            rotationCalc.y -= movementRate;
-        }
-        if (controlsState.d) {
             rotationCalc.y += movementRate;
         }
+        if (controlsState.d) {
+            rotationCalc.y -= movementRate;
+        }
 
+        // add camera rotation based upon mouse / touch location
+        const cameraTouchDeviceModifier = touchEvents === false ? 1 : -1;
         setCameraRotation([
-            normalizeMouseCoorScaled.y,
+            normalizeMouseCoorScaled.y * cameraTouchDeviceModifier,
             normalizeMouseCoorScaled.x,
             0
-        ])
+        ]);
 
+        // make sure insect is not beneath .1 of y
         if (positionCalc.y < .1) {
             positionCalc.y = .1;
         }
 
+        // apply transformations
         setInsectPosition([
             positionCalc.x,
             positionCalc.y,
             positionCalc.z
-        ])
+        ]);
 
         setInsectRotation([
             rotationCalc.x + normalizeMouseCoorScaled.y,
             rotationCalc.y + normalizeMouseCoorScaled.x,
             rotationCalc.z
-        ])
+        ]);
 
-        setInsectWingRotation(Math.sin(clock.elapsedTime * 6) / (1.5))
+        // flap insect wings
+        setInsectWingRotation(Math.sin(clock.elapsedTime * 6) / (1.5));
     });
 
     const whiteColor = new Color(0xffffff);
@@ -248,7 +350,7 @@ const InsectControls: React.FC = () => {
         color: {
             value: whiteColor
         }
-    }
+    };
 
     const butterflyShaderRightUniforms = {
         wingTexture: {
@@ -257,7 +359,7 @@ const InsectControls: React.FC = () => {
         color: {
             value: whiteColor
         }
-    }
+    };
 
     return (
         <>
@@ -273,8 +375,7 @@ const InsectControls: React.FC = () => {
                     <mesh>
                         <cylinderGeometry args={[.05, .05, .75, 8, 1]} />
                         <meshBasicMaterial 
-//                            color={0x4800cd}
-                            color={skyColorLight}
+                            color={whiteColor}
                         />
                     </mesh>
                     <mesh 
@@ -282,14 +383,7 @@ const InsectControls: React.FC = () => {
                         position={[-0.05,0,0]}
                     >
                         <planeGeometry args={[1.5, 1.5, 1, 1]} />
-                        {/* <meshBasicMaterial 
-                            map={butterflyWingTextureLeft}
-                            transparent={true}
-                            alphaTest={.5}
-                            side={DoubleSide}
-                        /> */}
                         <shaderMaterial
-//                            map={butterflyWingTextureLeft}
                             vertexShader={insectShader.vertexShader}
                             fragmentShader={insectShader.fragmentShader}
                             transparent={true}
@@ -304,14 +398,7 @@ const InsectControls: React.FC = () => {
                         position={[0.05,0,0]}
                     >
                         <planeGeometry args={[1.5, 1.5, 1, 1]} />
-                        {/* <meshBasicMaterial 
-                            map={butterflyWingTextureRight}
-                            transparent={true}
-                            alphaTest={.5}
-                            side={DoubleSide}
-                        /> */}
                         <shaderMaterial
-//                            map={butterflyWingTextureRight}
                             vertexShader={insectShader.vertexShader}
                             fragmentShader={insectShader.fragmentShader}
                             transparent={true}
@@ -339,7 +426,6 @@ const InsectControls: React.FC = () => {
                 </group>
             </group>
         </>
-
     );
 };
 
@@ -380,7 +466,7 @@ const SkyDome = () => {
             />
         </mesh>
     )
-}
+};
 
 const groundShader = {
     vertexShader: `
@@ -415,29 +501,16 @@ const grassShader = {
     uniform float time;
     
       void main() {
-  
-      vUv = uv;
-      
-      // VERTEX POSITION
-      
-      vec4 mvPosition = vec4( position, 1.0 );
-      #ifdef USE_INSTANCING
-          mvPosition = instanceMatrix * mvPosition;
-      #endif
-      
-      // DISPLACEMENT
-      
-      // here the displacement is made stronger on the blades tips.
-      float dispPower = 1.0 - cos( uv.y * 3.1416 / 2.0 );
-      
-      float displacement = sin( mvPosition.z + time * 5.0 ) * ( 0.1 * dispPower );
-      mvPosition.z += displacement;
-      
-      //
-      
-      vec4 modelViewPosition = modelViewMatrix * mvPosition;
-      gl_Position = projectionMatrix * modelViewPosition;
-  
+        vUv = uv;      
+        vec4 mvPosition = vec4( position, 1.0 );
+        #ifdef USE_INSTANCING
+            mvPosition = instanceMatrix * mvPosition;
+        #endif
+        float dispPower = 1.0 - cos( uv.y * 3.1416 / 2.0 );
+        float displacement = sin( mvPosition.z + time * 5.0 ) * ( 0.1 * dispPower );
+        mvPosition.z += displacement;            
+        vec4 modelViewPosition = modelViewMatrix * mvPosition;
+        gl_Position = projectionMatrix * modelViewPosition;
       }
   `,
   fragmentShader: `
@@ -445,12 +518,12 @@ const grassShader = {
     uniform vec3 skyColorLight;
     void main() {
         vec3 baseColor = vec3( 0.0, 1.0, 0.0 );
-      float clarity = ( vUv.y * 0.5 ) + 0.5;
-      vec3 mixSkyColorLight = mix(skyColorLight, baseColor, clarity);
-      gl_FragColor = vec4( mixSkyColorLight, 1 );
+        float clarity = ( vUv.y * 0.5 ) + 0.5;
+        vec3 mixSkyColorLight = mix(skyColorLight, baseColor, clarity);
+        gl_FragColor = vec4( mixSkyColorLight, 1 );
     }
   `
-}
+};
 
 const Grass = () => {  
   const uniforms = {
@@ -460,7 +533,7 @@ const Grass = () => {
     skyColorLight: {
         value: skyColorLight
     }
-  }
+  };
   
   const leavesMaterial = new ShaderMaterial({
     vertexShader: grassShader.vertexShader,
@@ -468,47 +541,35 @@ const Grass = () => {
     uniforms,
     side: DoubleSide
   });
-  
-  /////////
-  // MESH
-  /////////
-  
+    
   const instanceNumber = 5000;
-  const dummy = new Object3D();
-  
+  const matrixPositionObject = new Object3D();  
   const geometry = new PlaneGeometry( 0.1, 1, 1, 4 );
-  geometry.translate( 0, 0.5, 0 ); // move grass blade geometry lowest point at 0.
+  geometry.translate( 0, 0.5, 0 );
   
   const instancedMesh = new InstancedMesh( geometry, leavesMaterial, instanceNumber );
-
-    // Position and scale the grass blade instances randomly.
-
     for ( let i=0 ; i<instanceNumber ; i++ ) {
-
-        dummy.position.set(
-        ( Math.random() - 0.5 ) * 50,
-        0,
-        ( Math.random() - 0.5 ) * 50
-    );
+        matrixPositionObject.position.set(
+            ( Math.random() - 0.5 ) * 75,
+            0,
+            ( Math.random() - 0.5 ) * 75
+        );
     
-    dummy.scale.setScalar( 0.5 + Math.random() * 2.5 );
-    
-    dummy.rotation.y = Math.random() * Math.PI;
-    
-    dummy.updateMatrix();
-    instancedMesh.setMatrixAt( i, dummy.matrix );
-
+        matrixPositionObject.scale.setScalar( 0.5 + Math.random() * 2.5 );
+        matrixPositionObject.rotation.y = Math.random() * Math.PI;
+        matrixPositionObject.updateMatrix();
+        instancedMesh.setMatrixAt( i, matrixPositionObject.matrix );
     }
 
     useFrame(({clock}) => {
         leavesMaterial.uniforms.time.value = clock.getElapsedTime();
-          leavesMaterial.uniformsNeedUpdate = true;
-    })
+        leavesMaterial.uniformsNeedUpdate = true;
+    });
 
-  return (
-    <primitive object={instancedMesh}/>
+    return (
+        <primitive object={instancedMesh}/>
     )
-}
+};
 
 const Ground = () => {
     return (
@@ -524,14 +585,16 @@ const Ground = () => {
                     }}
                     side={DoubleSide}
                 />
-                </mesh>
+            </mesh>
         </>
     )
-}
+};
 
 const InsectsShaderCanvas: React.FC<InsectShaderCanvasProps> = ({
     classNames = ''
 }) => {
+
+    const touchDevice = isTouchDevice();
 
     return (
         <>
@@ -539,14 +602,17 @@ const InsectsShaderCanvas: React.FC<InsectShaderCanvasProps> = ({
                 gl={{ antialias: true, toneMapping: NoToneMapping }}
                 linear
                 className={classNames}
-//                scene={{ background: skyColorLight }}
             >
                 <Ground />
                 <SkyDome />
-                {/* <gridHelper args={[10, 10, 0xffffff, 0xffffff]} position={[0, -.5, 0]} /> */}
                 <InsectControls />
                 <perspectiveCamera />
             </Canvas>
+            {touchDevice === true && (
+                <div className='mobile-control-circle'>
+                    <img src='insects/mobile-control-circle-white.png' />
+                </div>
+            )}
         </>
     )
 };

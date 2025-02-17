@@ -225,3 +225,23 @@ canvas {
   background: transparent;
   position: absolute;
 }
+
+.mobile-control-circle {
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  background: transparent;
+  position: absolute;
+  z-index: 2;
+  top: 0px;
+  display: flex;
+  justify-content: center;
+  align-items: end;
+}
+
+.mobile-control-circle img {
+  width: 100px;
+  height: 100px;
+  padding-bottom: 75px;
+  /* opacity: .25; */
+}
