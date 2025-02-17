@@ -105,12 +105,12 @@ const insectShader = {
         varying vec3 vPosition;
 
         void main() {
-//            vec2 uv = vUv - vec2(0.5, 0.5);
+            vec2 uv = vUv - vec2(0.5, 0.5);
             vec4 finalColor = texture2D(wingTexture, vUv);
-            // if(finalColor.a > 0.001) {
-            //     finalColor = (color, 1.0);
-            // }
-            gl_FragColor = vec4(finalColor, 1.0);
+            if(finalColor.a > 0.001) { 
+                finalColor = vec4(color, 1.0);
+            }
+            gl_FragColor = finalColor;
         }
     `,
 }
@@ -277,41 +277,48 @@ const InsectControls: React.FC = () => {
                             color={skyColorLight}
                         />
                     </mesh>
-                    <mesh rotation={[0, .5 + insectWingRotation, 0]}>
+                    <mesh 
+                        rotation={[0, .5 + insectWingRotation, 0]}
+                        position={[-0.05,0,0]}
+                    >
                         <planeGeometry args={[1.5, 1.5, 1, 1]} />
-                        <meshBasicMaterial 
+                        {/* <meshBasicMaterial 
                             map={butterflyWingTextureLeft}
                             transparent={true}
                             alphaTest={.5}
                             side={DoubleSide}
-                        />
-                        {/* <shaderMaterial
+                        /> */}
+                        <shaderMaterial
 //                            map={butterflyWingTextureLeft}
                             vertexShader={insectShader.vertexShader}
                             fragmentShader={insectShader.fragmentShader}
                             transparent={true}
-                            alphaTest={.5}
+                            depthWrite={false}
+                            alphaTest={0.5}
                             side={DoubleSide}
                             uniforms={butterflyShaderLeftUniforms}
-                        /> */}
+                        />
                     </mesh>
-                    <mesh rotation={[0, -.5 - insectWingRotation, 0]}>
+                    <mesh 
+                        rotation={[-0, -.5 - insectWingRotation, 0]}
+                        position={[0.05,0,0]}
+                    >
                         <planeGeometry args={[1.5, 1.5, 1, 1]} />
-                        <meshBasicMaterial 
+                        {/* <meshBasicMaterial 
                             map={butterflyWingTextureRight}
                             transparent={true}
                             alphaTest={.5}
                             side={DoubleSide}
-                        />
-                        {/* <shaderMaterial
+                        /> */}
+                        <shaderMaterial
 //                            map={butterflyWingTextureRight}
                             vertexShader={insectShader.vertexShader}
                             fragmentShader={insectShader.fragmentShader}
                             transparent={true}
-                            alphaTest={.5}
+                            depthWrite={false}
                             side={DoubleSide}
                             uniforms={butterflyShaderRightUniforms}
-                        /> */}
+                        />
                     </mesh>
                 </group>
                 <mesh
