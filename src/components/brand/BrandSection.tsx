@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
-import { BrandHeader, BrandLanding } from '../index';
+import { BrandHeader } from './BrandHeader';
+import { BrandLanding } from './BrandLanding';
 import '../../assets/css/brand.css';
 
 const BrandSection: React.FC = () => {
@@ -7,13 +8,11 @@ const BrandSection: React.FC = () => {
   const [brandClickStatus, setBrandClickStatus] = useState<boolean>(false);
 
   useEffect(() => {
+    console.log('BrandSection useEffect')
     const handleBrandClick = (): void => {
       setBrandClickStatus(true);
       if (brandRef.current) {
-        brandRef.current.removeEventListener('click', handleBrandClick);
-        brandRef.current.removeEventListener('touchstart', handleBrandClick);
-        brandRef.current.removeEventListener('touchmove', handleBrandClick);
-        brandRef.current.removeEventListener('mousewheel', handleBrandClick);
+        document.querySelector('#root')?.classList.add('branding-clicked')
       }
     };
 

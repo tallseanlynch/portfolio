@@ -2,7 +2,8 @@ import {
   SnowShaderCanvas,
   BrandSection,
   WaterShaderCanvas,
-  RomeShaderCanvas
+  RomeShaderCanvas,
+  InsectsShaderCanvas
 } from './components';
 import './assets/css/brand.css';
 import {
@@ -18,10 +19,16 @@ interface SceneCounterState {
   }
 };
 
+type calculateSceneIndexType = {
+  startingSceneIndex: number;
+  sceneCounter: number;
+};
+
 const scenes = [
   memo(WaterShaderCanvas),
   memo(SnowShaderCanvas),
-  memo(RomeShaderCanvas)
+  memo(RomeShaderCanvas),
+  memo(InsectsShaderCanvas)
 ];
 
 const startingSceneMap = {
@@ -30,12 +37,9 @@ const startingSceneMap = {
   snow: 1,
   [1]: 'snow',
   rome: 2,
-  [2]: 'rome'
-};
-
-type calculateSceneIndexType = {
-  startingSceneIndex: number;
-  sceneCounter: number;
+  [2]: 'rome',
+  insects: 3,
+  [3]: 'insects'
 };
 
 const calculateSceneIndex = ({startingSceneIndex, sceneCounter}: calculateSceneIndexType): number => {

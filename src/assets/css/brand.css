@@ -201,3 +201,27 @@ canvas {
   height: 100px;
   image-rendering: pixelated;
 }
+
+.branding-clicked .web-socket-ui {
+  opacity: 1;  
+}
+
+.web-socket-ui {
+  transition: opacity 1000ms;
+  opacity: 0;
+  display: flex;
+  justify-content: center;
+  position: absolute;
+  top: 100px;
+  width: 100%;
+  pointer-events: all;
+  z-index: 1;
+}
+
+.controls-container {
+  width: 100%;
+  height: 100%;
+  /* pointer-events: all; */
+  background: transparent;
+  position: absolute;
+}
