@@ -25,7 +25,8 @@ import {
     ShaderMaterial,
     InstancedMesh,
     PlaneGeometry,
-    Object3D
+    Object3D,
+    CircleGeometry
 } from 'three';
 import { isTouchDevice } from '../../assets/js/util';
 
@@ -49,7 +50,10 @@ interface InsectShaderCanvasProps {
     classNames?: string
 };
 
+const grassBaseColor = new Color(0x00ff00);
+const dryTallGrassColor = new Color(0xf6ff33);
 const skyColorLight = new Color(0x89dffe);
+
 const positionCalc = new Vector3(0, 5, 0);
 const rotationCalc = new Euler(0, 0, 0);
 const cameraPositionCalc = new Vector3(0, 0, 0);
@@ -65,7 +69,7 @@ const deadZoneNormalizeMouseCoorCalc = new Vector2(0,0,);
 const normalizeMouseCoorScaled = new Vector2(0, 0);
 const movementRate = .0125;
 
-const insectShader = {
+const insectWingsShader = {
     vertexShader: `
         varying vec2 vUv;
         varying vec3 vPosition;
@@ -78,6 +82,7 @@ const insectShader = {
     `,
     fragmentShader: `
         uniform vec3 color;
+        uniform vec3 skyColorLight;
         uniform sampler2D wingTexture;
 
         varying vec2 vUv;
@@ -87,8 +92,34 @@ const insectShader = {
             vec2 uv = vUv - vec2(0.5, 0.5);
             vec4 finalColor = texture2D(wingTexture, vUv);
             if(finalColor.a > 0.001) {
-                finalColor = vec4(color, 1.0);
+                finalColor = vec4(mix(color, skyColorLight, 1.0 - abs(uv.x) * 2.0), 1.0);
             }
+            gl_FragColor = finalColor;
+        }
+    `,
+}
+
+const insectBodyShader = {
+    vertexShader: `
+        varying vec2 vUv;
+        varying vec3 vPosition;
+
+        void main() {
+            vUv = uv;
+            vPosition = position;
+            gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+        }
+    `,
+    fragmentShader: `
+        uniform vec3 color;
+        uniform vec3 skyColorLight;
+
+        varying vec2 vUv;
+        varying vec3 vPosition;
+
+        void main() {
+            vec2 uv = vUv - vec2(0.5, 0.5);
+            vec4 finalColor = vec4(mix(color, skyColorLight, abs(vPosition.y)), 1.0);
             gl_FragColor = finalColor;
         }
     `,
@@ -219,7 +250,7 @@ const InsectControls: React.FC = () => {
                 document.removeEventListener('mousedown', handleMouseDown);
                 document.removeEventListener('mouseup', handleMouseUp);    
             }
-            };
+        };
     }, [controlsState, touchEvents]);
 
     const mouseCoorHeightModifier = touchEvents === true ? (window.innerHeight - 125) : (window.innerHeight / 2);
@@ -295,9 +326,9 @@ const InsectControls: React.FC = () => {
         }
 
         // add player control transformations using controlsState
-        const touchDeviceDownDirectionModifier = (normalizeMouseCoorScaled.y > 0 && touchEvents === true) ? 5 : 2;
+        const touchDeviceDownDirectionModifier = (normalizeMouseCoorScaled.y > 0 && touchEvents === true) ? 5 : 1;
         if (controlsState.w) {
-            positionCalc.add(backDirToPlayerDirection.multiplyScalar(2));
+            positionCalc.add(backDirToPlayerDirection.multiplyScalar(5));
             positionCalc.y += normalizeMouseCoorScaled.y * -1 * touchDeviceDownDirectionModifier;
         }
         if (controlsState.s) {
@@ -345,19 +376,34 @@ const InsectControls: React.FC = () => {
 
     const butterflyShaderLeftUniforms = {
         wingTexture: {
-            value: butterflyWingTextureLeft,
+            value: butterflyWingTextureLeft
         },
         color: {
             value: whiteColor
+        },
+        skyColorLight: {
+            value: skyColorLight
         }
     };
 
     const butterflyShaderRightUniforms = {
         wingTexture: {
-            value: butterflyWingTextureRight,
+            value: butterflyWingTextureRight
         },
         color: {
             value: whiteColor
+        },
+        skyColorLight: {
+            value: skyColorLight
+        }
+    };
+
+    const butterflyShaderBodyUniforms = {
+        color: {
+            value: whiteColor
+        },
+        skyColorLight: {
+            value: skyColorLight
         }
     };
 
@@ -372,11 +418,38 @@ const InsectControls: React.FC = () => {
                     ref={insectGroupRef}
                     rotation={[-.75, 0, 0]}
                 >
+                    <mesh
+                        position={[-.03,.75,0]}
+                        rotation={[0,0,.125]}
+                    >
+                        <cylinderGeometry args={[.02, .02, .75, 4, 1]} />
+                        <meshBasicMaterial 
+                            color={skyColorLight}
+                        />
+                    </mesh>
+                    <mesh
+                        position={[.03,.75,0]}
+                        rotation={[0,0,-.125]}
+                    >
+                        <cylinderGeometry args={[.02, .02, .75, 4, 1]} />
+                        <meshBasicMaterial 
+                            color={skyColorLight}
+                        />
+                    </mesh>
+
                     <mesh>
                         <cylinderGeometry args={[.05, .05, .75, 8, 1]} />
-                        <meshBasicMaterial 
-                            color={whiteColor}
+                        <shaderMaterial
+                            vertexShader={insectBodyShader.vertexShader}
+                            fragmentShader={insectBodyShader.fragmentShader}
+                            transparent={true}
+                            depthWrite={false}
+                            side={DoubleSide}
+                            uniforms={butterflyShaderBodyUniforms}
                         />
+                        {/* <meshBasicMaterial 
+                            color={whiteColor}
+                        /> */}
                     </mesh>
                     <mesh 
                         rotation={[0, .5 + insectWingRotation, 0]}
@@ -384,11 +457,10 @@ const InsectControls: React.FC = () => {
                     >
                         <planeGeometry args={[1.5, 1.5, 1, 1]} />
                         <shaderMaterial
-                            vertexShader={insectShader.vertexShader}
-                            fragmentShader={insectShader.fragmentShader}
+                            vertexShader={insectWingsShader.vertexShader}
+                            fragmentShader={insectWingsShader.fragmentShader}
                             transparent={true}
                             depthWrite={false}
-                            alphaTest={0.5}
                             side={DoubleSide}
                             uniforms={butterflyShaderLeftUniforms}
                         />
@@ -399,8 +471,8 @@ const InsectControls: React.FC = () => {
                     >
                         <planeGeometry args={[1.5, 1.5, 1, 1]} />
                         <shaderMaterial
-                            vertexShader={insectShader.vertexShader}
-                            fragmentShader={insectShader.fragmentShader}
+                            vertexShader={insectWingsShader.vertexShader}
+                            fragmentShader={insectWingsShader.fragmentShader}
                             transparent={true}
                             depthWrite={false}
                             side={DoubleSide}
@@ -485,9 +557,11 @@ const groundShader = {
         varying vec3 vPosition;
         
         void main() {
-            float distanceFromCenter = distance(vPosition, vec3(0.0,0.0,0.0)) / 50.0;
-            // vec3 groundColorSkyMix = mix(vec3(0.0, 1.0, 0.0), skyColorLight, distanceFromCenter);
-            vec3 groundColorSkyMix = mix(vec3(0.0, 1.0, 0.0), vec3(1.0, 1.0, 1.0), distanceFromCenter);
+            float distanceFromCenter = distance(vPosition, vec3(0.0,0.0,0.0)) / 100.0;
+            vec3 uvModColor = vec3(vPosition) * .25;
+            vec3 groundColor = vec3(0.0, 1.0, 0.0);
+            vec3 groundColorUvModColorMix = mix(groundColor, uvModColor, .05);
+            vec3 groundColorSkyMix = mix(groundColor, vec3(1.0, 1.0, 1.0), distanceFromCenter);
             gl_FragColor = vec4(groundColorSkyMix, 1.0);
         }
     `,
@@ -499,39 +573,64 @@ const grassShader = {
     vertexShader: `
     varying vec2 vUv;
     uniform float time;
+    varying vec3 vPosition;
     
       void main() {
         vUv = uv;      
         vec4 mvPosition = vec4( position, 1.0 );
         #ifdef USE_INSTANCING
             mvPosition = instanceMatrix * mvPosition;
+            vPosition = vec3(mvPosition.x, mvPosition.y, mvPosition.z);
         #endif
         float dispPower = 1.0 - cos( uv.y * 3.1416 / 2.0 );
-        float displacement = sin( mvPosition.z + time * 5.0 ) * ( 0.1 * dispPower );
+        float displacement = sin( mvPosition.z + time * 7.0 ) * ( 0.1 * dispPower );
         mvPosition.z += displacement;            
         vec4 modelViewPosition = modelViewMatrix * mvPosition;
         gl_Position = projectionMatrix * modelViewPosition;
       }
   `,
   fragmentShader: `
+    varying vec3 vPosition;
     varying vec2 vUv;
     uniform vec3 skyColorLight;
+    uniform vec3 baseColor;
     void main() {
-        vec3 baseColor = vec3( 0.0, 1.0, 0.0 );
         float clarity = ( vUv.y * 0.5 ) + 0.5;
         vec3 mixSkyColorLight = mix(skyColorLight, baseColor, clarity);
+        mixSkyColorLight = mix(mixSkyColorLight, vPosition / 10.0, .125);
         gl_FragColor = vec4( mixSkyColorLight, 1 );
     }
   `
 };
 
-const Grass = () => {  
+interface GrassProps {
+    baseColor: Color,
+    skyColor: Color,
+    instanceNumber: number, 
+    instanceOrigin: Vector3,
+    planeGeometryArgs: number[],
+    placementScale: number,
+    instanceScale: number    
+};
+
+const Grass: React.FC<GrassProps> = ({
+    baseColor,
+    skyColor,
+    instanceNumber, 
+    instanceOrigin,
+    planeGeometryArgs,
+    placementScale,
+    instanceScale
+}) => {  
   const uniforms = {
-      time: {
+    time: {
         value: 0
     },
     skyColorLight: {
-        value: skyColorLight
+        value: skyColor
+    },
+    baseColor: {
+        value: baseColor
     }
   };
   
@@ -542,24 +641,27 @@ const Grass = () => {
     side: DoubleSide
   });
     
-  const instanceNumber = 5000;
   const matrixPositionObject = new Object3D();  
-  const geometry = new PlaneGeometry( 0.1, 1, 1, 4 );
-  geometry.translate( 0, 0.5, 0 );
-  
+  const geometry = new PlaneGeometry(planeGeometryArgs[0], planeGeometryArgs[1], planeGeometryArgs[2], planeGeometryArgs[3])
   const instancedMesh = new InstancedMesh( geometry, leavesMaterial, instanceNumber );
     for ( let i=0 ; i<instanceNumber ; i++ ) {
-        matrixPositionObject.position.set(
-            ( Math.random() - 0.5 ) * 75,
-            0,
-            ( Math.random() - 0.5 ) * 75
-        );
-    
-        matrixPositionObject.scale.setScalar( 0.5 + Math.random() * 2.5 );
+        // Calculate random angle and radius
+        const angle = Math.random() * Math.PI * 2; // Random angle between 0 and 2π
+        const radius = Math.sqrt(Math.random()) * placementScale; // Square root of random number times the radius of the circle
+
+        // Convert polar coordinates (radius, angle) to Cartesian coordinates (x, z)
+        const x = radius * Math.cos(angle);
+        const z = radius * Math.sin(angle);
+
+        // Set the position
+        matrixPositionObject.position.set(x, 0, z);        
+        matrixPositionObject.scale.setScalar( 0.5 + Math.random() * instanceScale );
         matrixPositionObject.rotation.y = Math.random() * Math.PI;
         matrixPositionObject.updateMatrix();
         instancedMesh.setMatrixAt( i, matrixPositionObject.matrix );
     }
+
+    instancedMesh.position.copy(instanceOrigin);
 
     useFrame(({clock}) => {
         leavesMaterial.uniforms.time.value = clock.getElapsedTime();
@@ -571,10 +673,140 @@ const Grass = () => {
     )
 };
 
+const SmallFlowers = ({
+    baseColor,
+    skyColor,
+    instanceNumber, 
+    instanceOrigin,
+    circleGeometryArgs,
+    placementScale,
+    instanceScale
+}) => {  
+    const uniforms = {
+        time: {
+          value: 0
+      },
+      skyColorLight: {
+          value: skyColor
+      },
+      baseColor: {
+        value: baseColor
+      }
+    };
+
+    const leavesMaterial = new ShaderMaterial({
+      vertexShader: grassShader.vertexShader,
+      fragmentShader: grassShader.fragmentShader,
+      uniforms,
+      side: DoubleSide
+    });
+      
+    const matrixPositionObject = new Object3D();
+    const geometry = new CircleGeometry(circleGeometryArgs[0], circleGeometryArgs[1]);    
+    const instancedMesh = new InstancedMesh( geometry, leavesMaterial, instanceNumber );
+      for ( let i=0 ; i<instanceNumber ; i++ ) {
+          // Calculate random angle and radius
+          const angle = Math.random() * Math.PI * 2; // Random angle between 0 and 2π
+          const radius = Math.sqrt(Math.random()) * placementScale; // Square root of random number times the radius of the circle
+  
+          // Convert polar coordinates (radius, angle) to Cartesian coordinates (x, z)
+          const x = radius * Math.cos(angle);
+          const z = radius * Math.sin(angle);
+  
+          // Set the position
+          matrixPositionObject.position.set(x, Math.random() / 5, z);    
+          matrixPositionObject.scale.setScalar( 0.1 + Math.random() * instanceScale );
+          matrixPositionObject.rotation.set(Math.PI / Math.random() * 2, Math.random() / 10, Math.random() / 10);
+          matrixPositionObject.updateMatrix();
+          instancedMesh.setMatrixAt( i, matrixPositionObject.matrix );
+      }
+      instancedMesh.position.copy(instanceOrigin);
+  
+    //   useFrame(({clock}) => {
+    //       leavesMaterial.uniforms.time.value = clock.getElapsedTime();
+    //       leavesMaterial.uniformsNeedUpdate = true;
+    //   });
+  
+    return (
+        <primitive object={instancedMesh}/>
+    )
+};
+
 const Ground = () => {
     return (
         <>
-            <Grass />
+            <SmallFlowers 
+                baseColor={grassBaseColor}
+                skyColor={skyColorLight}
+                instanceNumber={500}
+                instanceOrigin={new Vector3(0,0,-20)}
+                circleGeometryArgs={[0.5, 8]}
+                placementScale={16}
+                instanceScale={2}            
+            />
+            <SmallFlowers 
+                baseColor={grassBaseColor}
+                skyColor={skyColorLight}
+                instanceNumber={1500}
+                instanceOrigin={new Vector3(0,0,0)}
+                circleGeometryArgs={[0.5, 8]}
+                placementScale={30}
+                instanceScale={1}            
+            />
+            <SmallFlowers 
+                baseColor={dryTallGrassColor}
+                skyColor={skyColorLight}
+                instanceNumber={500}
+                instanceOrigin={new Vector3(0,0,0)}
+                circleGeometryArgs={[0.5, 8]}
+                placementScale={20}
+                instanceScale={1}            
+            />
+            <Grass 
+                baseColor={dryTallGrassColor}
+                skyColor={skyColorLight}
+                instanceNumber={500}
+                instanceOrigin={new Vector3(-5,0,-5)}
+                planeGeometryArgs={[0.05, 2, 1, 4]}
+                placementScale={10}
+                instanceScale={1}
+            />
+            <Grass 
+                baseColor={dryTallGrassColor}
+                skyColor={dryTallGrassColor}
+                instanceNumber={500}
+                instanceOrigin={new Vector3(5,0,3)}
+                planeGeometryArgs={[0.05, 2, 1, 4]}
+                placementScale={10}
+                instanceScale={2}
+            />
+            <Grass 
+                baseColor={grassBaseColor}
+                skyColor={skyColorLight}
+                instanceNumber={5000}
+                instanceOrigin={new Vector3(0,0,0)}
+                planeGeometryArgs={[0.15, 1, 1, 4]}
+                placementScale={40}
+                instanceScale={1.5}
+            />
+            <Grass 
+                baseColor={dryTallGrassColor}
+                skyColor={skyColorLight}
+                instanceNumber={2500}
+                instanceOrigin={new Vector3(0,0,0)}
+                planeGeometryArgs={[0.15, 1, 1, 4]}
+                placementScale={50}
+                instanceScale={1.5}
+            />
+            <Grass 
+                baseColor={grassBaseColor}
+                skyColor={skyColorLight}
+                instanceNumber={2500}
+                instanceOrigin={new Vector3(0,0,0)}
+                planeGeometryArgs={[0.15, 1, 1, 4]}
+                placementScale={60}
+                instanceScale={.5}
+            />
             <mesh rotation={[Math.PI / 2, 0, 0]} position={[0, -.5, 0]}>
                 <planeGeometry args={[1000, 1000, 1, 1]} />
                 <shaderMaterial
@@ -603,10 +835,10 @@ const InsectsShaderCanvas: React.FC<InsectShaderCanvasProps> = ({
                 linear
                 className={classNames}
             >
-                <Ground />
-                <SkyDome />
-                <InsectControls />
-                <perspectiveCamera />
+            <Ground />
+            <SkyDome />
+            <InsectControls />
+            <perspectiveCamera />
             </Canvas>
             {touchDevice === true && (
                 <div className='mobile-control-circle'>
