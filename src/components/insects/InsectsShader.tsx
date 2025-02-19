@@ -26,7 +26,8 @@ import {
     InstancedMesh,
     PlaneGeometry,
     Object3D,
-    CircleGeometry
+    CircleGeometry,
+    Quaternion
 } from 'three';
 import { isTouchDevice } from '../../assets/js/util';
 import { ClientData, EventData } from './websocket-types';
@@ -154,14 +155,13 @@ const InsectControls: React.FC<InsectControls> = ({sendUpdate}) => {
 
     useEffect(() => {
         // send updates to server
-        if(frameCount % 3 === 0) {
+        if(frameCount % 10 === 0) {
             sendUpdate({
                 payload: {
                     insectPosition,
                     insectRotation
                 }
             })
-//            console.log('useEffect insectPosition, insectRotation');
         }
     }, [frameCount]);
 
@@ -440,8 +440,8 @@ const InsectControls: React.FC<InsectControls> = ({sendUpdate}) => {
                     rotation={[-.75, 0, 0]}
                 >
                     <mesh
-                        position={[-.03,.75,0]}
-                        rotation={[0,0,.125]}
+                        position={[-.05,.75,.175]}
+                        rotation={[.5,0,.125]}
                     >
                         <cylinderGeometry args={[.02, .02, .75, 4, 1]} />
                         <meshBasicMaterial 
@@ -449,8 +449,8 @@ const InsectControls: React.FC<InsectControls> = ({sendUpdate}) => {
                         />
                     </mesh>
                     <mesh
-                        position={[.03,.75,0]}
-                        rotation={[0,0,-.125]}
+                        position={[.05,.75,.175]}
+                        rotation={[.5,0,-.125]}
                     >
                         <cylinderGeometry args={[.02, .02, .75, 4, 1]} />
                         <meshBasicMaterial 
@@ -459,7 +459,7 @@ const InsectControls: React.FC<InsectControls> = ({sendUpdate}) => {
                     </mesh>
 
                     <mesh>
-                        <cylinderGeometry args={[.05, .05, .75, 8, 1]} />
+                        <cylinderGeometry args={[.05, .05, .85, 8, 1]} />
                         <shaderMaterial
                             vertexShader={insectBodyShader.vertexShader}
                             fragmentShader={insectBodyShader.fragmentShader}
@@ -530,6 +530,15 @@ interface SocketInsectProps {
     position: Vector3Type,
     rotation: EulerType
 }
+const lerpCalcVector3A = new Vector3();
+const lerpCalcVector3B = new Vector3();
+const lerpCalcVector3C = new Vector3();
+
+const currentQuaternionA = new Quaternion();
+const currentQuaternionB = new Quaternion();
+const lerpEulerCalcA = new Euler();
+const lerpEulerCalcB = new Euler();
+const resultEuler = new Euler();
 
 const SocketInsect: React.FC<SocketInsectProps> = ({position, rotation}) => {
     const butterflyWingTextureLeft = useLoader(TextureLoader, './insects/butterfly-wings.png');
@@ -538,12 +547,29 @@ const SocketInsect: React.FC<SocketInsectProps> = ({position, rotation}) => {
     const backDirMeshRef = useRef<Mesh | null>(null);
     // const cameraPositionMeshRef = useRef<Mesh | null>(null);
     const insectGroupRef = useRef<Group | null>(null);
-    const [insectWingRotation, setInsectWingRotation] = useState<number>(0)
-    // const [insectPosition, setInsectPosition] = useState<Vector3Type>([positionCalc.x, positionCalc.y, positionCalc.z]);
-    // const [insectRotation, setInsectRotation] = useState<EulerType>([rotationCalc.x, rotationCalc.y, rotationCalc.z]);
+    const [insectWingRotation, setInsectWingRotation] = useState<number>(0);
+    const [insectPosition, setInsectPosition] = useState<Vector3Type>(position);
+    const [insectRotation, setInsectRotation] = useState<EulerType>(rotation);
     // const [frameCount, setFrameCount] = useState<number>(0)
 
     useFrame(({ clock }) => {
+        setInsectPosition(current => {
+            lerpCalcVector3A.set(current[0], current[1], current[2]);//.lerp(position, .1);
+            lerpCalcVector3B.set(position[0], position[1], position[2]);
+            lerpCalcVector3C.lerpVectors(lerpCalcVector3A, lerpCalcVector3B, .1);
+            return [lerpCalcVector3C.x, lerpCalcVector3C.y, lerpCalcVector3C.z]
+        })
+
+        setInsectRotation(current => {
+            lerpEulerCalcA.set(current[0], current[1], current[2]);
+            currentQuaternionA.setFromEuler(lerpEulerCalcA);
+            lerpEulerCalcB.set(rotation[0], rotation[1], rotation[2]);
+            currentQuaternionB.setFromEuler(lerpEulerCalcB);
+            currentQuaternionA.slerp(currentQuaternionB, 0.1); // Adjust the 0.1 factor based on desired speed
+            resultEuler.setFromQuaternion(currentQuaternionA);
+            return [resultEuler.x, resultEuler.y, resultEuler.z];
+        })
+
         // flap insect wings
         setInsectWingRotation(Math.sin(clock.elapsedTime * 6) / (1.5));
     });
@@ -587,16 +613,16 @@ const SocketInsect: React.FC<SocketInsectProps> = ({position, rotation}) => {
         <>
             <group
                 ref={groupRef}
-                rotation={rotation}
-                position={position}
+                rotation={insectRotation}
+                position={insectPosition}
             >
                 <group
                     ref={insectGroupRef}
                     rotation={[-.75, 0, 0]}
                 >
                     <mesh
-                        position={[-.03,.75,0]}
-                        rotation={[0,0,.125]}
+                        position={[-.05,.75,.175]}
+                        rotation={[.5,0,.125]}
                     >
                         <cylinderGeometry args={[.02, .02, .75, 4, 1]} />
                         <meshBasicMaterial 
@@ -604,8 +630,8 @@ const SocketInsect: React.FC<SocketInsectProps> = ({position, rotation}) => {
                         />
                     </mesh>
                     <mesh
-                        position={[.03,.75,0]}
-                        rotation={[0,0,-.125]}
+                        position={[.05,.75,.175]}
+                        rotation={[.5,0,-.125]}
                     >
                         <cylinderGeometry args={[.02, .02, .75, 4, 1]} />
                         <meshBasicMaterial 
@@ -614,7 +640,7 @@ const SocketInsect: React.FC<SocketInsectProps> = ({position, rotation}) => {
                     </mesh>
 
                     <mesh>
-                        <cylinderGeometry args={[.05, .05, .75, 8, 1]} />
+                        <cylinderGeometry args={[.05, .05, .85, 8, 1]} />
                         <shaderMaterial
                             vertexShader={insectBodyShader.vertexShader}
                             fragmentShader={insectBodyShader.fragmentShader}
@@ -1009,7 +1035,6 @@ const WebSocketUI = () => {
     useEffect(() => {
         ws.current = new WebSocket(wssAddress);
         ws.current.onopen = () => {
-//            console.log('WebSocket connection established');
             sendMessage({
                 messageType: 'connectedFromClient',
                 uuid: clientData.uuid,
@@ -1022,10 +1047,10 @@ const WebSocketUI = () => {
             handleIncomingMessage(eventData);
         };
         ws.current.onclose = () => {
-//            console.log('WebSocket connection closed');
+           console.log('WebSocket connection closed');
         };
         ws.current.onerror = (error) => {
-//            console.log('WebSocket Error: ', error);
+           console.log('WebSocket Error: ', error);
         };
 
         return () => {
