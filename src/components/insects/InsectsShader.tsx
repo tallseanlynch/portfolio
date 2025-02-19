@@ -29,6 +29,7 @@ import {
     CircleGeometry
 } from 'three';
 import { isTouchDevice } from '../../assets/js/util';
+import { ClientData, EventData } from './websocket-types';
 
 interface InsectsShaderProps {
     position: Vector3Type
@@ -125,7 +126,11 @@ const insectBodyShader = {
     `,
 }
 
-const InsectControls: React.FC = () => {
+interface InsectControls {
+    sendUpdate: (payload) => void;
+}
+
+const InsectControls: React.FC<InsectControls> = ({sendUpdate}) => {
     const butterflyWingTextureLeft = useLoader(TextureLoader, './insects/butterfly-wings.png');
     const butterflyWingTextureRight = useLoader(TextureLoader, './insects/butterfly-wings-1.png');
     const [mouseCoors, setMouseCoors] = useState<Vector2Type>([0, 0])
@@ -145,6 +150,20 @@ const InsectControls: React.FC = () => {
         d: false
     });
     const touchEvents = isTouchDevice();
+    const [frameCount, setFrameCount] = useState<number>(0)
+
+    useEffect(() => {
+        // send updates to server
+        if(frameCount % 25 === 0) {
+            sendUpdate({
+                payload: {
+                    insectPosition,
+                    insectRotation
+                }
+            })
+            console.log('useEffect insectPosition, insectRotation');
+        }
+    }, [frameCount]);
 
     useEffect(() => {
         const handleKeyDown = (keyboardEvent) => {
@@ -257,6 +276,9 @@ const InsectControls: React.FC = () => {
     const deadZone = 0.1;
 
     useFrame(({ clock }) => {
+        // numberOfFrames = numberOfFrames + 1;
+        setFrameCount(current => current + 1);
+
         // normalize coors
         mouseCoorCalc.set(mouseCoors[0], mouseCoors[1]);
         normalizeMouseCoorCalc.set(
@@ -355,7 +377,6 @@ const InsectControls: React.FC = () => {
             positionCalc.y = .1;
         }
 
-        // apply transformations
         setInsectPosition([
             positionCalc.x,
             positionCalc.y,
@@ -366,7 +387,7 @@ const InsectControls: React.FC = () => {
             rotationCalc.x + normalizeMouseCoorScaled.y,
             rotationCalc.y + normalizeMouseCoorScaled.x,
             rotationCalc.z
-        ]);
+        ]);    
 
         // flap insect wings
         setInsectWingRotation(Math.sin(clock.elapsedTime * 6) / (1.5));
@@ -500,6 +521,159 @@ const InsectControls: React.FC = () => {
         </>
     );
 };
+
+
+
+
+
+interface SocketInsectProps {
+    position: Vector3Type,
+    rotation: EulerType
+}
+
+const SocketInsect: React.FC<SocketInsectProps> = ({position, rotation}) => {
+    const butterflyWingTextureLeft = useLoader(TextureLoader, './insects/butterfly-wings.png');
+    const butterflyWingTextureRight = useLoader(TextureLoader, './insects/butterfly-wings-1.png');
+    const groupRef = useRef(null);
+    const backDirMeshRef = useRef<Mesh | null>(null);
+    // const cameraPositionMeshRef = useRef<Mesh | null>(null);
+    const insectGroupRef = useRef<Group | null>(null);
+    const [insectWingRotation, setInsectWingRotation] = useState<number>(0)
+    // const [insectPosition, setInsectPosition] = useState<Vector3Type>([positionCalc.x, positionCalc.y, positionCalc.z]);
+    // const [insectRotation, setInsectRotation] = useState<EulerType>([rotationCalc.x, rotationCalc.y, rotationCalc.z]);
+    // const [frameCount, setFrameCount] = useState<number>(0)
+
+    useFrame(({ clock }) => {
+        // flap insect wings
+        setInsectWingRotation(Math.sin(clock.elapsedTime * 6) / (1.5));
+    });
+
+    const whiteColor = new Color(0xffffff);
+
+    const butterflyShaderLeftUniforms = {
+        wingTexture: {
+            value: butterflyWingTextureLeft
+        },
+        color: {
+            value: whiteColor
+        },
+        skyColorLight: {
+            value: skyColorLight
+        }
+    };
+
+    const butterflyShaderRightUniforms = {
+        wingTexture: {
+            value: butterflyWingTextureRight
+        },
+        color: {
+            value: whiteColor
+        },
+        skyColorLight: {
+            value: skyColorLight
+        }
+    };
+
+    const butterflyShaderBodyUniforms = {
+        color: {
+            value: whiteColor
+        },
+        skyColorLight: {
+            value: skyColorLight
+        }
+    };
+
+    return (
+        <>
+            <group
+                ref={groupRef}
+                rotation={rotation}
+                position={position}
+            >
+                <group
+                    ref={insectGroupRef}
+                    rotation={[-.75, 0, 0]}
+                >
+                    <mesh
+                        position={[-.03,.75,0]}
+                        rotation={[0,0,.125]}
+                    >
+                        <cylinderGeometry args={[.02, .02, .75, 4, 1]} />
+                        <meshBasicMaterial 
+                            color={skyColorLight}
+                        />
+                    </mesh>
+                    <mesh
+                        position={[.03,.75,0]}
+                        rotation={[0,0,-.125]}
+                    >
+                        <cylinderGeometry args={[.02, .02, .75, 4, 1]} />
+                        <meshBasicMaterial 
+                            color={skyColorLight}
+                        />
+                    </mesh>
+
+                    <mesh>
+                        <cylinderGeometry args={[.05, .05, .75, 8, 1]} />
+                        <shaderMaterial
+                            vertexShader={insectBodyShader.vertexShader}
+                            fragmentShader={insectBodyShader.fragmentShader}
+                            transparent={true}
+                            depthWrite={false}
+                            side={DoubleSide}
+                            uniforms={butterflyShaderBodyUniforms}
+                        />
+                        {/* <meshBasicMaterial 
+                            color={whiteColor}
+                        /> */}
+                    </mesh>
+                    <mesh 
+                        rotation={[0, .5 + insectWingRotation, 0]}
+                        position={[-0.05,0,0]}
+                    >
+                        <planeGeometry args={[1.5, 1.5, 1, 1]} />
+                        <shaderMaterial
+                            vertexShader={insectWingsShader.vertexShader}
+                            fragmentShader={insectWingsShader.fragmentShader}
+                            transparent={true}
+                            depthWrite={false}
+                            side={DoubleSide}
+                            uniforms={butterflyShaderLeftUniforms}
+                        />
+                    </mesh>
+                    <mesh 
+                        rotation={[-0, -.5 - insectWingRotation, 0]}
+                        position={[0.05,0,0]}
+                    >
+                        <planeGeometry args={[1.5, 1.5, 1, 1]} />
+                        <shaderMaterial
+                            vertexShader={insectWingsShader.vertexShader}
+                            fragmentShader={insectWingsShader.fragmentShader}
+                            transparent={true}
+                            depthWrite={false}
+                            side={DoubleSide}
+                            uniforms={butterflyShaderRightUniforms}
+                        />
+                    </mesh>
+                </group>
+                <mesh
+                    ref={backDirMeshRef}
+                    position={[0, 0, 3]}
+                >
+                    <boxGeometry args={[.05, .05, .01, 1, 1]} />
+                    <meshStandardMaterial color={0x00ff00} transparent={true} opacity={0} />
+                </mesh>
+            </group>
+        </>
+    );
+};
+
+
+
+
+
+
+
 
 const skyDomeShader = {
     vertexShader: `
@@ -822,6 +996,126 @@ const Ground = () => {
     )
 };
 
+const localhostAddress = 'ws://localhost:8080';
+const gcpAddress = 'wss://websocket-service-943494934642.us-central1.run.app';
+const wssAddress = window.location.href.includes('localhost') ? localhostAddress : gcpAddress;
+
+const WebSocketUI = () => {
+    const [clientData, setClientData] = useState<ClientData>({ uuid: '', status: 'unconnected', memory: {} });
+    const ws = useRef<WebSocket | null>(null);
+
+    (window as any).clientData = clientData;
+
+    useEffect(() => {
+        ws.current = new WebSocket(wssAddress);
+        ws.current.onopen = () => {
+            console.log('WebSocket connection established');
+            sendMessage({
+                messageType: 'connectedFromClient',
+                uuid: clientData.uuid,
+                timeStamp: new Date().getTime(),
+                payload: {}
+            });
+        };
+        ws.current.onmessage = (event) => {
+            const eventData: EventData = JSON.parse(event.data);
+            handleIncomingMessage(eventData);
+        };
+        ws.current.onclose = () => {
+            console.log('WebSocket connection closed');
+        };
+        ws.current.onerror = (error) => {
+            console.log('WebSocket Error: ', error);
+        };
+
+        return () => {
+            ws.current?.close();
+        };
+    }, []);
+
+    const handleIncomingMessage = (eventData: EventData) => {
+        console.log('incomingMessageReducer', eventData);
+        switch (eventData.messageType) {
+            case 'connectedFromServer':
+                setClientData((prevData) => ({ ...prevData, uuid: eventData.payload.uuid }));
+                break;
+            case 'disconnectedFromServer':
+                setClientData((prevData) => ({ ...prevData, status: eventData.messageType }));
+                break;
+            case 'broadcastUpdateFromServer': {
+                const { uuid, updatePayload } = eventData.payload;
+                setClientData((prevData) => ({
+                    ...prevData,
+                    memory: {
+                        ...prevData.memory,
+                        [uuid]: { ...prevData.memory[uuid], ...updatePayload.payload }
+                    }
+                }));
+            }
+                break;
+            case 'broadcastDisconnectedFromServer': {
+                const uuidToDelete = eventData.payload.uuid;
+                setClientData((prevData) => {
+                    const updatedMemory = { ...prevData.memory };
+                    delete updatedMemory[uuidToDelete];
+                    return { ...prevData, memory: updatedMemory };
+                });
+                break;
+            }
+        }
+    };
+
+    const sendMessage = (message: EventData) => {
+        if (ws.current?.readyState === WebSocket.OPEN) {
+            ws.current.send(JSON.stringify(message));
+        }
+    };
+
+    // Handlers for button clicks
+    // const connectWebSocket = () => {
+    //     if (!ws.current || ws.current.readyState === WebSocket.CLOSED) {
+    //         ws.current = new WebSocket(wssAddress);
+    //     }
+    // };
+
+    // const disconnectWebSocket = () => {
+    //     if (ws.current) {
+    //         ws.current.close();
+    //     }
+    // };
+
+    interface PayloadProps {
+        [key: string]: any
+    }
+
+    const sendUpdate = (payload: PayloadProps) => {
+        sendMessage({
+            messageType: 'updateFromClient',
+            uuid: clientData.uuid,
+            payload,
+            timeStamp: new Date().getTime()
+        });
+    };
+
+    return (
+        <>
+            <InsectControls sendUpdate={sendUpdate}/>
+            {Object.keys(clientData.memory).map((socketInsectKey) => {
+                <SocketInsect
+                    position={clientData.memory[socketInsectKey].insectPosition}
+                    rotation={clientData.memory[socketInsectKey].insectRotation}
+                />
+            })}
+        </>
+
+        // <div className='ws-client-container'>
+        //     <button onClick={connectWebSocket}>Connect</button>
+        //     <button onClick={disconnectWebSocket}>Disconnect</button>
+        //     <button onClick={sendUpdate}>Send Update</button>
+        // </div>
+    );
+};
+
 const InsectsShaderCanvas: React.FC<InsectShaderCanvasProps> = ({
     classNames = ''
 }) => {
@@ -835,10 +1129,10 @@ const InsectsShaderCanvas: React.FC<InsectShaderCanvasProps> = ({
                 linear
                 className={classNames}
             >
-            <Ground />
-            <SkyDome />
-            <InsectControls />
-            <perspectiveCamera />
+                <Ground />
+                <SkyDome />
+                <perspectiveCamera />
+                <WebSocketUI />
             </Canvas>
             {touchDevice === true && (
                 <div className='mobile-control-circle'>

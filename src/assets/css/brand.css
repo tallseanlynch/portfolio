@@ -245,3 +245,10 @@ canvas {
   padding-bottom: 75px;
   /* opacity: .25; */
 }
+
+.ws-client-container {
+  position: absolute;
+  bottom: 0px;
+  z-index: 2;
+  pointer-events: all;
+}
