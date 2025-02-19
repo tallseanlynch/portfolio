@@ -154,14 +154,14 @@ const InsectControls: React.FC<InsectControls> = ({sendUpdate}) => {
 
     useEffect(() => {
         // send updates to server
-        if(frameCount % 25 === 0) {
+        if(frameCount % 3 === 0) {
             sendUpdate({
                 payload: {
                     insectPosition,
                     insectRotation
                 }
             })
-            console.log('useEffect insectPosition, insectRotation');
+//            console.log('useEffect insectPosition, insectRotation');
         }
     }, [frameCount]);
 
@@ -1009,7 +1009,7 @@ const WebSocketUI = () => {
     useEffect(() => {
         ws.current = new WebSocket(wssAddress);
         ws.current.onopen = () => {
-            console.log('WebSocket connection established');
+//            console.log('WebSocket connection established');
             sendMessage({
                 messageType: 'connectedFromClient',
                 uuid: clientData.uuid,
@@ -1022,10 +1022,10 @@ const WebSocketUI = () => {
             handleIncomingMessage(eventData);
         };
         ws.current.onclose = () => {
-            console.log('WebSocket connection closed');
+//            console.log('WebSocket connection closed');
         };
         ws.current.onerror = (error) => {
-            console.log('WebSocket Error: ', error);
+//            console.log('WebSocket Error: ', error);
         };
 
         return () => {
@@ -1034,7 +1034,7 @@ const WebSocketUI = () => {
     }, []);
 
     const handleIncomingMessage = (eventData: EventData) => {
-        console.log('incomingMessageReducer', eventData);
+//        console.log('incomingMessageReducer', eventData);
         switch (eventData.messageType) {
             case 'connectedFromServer':
                 setClientData((prevData) => ({ ...prevData, uuid: eventData.payload.uuid }));
@@ -1100,11 +1100,14 @@ const WebSocketUI = () => {
     return (
         <>
             <InsectControls sendUpdate={sendUpdate}/>
-            {Object.keys(clientData.memory).map((socketInsectKey) => {
-                <SocketInsect
-                    position={clientData.memory[socketInsectKey].insectPosition}
-                    rotation={clientData.memory[socketInsectKey].insectRotation}
-                />
+            {Object.keys(clientData.memory).map((socketInsectKey, index) => {
+                return (
+                    <SocketInsect
+                        key={index}
+                        position={clientData.memory[socketInsectKey].insectPosition}
+                        rotation={clientData.memory[socketInsectKey].insectRotation}
+                    />
+                )
             })}
         </>
 
