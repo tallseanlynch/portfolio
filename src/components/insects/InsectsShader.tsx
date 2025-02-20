@@ -180,7 +180,7 @@ const InsectControls: React.FC<InsectControls> = ({sendUpdate}) => {
             }
         };
 
-        const handleMouseMove = (mouseEvent: MouseEvent) => {
+        const handleMouseMove = (mouseEvent) => {
             if(mouseEvent.buttons > 0) {
                 const leftMouseState = mouseEvent.clientX - (window.innerWidth / 2) < 0 && Math.abs(mouseEvent.clientX - (window.innerWidth / 2)) > 50;
                 const rightMouseState = mouseEvent.clientX - (window.innerWidth / 2) > 0 && Math.abs(mouseEvent.clientX - (window.innerWidth / 2)) > 50;
@@ -202,7 +202,7 @@ const InsectControls: React.FC<InsectControls> = ({sendUpdate}) => {
             setMouseCoors([mouseEvent.clientX, mouseEvent.clientY]);
         }
 
-        const handleTouchMove = (touchEvent: TouchEvent) => {
+        const handleTouchMove = (touchEvent) => {
             setMouseCoors([touchEvent.touches[0].clientX, touchEvent.touches[0].clientY]);
 
             const leftTouchState = (touchEvent.touches[0].clientX - (window.innerWidth / 2) < 0) && (Math.abs(touchEvent.touches[0].clientX - (window.innerWidth / 2)) > 50);
@@ -239,7 +239,7 @@ const InsectControls: React.FC<InsectControls> = ({sendUpdate}) => {
             }));
         }
 
-        const handleTouchEnd = (touchEvent: TouchEvent) => {
+        const handleTouchEnd = (touchEvent) => {
             setControlsState({
                 a: false,
                 w: false,
@@ -249,27 +249,30 @@ const InsectControls: React.FC<InsectControls> = ({sendUpdate}) => {
             touchEvent.preventDefault();
         }
 
-        document.addEventListener('keydown', handleKeyDown);
-        document.addEventListener('keyup', handleKeyUp);
-        document.addEventListener('mousemove', handleMouseMove);
-        document.addEventListener('touchmove', handleTouchMove, {passive: false});
-        document.addEventListener('touchend', handleTouchEnd, {passive: false});
-        if(touchEvents === false) {
-            document.addEventListener('mousedown', handleMouseDown);
-            document.addEventListener('mouseup', handleMouseUp);    
-        }
-
-        return () => {
-            document.removeEventListener('keydown', handleKeyDown);
-            document.removeEventListener('keyup', handleKeyUp);
-            document.removeEventListener('mousemove', handleMouseMove);
-            document.removeEventListener('touchmove', handleTouchMove);
-            document.removeEventListener('touchend', handleTouchEnd);
+        const eventElement = document.querySelector('.container-100');
+        if(eventElement !== null) {
+            document.addEventListener('keydown', handleKeyDown);
+            document.addEventListener('keyup', handleKeyUp);
+            eventElement.addEventListener('mousemove', handleMouseMove);
+            eventElement.addEventListener('touchmove', handleTouchMove, {passive: false});
+            eventElement.addEventListener('touchend', handleTouchEnd, {passive: false});
             if(touchEvents === false) {
-                document.removeEventListener('mousedown', handleMouseDown);
-                document.removeEventListener('mouseup', handleMouseUp);    
+                eventElement.addEventListener('mousedown', handleMouseDown);
+                eventElement.addEventListener('mouseup', handleMouseUp);    
             }
-        };
+    
+            return () => {
+                document.removeEventListener('keydown', handleKeyDown);
+                document.removeEventListener('keyup', handleKeyUp);
+                eventElement.removeEventListener('mousemove', handleMouseMove);
+                eventElement.removeEventListener('touchmove', handleTouchMove);
+                eventElement.removeEventListener('touchend', handleTouchEnd);
+                if(touchEvents === false) {
+                    eventElement.removeEventListener('mousedown', handleMouseDown);
+                    eventElement.removeEventListener('mouseup', handleMouseUp);    
+                }
+            };    
+        }
     }, [controlsState, touchEvents]);
 
     const mouseCoorHeightModifier = touchEvents === true ? (window.innerHeight - 125) : (window.innerHeight / 2);

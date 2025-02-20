@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react';
-import { BrandHeader } from '../components';
+import { BrandHeader } from '../components/brand/BrandHeader';
 import { Provider } from 'react-redux';
 import store from '../store';
 

@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react';
-import { BrandLanding } from '../components';
+import { BrandLanding } from '../components/brand/BrandLanding';
 
 const meta = {
   title: 'Brand/Landing',
