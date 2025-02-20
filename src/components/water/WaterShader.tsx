@@ -133,12 +133,12 @@ const WaterShader: React.FC<WaterShaderProps> = ({
         vec3 gray = vec3(avg, avg, avg);
         gl_FragColor = vec4(mix(gray, mixColor.rgb, saturation), mixColor.a);
       }
-    `,
+    `
   };
 
   useEffect(() => {
     const interval = setInterval(() => {
-      uniforms.mouseClicks.value[mouseClicks % numberOfWaves] = new Vector3((Math.random() * 60) - 30, (Math.random() * 60) - 30, 0);
+      uniforms.mouseClicks.value[mouseClicks % numberOfWaves].set((Math.random() * 60) - 30, (Math.random() * 60) - 30, 0);
       uniforms.clickMagnitudes.value[mouseClicks % numberOfWaves] = 0.1;
       mouseClicks++;
     }, randomRippleInterval);

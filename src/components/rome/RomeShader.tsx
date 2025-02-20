@@ -65,6 +65,7 @@ const RomeShaderCanvas: React.FC<RomeShaderCanvasProps> = ({
                 zoomSpeed={1}
                 panSpeed={1}
                 rotateSpeed={1}
+                maxPolarAngle={Math.PI/1.8}
             />
         </Canvas>
     )
