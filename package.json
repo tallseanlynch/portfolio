@@ -6,11 +6,11 @@
   "scripts": {
     "dev": "vite",
     "vite-host": "vite --host",
-    "build": "tsc -b && vite build",
+    "build": "tsc -b && vite build && npm run build-storybook",
     "lint": "eslint .",
     "preview": "vite preview",
     "storybook": "storybook dev -p 6006",
-    "build-storybook": "storybook build"
+    "build-storybook": "storybook build -o ./storybook"
   },
   "dependencies": {
     "@react-three/drei": "^9.121.4",
