@@ -72,6 +72,7 @@ const RomeGroundRippleShader: React.FC = (): JSX.Element => {
                     }
                 }
             }
+            // gl_FragColor = vec4(positionDiff, positionDiff, positionDiff, positionDiff /2.0); // Red color
             gl_FragColor = vec4(positionDiff, positionDiff, positionDiff, positionDiff /2.0); // Red color
         }
     `,

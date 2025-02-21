@@ -10,20 +10,19 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "storybook": "storybook dev -p 6006",
-    "build-storybook": "storybook build -o ./dist/storybook"
+    "build-storybook": "storybook build -o ./storybook"
   },
   "dependencies": {
-    "@react-three/drei": "^10.0.0",
-    "@react-three/fiber": "^9.0.4",
-    "@react-three/postprocessing": "^3.0.4",
+    "@react-three/drei": "^9.121.4",
+    "@react-three/fiber": "^8.17.12",
     "@reduxjs/toolkit": "^2.5.1",
     "@types/ws": "^8.5.14",
-    "react": "^19.0.0",
-    "react-dom": "^19.0.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
     "react-redux": "^9.2.0",
-    "react-router-dom": "^7.2.0",
+    "react-router-dom": "^7.1.5",
     "sharp": "^0.33.5",
-    "three": "^0.173.0",
+    "three": "^0.172.0",
     "ws": "^8.18.0"
   },
   "devDependencies": {

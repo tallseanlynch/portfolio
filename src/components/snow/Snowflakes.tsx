@@ -41,6 +41,7 @@ const Snowflakes: React.FC<SnowflakesProps> = ({ count = 10000, scale = 100 }) =
         <points>
             <bufferGeometry attach="geometry">
                 <bufferAttribute
+                    args={[positions, count]}
                     ref={bufferRef}
                     attach={'attributes-position'}
                     array={positions}

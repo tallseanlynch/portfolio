@@ -27,7 +27,7 @@ const RomeRain: React.FC = ():JSX.Element => {
         -Math.cos(lineDirection),
         0
     ).multiplyScalar(.05);
-    const instanceCount = 200;
+    const instanceCount = 1000;
     const instancedMesh = new InstancedMesh(geo, mat, instanceCount);
     instancedMesh.position.set(-2.5, 0, -2.5);
     for (let instanceIndex = 0; instanceIndex < instanceCount; instanceIndex++) {
