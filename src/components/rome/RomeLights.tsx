@@ -70,10 +70,10 @@ const RomeLights: React.FC = (): JSX.Element => {
 
     return (
         <>
-            <RomeLight position={new Vector3(-1.75, .5, 1.5)} backLight={true} castShadow={true} />
-            <RomeLight position={new Vector3(1.75, .5, 1.5)} backLight={true} castShadow={true} />
-            <RomeLight position={new Vector3(-.75, .5, .5)} backLight={true} castShadow={true} />
-            <RomeLight position={new Vector3(.75, .5, .5)} backLight={true} castShadow={true} />
+            <RomeLight position={new Vector3(-1.75, .5, 1.5)} backLight={true} />
+            <RomeLight position={new Vector3(1.75, .5, 1.5)} backLight={true} />
+            <RomeLight position={new Vector3(-.75, .5, .5)} backLight={true} />
+            <RomeLight position={new Vector3(.75, .5, .5)} backLight={true} />
             <RomeLight position={new Vector3(-.125, 0.25, -1)} backLight={true} />
             <RomeLight position={new Vector3(.125, 0.25, -1)} backLight={true} />
             <RomeLight position={new Vector3(-.125, 0.25, -2)} backLight={true} />

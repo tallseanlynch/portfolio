@@ -19,6 +19,7 @@ import { RomeBushes } from './RomeBushes';
 import { RomeLights } from './RomeLights';
 import { RomeRain } from './RomeRain';
 import { RomeLightningBolt } from './RomeLightningBolt';
+import { RomeDistanceRing } from './RomeDistanceRing';
 
 const RomeShader: React.FC = (): JSX.Element => {
     useFrame(({camera }) => {
@@ -58,6 +59,7 @@ const RomeShader: React.FC = (): JSX.Element => {
                 />
                 <RomeLights />
                 <RomeLightningBolt />
+                <RomeDistanceRing />
             </group>
         </>
     )

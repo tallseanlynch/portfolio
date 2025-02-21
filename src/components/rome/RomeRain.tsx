@@ -9,8 +9,10 @@ import {
 } from 'three';
 import { useFrame } from '@react-three/fiber';
 import { whiteColor } from './romeColors';
+import { isMobileDevice } from '../../assets/js/util';
 
 const RomeRain: React.FC = ():JSX.Element => {
+    const mobileDevice = isMobileDevice();
     const positionInterval = 5;
     const matrixCalcObject = new Object3D();
     const mat = new MeshBasicMaterial(
@@ -27,7 +29,7 @@ const RomeRain: React.FC = ():JSX.Element => {
         -Math.cos(lineDirection),
         0
     ).multiplyScalar(.05);
-    const instanceCount = 1000;
+    const instanceCount = mobileDevice ? 200 : 1000;
     const instancedMesh = new InstancedMesh(geo, mat, instanceCount);
     instancedMesh.position.set(-2.5, 0, -2.5);
     for (let instanceIndex = 0; instanceIndex < instanceCount; instanceIndex++) {

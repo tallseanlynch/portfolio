@@ -73,7 +73,16 @@ const RomeGroundRippleShader: React.FC = (): JSX.Element => {
                 }
             }
             // gl_FragColor = vec4(positionDiff, positionDiff, positionDiff, positionDiff /2.0); // Red color
-            gl_FragColor = vec4(positionDiff, positionDiff, positionDiff, positionDiff /2.0); // Red color
+            float distanceFromOrigin = distance(vUv, vec2(0.5, 0.5)) * 2.0;
+            if(distanceFromOrigin < .75) {
+                distanceFromOrigin = 0.0;
+            }
+            if(distanceFromOrigin > .75) {
+                distanceFromOrigin = (distanceFromOrigin - .75) * 4.0;
+            }
+            vec4 positionDiffVector4 = vec4(positionDiff, positionDiff, positionDiff, positionDiff /2.0);
+            vec4 colorBlackVector4 = vec4(0.0, 0.0, 0.0, 1.0);
+            gl_FragColor = mix(positionDiffVector4, colorBlackVector4, distanceFromOrigin); // Red color
         }
     `,
   };
@@ -114,7 +123,7 @@ const RomeGroundRippleShader: React.FC = (): JSX.Element => {
         rotation={planeRotation}
       >
         <planeGeometry
-          args={[5, 5, 1, 1]}
+          args={[5.5, 5.5, 1, 1]}
         />
         <shaderMaterial
           ref={materialRef}
