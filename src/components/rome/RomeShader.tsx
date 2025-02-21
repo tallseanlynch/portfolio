@@ -18,10 +18,10 @@ import { RomeTrees } from './RomeTrees';
 import { RomeBushes } from './RomeBushes';
 import { RomeLights } from './RomeLights';
 import { RomeRain } from './RomeRain';
+import { RomeLightningBolt } from './RomeLightningBolt';
 
 const RomeShader: React.FC = (): JSX.Element => {
-
-    useFrame(({camera}) => {
+    useFrame(({camera }) => {
         if (camera.position.y < -1) camera.position.y = -1; // Enforce y > 0
     });
 
@@ -57,6 +57,7 @@ const RomeShader: React.FC = (): JSX.Element => {
                     groupRotation={new Euler(0, Math.PI * -.35, 0)}
                 />
                 <RomeLights />
+                <RomeLightningBolt />
             </group>
         </>
     )
