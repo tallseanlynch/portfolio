@@ -3,7 +3,7 @@ import '../assets/css/brand.css';
 
 const importImages = async () => {
     const sprites = await Promise.all([
-        import('/rome/arch-50-compressed.png'),
+        import('/rome/arch-50-compressed-gray-compressed.png'),
         import('/rome/bush-0-50-compressed.png'),
         import('/rome/light-post-0-50-compressed.png'),
         import('/rome/tree-0-inverse-mix-1-50-compressed.png'),

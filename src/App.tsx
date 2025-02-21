@@ -9,7 +9,8 @@ import './assets/css/brand.css';
 import {
   useEffect,
   memo,
-  useState
+  useState,
+  Suspense
 } from 'react';
 import { useSelector } from 'react-redux';
 
@@ -57,6 +58,14 @@ const calculateStartingSceneParams = (): string => {
   return startingSceneParam;
 };
 
+const Loading = () => {
+    return (
+        <div className='loading-container'>
+          <div className="lds-ring"><div></div><div></div><div></div><div></div></div>
+        </div>
+    )
+}
+
 const App = (): JSX.Element => {
   const sceneCounter = useSelector((state: SceneCounterState) => state.sceneCounter.value);
   const [startingSceneIndex, setStartingSceneIndex] = useState(0);
@@ -73,10 +82,12 @@ const App = (): JSX.Element => {
 
   return (
     <>
-      <div className='container-100'>
-        <SceneToRender />
-      </div>
-      <BrandSection />
+      <Suspense fallback={<Loading />}>
+        <div className='container-100'>
+            <SceneToRender />
+          </div>
+          <BrandSection />
+      </Suspense>
     </>
   );
 }
