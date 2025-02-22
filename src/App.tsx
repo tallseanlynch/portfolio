@@ -86,9 +86,9 @@ const App = (): JSX.Element => {
         <div className='container-100'>
             <SceneToRender />
           </div>
-          <BrandSection />
       </Suspense>
-    </>
+      <BrandSection />
+      </>
   );
 }
 
