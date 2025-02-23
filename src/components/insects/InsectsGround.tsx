@@ -228,7 +228,7 @@ const InsectsGround = () => {
                 skyColor={skyColorLight}
                 instanceNumber={2500}
                 instanceOrigin={new Vector3(0,0,0)}
-                planeGeometryArgs={[0.15, 1, 1, 4]}
+                planeGeometryArgs={[0.05, 1, 1, 4]}
                 placementScale={50}
                 instanceScale={1.5}
             />

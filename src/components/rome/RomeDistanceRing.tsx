@@ -21,7 +21,7 @@ const RomeDistanceMaterial: React.FC = (): JSX.Element => {
 
 const RomeDistanceRing = () => {
     return (
-        <mesh position={[0, 3, 0]} scale={[20, 1, 20]}>
+        <mesh position={[0, 3, 0]} scale={[30, 1, 30]}>
             <cylinderGeometry args={[1, 1, 30, 16, 1, true]} />
             <RomeDistanceMaterial />
         </mesh>
