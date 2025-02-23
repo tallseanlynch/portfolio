@@ -93,7 +93,7 @@ const RomeTrees: React.FC = (): JSX.Element => {
             />
             <RomeTreeRing
                 texture={treeTexture1}
-                distance={20}
+                distance={12.5}
             />
             <mesh
                 position={[-.75, .66, 0.2]}
