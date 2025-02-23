@@ -26,7 +26,7 @@ const skyDomeShader = {
 
 const InsectsSkyDome = () => {
     return (
-        <mesh scale={[100, 100, 100]}>
+        <mesh scale={[300, 300, 300]}>
             <sphereGeometry />
             <shaderMaterial
                 vertexShader={skyDomeShader.vertexShader}

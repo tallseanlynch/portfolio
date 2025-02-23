@@ -2,19 +2,29 @@ import {
     Canvas
 } from '@react-three/fiber';
 import {
-    NoToneMapping
+    NoToneMapping,
+    Vector3
 } from 'three';
 import { isTouchDevice } from '../../assets/js/util';
 import { InsectsSkyDome } from './InsectsSkyDome';
 import { InsectsGround } from './InsectsGround';
 import { InsectsWebSocketUI } from './InsectsWebSocketUI';
-
+import { InsectsClouds } from './InsectsClouds';
+import { whiteColor, skyColorLight } from './insectsColors';
 
 const InsectsShader: React.FC = (): JSX.Element => {
     return (
         <>
             <InsectsGround />
             <InsectsSkyDome />
+            <InsectsClouds 
+                whiteColor={whiteColor}
+                skyColor={skyColorLight}
+                instanceNumber={800}
+                instanceOrigin={new Vector3(0,20,0)}
+                placementScale={300}
+                instanceScale={5}            
+            />
             <perspectiveCamera />
             <InsectsWebSocketUI />
         </>

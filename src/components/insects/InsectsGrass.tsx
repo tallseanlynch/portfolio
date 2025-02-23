@@ -40,8 +40,11 @@ const grassShader = {
     uniform vec3 baseColor;
     void main() {
         float clarity = ( vUv.y * 0.5 ) + 0.5;
+        // vec3 positionColor = mix(skyColorLight, vPosition, .05);
+        // vec3 mixSkyColorLight = mix(positionColor, baseColor, clarity);
         vec3 mixSkyColorLight = mix(skyColorLight, baseColor, clarity);
-        mixSkyColorLight = mix(mixSkyColorLight, vPosition / 10.0, .125);
+        //mixSkyColorLight = mix(mixSkyColorLight, vPosition / 10.0, .125);
+        // gl_FragColor = vec4(mix(mixSkyColorLight, vPosition, .0125), 1.0);
         gl_FragColor = vec4( mixSkyColorLight, 1 );
     }
   `

@@ -8,7 +8,6 @@ const BrandSection: React.FC = () => {
   const [brandClickStatus, setBrandClickStatus] = useState<boolean>(false);
 
   useEffect(() => {
-    console.log('BrandSection useEffect')
     const handleBrandClick = (): void => {
       setBrandClickStatus(true);
       if (brandRef.current) {

@@ -123,7 +123,6 @@ const RomeLightningBolt = () => {
     setInterval(() => {
         if(skyDomeRef !== null && skyDomeRef.current && lightningBoltRef && lightningBoltRef.current) {
             lightningBoltRef.current.uniforms.baseStrikePosition.value.set((Math.random() * 4) -2.0, 0.0, Math.random());
-            console.log('baseStrikePosition');
         }
     }, 7500)
 
