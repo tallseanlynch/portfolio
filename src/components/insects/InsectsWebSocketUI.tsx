@@ -3,7 +3,7 @@ import {
     useEffect,
     useRef
 } from 'react';
-import { Vector3 } from 'three';
+import { Vector3, Color } from 'three';
 import { ClientData, EventData } from './websocket-types';
 import { InsectsControls } from './InsectsControls';
 import { InsectsSocketInsect } from './InsectsSocketInsect';
@@ -12,8 +12,8 @@ import { colors } from './insectsColors';
 const localhostAddress = 'ws://localhost:8080';
 const gcpAddress = 'wss://websocket-service-943494934642.us-central1.run.app';
 const wssAddress = window.location.href.includes('localhost') ? localhostAddress : gcpAddress;
-// const clientColor = new Color(Math.random(), Math.random(), Math.random());
-const clientColor = colors[Math.floor(Math.random() * colors.length)];
+const clientColorNumber = Math.floor(Math.random() * colors.length);
+const clientColor = colors[clientColorNumber];
 const patternSpotMagnitude = .45;
 const clientPatternSpots = [
     new Vector3().random().multiplyScalar(patternSpotMagnitude),
@@ -50,28 +50,42 @@ const InsectsWebSocketUI = () => {
            console.log('WebSocket Error: ', error);
         };
 
+        console.log('InsectsWebSocketUI')
+
         return () => {
             ws.current?.close();
         };
     }, []);
 
+    // useEffect(() => {
+    //     console.log(`${JSON.stringify(clientData, null, 2)}`);
+    // }, [clientData])
+
     const handleIncomingMessage = (eventData: EventData) => {
         switch (eventData.messageType) {
             case 'connectedFromServer':
-                setClientData((prevData) => ({ ...prevData, uuid: eventData.payload.uuid }));
+                setClientData((prevData) => {return { 
+                    ...prevData, 
+                    uuid: eventData.payload.uuid
+                }});
                 break;
             case 'disconnectedFromServer':
-                setClientData((prevData) => ({ ...prevData, status: eventData.messageType }));
+                setClientData((prevData) => {return { ...prevData, status: eventData.messageType }});
                 break;
             case 'broadcastUpdateFromServer': {
                 const { uuid, updatePayload } = eventData.payload;
-                setClientData((prevData) => ({
-                    ...prevData,
-                    memory: {
-                        ...prevData.memory,
-                        [uuid]: { ...prevData.memory[uuid], ...updatePayload.payload }
+                // if(updatePayload.payload.insectColor !== undefined) {
+                //     console.log(updatePayload.payload.insectColor);
+                // }
+                setClientData((prevData) => {
+                    return {
+                        ...prevData,
+                        memory: {
+                            ...prevData.memory,
+                            [uuid]: { ...prevData.memory[uuid], ...updatePayload }
+                        }    
                     }
-                }));
+                });
             }
                 break;
             case 'broadcastDisconnectedFromServer': {
@@ -112,12 +126,25 @@ const InsectsWebSocketUI = () => {
                 clientColor={clientColor}
                 clientPatternSpots={clientPatternSpots}
             />
-            {Object.keys(clientData.memory).map((socketInsectKey, index) => {
+            {Object.keys(clientData.memory).map(socketInsectKey => {
+                
+                const convertArrayToVector3Array = (spotsArray) => {
+                    return [
+                        new Vector3().set(spotsArray[0].x, spotsArray[0].y, spotsArray[0].z),
+                        new Vector3().set(spotsArray[1].x, spotsArray[1].y, spotsArray[1].z),
+                        new Vector3().set(spotsArray[2].x, spotsArray[2].y, spotsArray[2].z),
+                        new Vector3().set(spotsArray[3].x, spotsArray[3].y, spotsArray[3].z),
+                        new Vector3().set(spotsArray[4].x, spotsArray[4].y, spotsArray[4].z),    
+                    ]
+                }
+
                 return (
                     <InsectsSocketInsect
-                        key={index}
+                        key={socketInsectKey}
                         position={clientData.memory[socketInsectKey].insectPosition}
                         rotation={clientData.memory[socketInsectKey].insectRotation}
+                        color={new Color(clientData.memory[socketInsectKey].insectColor)}
+                        patternSpots={convertArrayToVector3Array(clientData.memory[socketInsectKey].insectPatternSpots)}
                     />
                 )
             })}

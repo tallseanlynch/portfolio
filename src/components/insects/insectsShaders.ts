@@ -37,7 +37,7 @@ const insectWingsShader = {
                     if(flipX) {
                         patternSpot.x = patternSpot.x * -1.0;
                     }
-                    patternSpot.y -= .1;
+                    patternSpot.y -= .125;
 
                     float distanceFromSpot = distance(patternSpot, vPosition);
                     if(distanceFromSpot < .6) {

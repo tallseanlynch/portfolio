@@ -11,22 +11,24 @@ import {
 import {
     Vector3,
     Euler,
-    Mesh,
     Group,
     TextureLoader,
     DoubleSide,
-    Quaternion
+    Quaternion,
+    Color
 } from 'three';
 import {
-    skyColorLight,
-    whiteColor
+    skyColorLight
+    // whiteColor
 } from './insectsColors';
 import { insectBodyShader, insectWingsShader } from './insectsShaders';
 
 
 interface SocketInsectsProps {
     position: Vector3Type,
-    rotation: EulerType
+    rotation: EulerType,
+    color: Color,
+    patternSpots: Vector3Type[]
 }
 const lerpCalcVector3A = new Vector3();
 const lerpCalcVector3B = new Vector3();
@@ -37,11 +39,25 @@ const currentQuaternionB = new Quaternion();
 const lerpEulerCalcA = new Euler();
 const lerpEulerCalcB = new Euler();
 const resultEuler = new Euler();
+// const initialPatternSpots = [
+//     new Vector3(),
+//     new Vector3(),
+//     new Vector3(),
+//     new Vector3(),
+//     new Vector3()
+// ]
+// const convertArrayToVector3Array = (spotsArray) => {
+//     initialPatternSpots[0].set(spotsArray[0].x, spotsArray[0].y, spotsArray[0].z);
+//     initialPatternSpots[1].set(spotsArray[1].x, spotsArray[1].y, spotsArray[1].z);
+//     initialPatternSpots[2].set(spotsArray[2].x, spotsArray[2].y, spotsArray[2].z);
+//     initialPatternSpots[3].set(spotsArray[3].x, spotsArray[3].y, spotsArray[3].z);
+//     initialPatternSpots[4].set(spotsArray[4].x, spotsArray[4].y, spotsArray[4].z);
+//     return initialPatternSpots
+// }
 
-const InsectsSocketInsect: React.FC<SocketInsectsProps> = ({position, rotation}) => {
+const InsectsSocketInsect: React.FC<SocketInsectsProps> = ({position, rotation, color, patternSpots}) => {
     const butterflyWingTextureLeft = useLoader(TextureLoader, './insects/butterfly-wings.png');
     const groupRef = useRef(null);
-    const backDirMeshRef = useRef<Mesh | null>(null);
     const insectGroupRef = useRef<Group | null>(null);
     const [insectWingRotation, setInsectWingRotation] = useState<number>(0);
     const [insectPosition, setInsectPosition] = useState<Vector3Type>(position);
@@ -52,7 +68,7 @@ const InsectsSocketInsect: React.FC<SocketInsectsProps> = ({position, rotation})
             lerpCalcVector3A.set(current[0], current[1], current[2]);
             lerpCalcVector3B.set(position[0], position[1], position[2]);
             lerpCalcVector3C.lerpVectors(lerpCalcVector3A, lerpCalcVector3B, .1);
-            return [lerpCalcVector3C.x, lerpCalcVector3C.y, lerpCalcVector3C.z]
+            return [lerpCalcVector3C.x, lerpCalcVector3C.y, lerpCalcVector3C.z];
         })
 
         setInsectRotation(current => {
@@ -68,19 +84,23 @@ const InsectsSocketInsect: React.FC<SocketInsectsProps> = ({position, rotation})
         setInsectWingRotation(Math.sin(clock.elapsedTime * 6) / (1.5));
     });
 
+//    console.log('color', insectColor)
+//    console.log('patternSpots', insectPatternSpots)
+
     const butterflyShaderLeftUniforms = {
         wingTexture: {
             value: butterflyWingTextureLeft
         },
         color: {
-            value: whiteColor
+            value: color
         },
         skyColorLight: {
             value: skyColorLight
         },
         flipX: {
             value: false
-        }
+        },
+        clientPatternSpots: { value: patternSpots }
     };
 
     const butterflyShaderRightUniforms = {
@@ -88,19 +108,20 @@ const InsectsSocketInsect: React.FC<SocketInsectsProps> = ({position, rotation})
             value: butterflyWingTextureLeft
         },
         color: {
-            value: whiteColor
+            value: color
         },
         skyColorLight: {
             value: skyColorLight
         },
         flipX: {
             value: true
-        }
+        },
+        clientPatternSpots: { value: patternSpots }
     };
 
     const butterflyShaderBodyUniforms = {
         color: {
-            value: whiteColor
+            value: color
         },
         skyColorLight: {
             value: skyColorLight
@@ -124,7 +145,7 @@ const InsectsSocketInsect: React.FC<SocketInsectsProps> = ({position, rotation})
                     >
                         <cylinderGeometry args={[.02, .02, .75, 4, 1]} />
                         <meshBasicMaterial 
-                            color={skyColorLight}
+                            color={color}
                         />
                     </mesh>
                     <mesh
@@ -133,7 +154,7 @@ const InsectsSocketInsect: React.FC<SocketInsectsProps> = ({position, rotation})
                     >
                         <cylinderGeometry args={[.02, .02, .75, 4, 1]} />
                         <meshBasicMaterial 
-                            color={skyColorLight}
+                            color={color}
                         />
                     </mesh>
 
@@ -177,13 +198,6 @@ const InsectsSocketInsect: React.FC<SocketInsectsProps> = ({position, rotation})
                         />
                     </mesh>
                 </group>
-                <mesh
-                    ref={backDirMeshRef}
-                    position={[0, 0, 3]}
-                >
-                    <boxGeometry args={[.05, .05, .01, 1, 1]} />
-                    <meshStandardMaterial color={0x00ff00} transparent={true} opacity={0} />
-                </mesh>
             </group>
         </>
     );

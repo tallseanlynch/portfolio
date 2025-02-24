@@ -78,12 +78,19 @@ const InsectsControls: React.FC<InsectsControlsProps> = ({
     useEffect(() => {
         // send updates to server
         if(frameCount % 10 === 0) {
-            sendUpdate({
-                payload: {
+           if(frameCount < 510) {
+                sendUpdate({
+                    insectPosition,
+                    insectRotation,
+                    insectColor: clientColor,
+                    insectPatternSpots: clientPatternSpots
+                })    
+            } else {
+                sendUpdate({
                     insectPosition,
                     insectRotation
-                }
-            })
+                })    
+            }
         }
     }, [frameCount]);
 
