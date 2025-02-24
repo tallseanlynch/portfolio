@@ -3,13 +3,25 @@ import {
     useEffect,
     useRef
 } from 'react';
+import { Vector3 } from 'three';
 import { ClientData, EventData } from './websocket-types';
 import { InsectsControls } from './InsectsControls';
 import { InsectsSocketInsect } from './InsectsSocketInsect';
+import { colors } from './insectsColors';
 
 const localhostAddress = 'ws://localhost:8080';
 const gcpAddress = 'wss://websocket-service-943494934642.us-central1.run.app';
 const wssAddress = window.location.href.includes('localhost') ? localhostAddress : gcpAddress;
+// const clientColor = new Color(Math.random(), Math.random(), Math.random());
+const clientColor = colors[Math.floor(Math.random() * colors.length)];
+const patternSpotMagnitude = .45;
+const clientPatternSpots = [
+    new Vector3().random().multiplyScalar(patternSpotMagnitude),
+    new Vector3().random().multiplyScalar(patternSpotMagnitude),
+    new Vector3().random().multiplyScalar(patternSpotMagnitude),
+    new Vector3().random().multiplyScalar(patternSpotMagnitude),
+    new Vector3().random().multiplyScalar(patternSpotMagnitude)
+]
 
 const InsectsWebSocketUI = () => {
     const [clientData, setClientData] = useState<ClientData>({ uuid: '', status: 'unconnected', memory: {} });
@@ -95,7 +107,11 @@ const InsectsWebSocketUI = () => {
 
     return (
         <>
-            <InsectsControls sendUpdate={sendUpdate}/>
+            <InsectsControls 
+                sendUpdate={sendUpdate} 
+                clientColor={clientColor}
+                clientPatternSpots={clientPatternSpots}
+            />
             {Object.keys(clientData.memory).map((socketInsectKey, index) => {
                 return (
                     <InsectsSocketInsect

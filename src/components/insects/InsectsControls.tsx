@@ -19,10 +19,11 @@ import {
     Group,
     TextureLoader,
     DoubleSide,
+    Color
 } from 'three';
 import {
     skyColorLight,
-    whiteColor
+    // whiteColor
 } from './insectsColors';
 import { isTouchDevice } from '../../assets/js/util';
 import { insectBodyShader, insectWingsShader } from './insectsShaders';
@@ -45,11 +46,16 @@ const movementRate = .0125;
 
 interface InsectsControlsProps {
     sendUpdate: (payload) => void;
+    clientColor: Color;
+    clientPatternSpots: Vector3[]
 }
 
-const InsectsControls: React.FC<InsectsControlsProps> = ({sendUpdate}) => {
+const InsectsControls: React.FC<InsectsControlsProps> = ({
+    sendUpdate,
+    clientColor,
+    clientPatternSpots
+}) => {
     const butterflyWingTextureLeft = useLoader(TextureLoader, './insects/butterfly-wings.png');
-    const butterflyWingTextureRight = useLoader(TextureLoader, './insects/butterfly-wings-1.png');
     const [mouseCoors, setMouseCoors] = useState<Vector2Type>([0, 0])
     const groupRef = useRef(null);
     const backDirMeshRef = useRef<Mesh | null>(null);
@@ -314,36 +320,24 @@ const InsectsControls: React.FC<InsectsControlsProps> = ({sendUpdate}) => {
 
 
     const butterflyShaderLeftUniforms = {
-        wingTexture: {
-            value: butterflyWingTextureLeft
-        },
-        color: {
-            value: whiteColor
-        },
-        skyColorLight: {
-            value: skyColorLight
-        }
+        wingTexture: { value: butterflyWingTextureLeft },
+        color: { value: clientColor },
+        skyColorLight: { value: skyColorLight },
+        flipX: { value: false },
+        clientPatternSpots: { value: clientPatternSpots }
     };
 
     const butterflyShaderRightUniforms = {
-        wingTexture: {
-            value: butterflyWingTextureRight
-        },
-        color: {
-            value: whiteColor
-        },
-        skyColorLight: {
-            value: skyColorLight
-        }
+        wingTexture: { value: butterflyWingTextureLeft },
+        color: { value: clientColor },
+        skyColorLight: { value: skyColorLight },
+        flipX: { value: true },
+        clientPatternSpots: { value: clientPatternSpots }
     };
 
     const butterflyShaderBodyUniforms = {
-        color: {
-            value: whiteColor
-        },
-        skyColorLight: {
-            value: skyColorLight
-        }
+        color: { value: clientColor },
+        skyColorLight: { value: skyColorLight }
     };
 
     return (
@@ -363,7 +357,7 @@ const InsectsControls: React.FC<InsectsControlsProps> = ({sendUpdate}) => {
                     >
                         <cylinderGeometry args={[.02, .02, .75, 4, 1]} />
                         <meshBasicMaterial 
-                            color={skyColorLight}
+                            color={clientColor}
                         />
                     </mesh>
                     <mesh
@@ -372,7 +366,7 @@ const InsectsControls: React.FC<InsectsControlsProps> = ({sendUpdate}) => {
                     >
                         <cylinderGeometry args={[.02, .02, .75, 4, 1]} />
                         <meshBasicMaterial 
-                            color={skyColorLight}
+                            color={clientColor}
                         />
                     </mesh>
 

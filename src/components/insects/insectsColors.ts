@@ -8,6 +8,21 @@ const yellowColor = new Color(0xffff00);
 const roseColor = new Color(0xff6f00);
 const dirtColor = new Color(0x9e9d24);
 
+const clientPink = new Color(0xFBE9E7);
+const clientGreen = new Color(0xF0F4C3);
+const clientPurple = new Color(0xC5CAE9);
+const clientBrown = new Color(0xD7CCC8);
+const clientGray = new Color(0xCFD8DC);
+
+const colors = [
+//    new Color(0x000000)
+    clientGray,
+    clientBrown,
+    clientPurple,
+    clientPink,
+    clientGreen
+]
+
 export { 
     grassBaseColor,
     dryTallGrassColor,
@@ -15,5 +30,6 @@ export {
     whiteColor,
     yellowColor,
     roseColor,
-    dirtColor
+    dirtColor,
+    colors
 }

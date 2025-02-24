@@ -40,7 +40,6 @@ const resultEuler = new Euler();
 
 const InsectsSocketInsect: React.FC<SocketInsectsProps> = ({position, rotation}) => {
     const butterflyWingTextureLeft = useLoader(TextureLoader, './insects/butterfly-wings.png');
-    const butterflyWingTextureRight = useLoader(TextureLoader, './insects/butterfly-wings-1.png');
     const groupRef = useRef(null);
     const backDirMeshRef = useRef<Mesh | null>(null);
     const insectGroupRef = useRef<Group | null>(null);
@@ -78,18 +77,24 @@ const InsectsSocketInsect: React.FC<SocketInsectsProps> = ({position, rotation})
         },
         skyColorLight: {
             value: skyColorLight
+        },
+        flipX: {
+            value: false
         }
     };
 
     const butterflyShaderRightUniforms = {
         wingTexture: {
-            value: butterflyWingTextureRight
+            value: butterflyWingTextureLeft
         },
         color: {
             value: whiteColor
         },
         skyColorLight: {
             value: skyColorLight
+        },
+        flipX: {
+            value: true
         }
     };
 
