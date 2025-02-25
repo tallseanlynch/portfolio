@@ -6,7 +6,7 @@ import { visualizer } from 'rollup-plugin-visualizer';
 export default defineConfig({
   plugins: [
     react(),
-    visualizer({ open: true, filename: 'bundle-analysis.html' })
+    visualizer({ filename: 'bundle-analysis.html' })
   ],
   optimizeDeps: {
     include: ["three"]

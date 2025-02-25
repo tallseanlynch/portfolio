@@ -19,7 +19,6 @@ import {
 } from 'three';
 import {
     skyColorLight
-    // whiteColor
 } from './insectsColors';
 import { insectBodyShader, insectWingsShader } from './insectsShaders';
 
@@ -30,6 +29,7 @@ interface SocketInsectsProps {
     color: Color,
     patternSpots: Vector3Type[]
 }
+
 const lerpCalcVector3A = new Vector3();
 const lerpCalcVector3B = new Vector3();
 const lerpCalcVector3C = new Vector3();
@@ -39,21 +39,6 @@ const currentQuaternionB = new Quaternion();
 const lerpEulerCalcA = new Euler();
 const lerpEulerCalcB = new Euler();
 const resultEuler = new Euler();
-// const initialPatternSpots = [
-//     new Vector3(),
-//     new Vector3(),
-//     new Vector3(),
-//     new Vector3(),
-//     new Vector3()
-// ]
-// const convertArrayToVector3Array = (spotsArray) => {
-//     initialPatternSpots[0].set(spotsArray[0].x, spotsArray[0].y, spotsArray[0].z);
-//     initialPatternSpots[1].set(spotsArray[1].x, spotsArray[1].y, spotsArray[1].z);
-//     initialPatternSpots[2].set(spotsArray[2].x, spotsArray[2].y, spotsArray[2].z);
-//     initialPatternSpots[3].set(spotsArray[3].x, spotsArray[3].y, spotsArray[3].z);
-//     initialPatternSpots[4].set(spotsArray[4].x, spotsArray[4].y, spotsArray[4].z);
-//     return initialPatternSpots
-// }
 
 const InsectsSocketInsect: React.FC<SocketInsectsProps> = ({position, rotation, color, patternSpots}) => {
     const butterflyWingTextureLeft = useLoader(TextureLoader, './insects/butterfly-wings.png');
@@ -83,9 +68,6 @@ const InsectsSocketInsect: React.FC<SocketInsectsProps> = ({position, rotation, 
 
         setInsectWingRotation(Math.sin(clock.elapsedTime * 6) / (1.5));
     });
-
-//    console.log('color', insectColor)
-//    console.log('patternSpots', insectPatternSpots)
 
     const butterflyShaderLeftUniforms = {
         wingTexture: {

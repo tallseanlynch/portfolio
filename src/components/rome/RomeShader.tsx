@@ -76,7 +76,6 @@ const RomeShaderCanvas: React.FC<RomeShaderCanvasProps> = ({
     return (
         <Canvas
             scene={{ background: blackColor }}
-            shadows
             camera={{ position: new Vector3(0, .01, 2.5) }}
             className={classNames}
         >

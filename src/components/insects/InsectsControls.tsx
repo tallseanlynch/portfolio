@@ -22,8 +22,7 @@ import {
     Color
 } from 'three';
 import {
-    skyColorLight,
-    // whiteColor
+    skyColorLight
 } from './insectsColors';
 import { isTouchDevice } from '../../assets/js/util';
 import { insectBodyShader, insectWingsShader } from './insectsShaders';

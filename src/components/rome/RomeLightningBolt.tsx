@@ -124,7 +124,7 @@ const RomeLightningBolt = () => {
         if(skyDomeRef !== null && skyDomeRef.current && lightningBoltRef && lightningBoltRef.current) {
             lightningBoltRef.current.uniforms.baseStrikePosition.value.set((Math.random() * 4) -2.0, 0.0, Math.random());
         }
-    }, 7500)
+    }, 5500)
 
     useFrame(({clock }) => {
         if(skyDomeRef !== null && skyDomeRef.current && lightningBoltRef && lightningBoltRef.current) {
@@ -160,7 +160,6 @@ const RomeLightningBolt = () => {
             </mesh>
             <group position={[0, 7.5, -5]}>
                 <mesh >
-                    {/* <meshBasicMaterial color={whiteColor} /> */}
                     <shaderMaterial
                         ref={lightningBoltRef}
                         vertexShader={RomeLightningBoltShader.vertexShader}

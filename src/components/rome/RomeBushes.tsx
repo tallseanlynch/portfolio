@@ -9,7 +9,7 @@ import { whiteColor } from './romeColors';
 
 const RomeBushMaterial: React.FC = (): JSX.Element => {
     const bushTexture0 = useLoader(TextureLoader, '/rome/bush-0-50-compressed.png')
-
+    
     return (
         <meshStandardMaterial
             color={whiteColor}

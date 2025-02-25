@@ -5,15 +5,26 @@ import {
     MeshStandardMaterial,
     InstancedMesh,
     PlaneGeometry,
-    Vector3
+    Vector3,
+    NearestFilter,
+    Color
 } from 'three';
 import { whiteColor } from './romeColors';
 import { isMobileDevice } from '../../assets/js/util';
 
 const mobileDevice = isMobileDevice();
 const textureLoader = new TextureLoader();
-const treeTexture0 = textureLoader.load('/rome/tree-0-inverse-mix-1-50-compressed.png');
-const treeTexture1 = textureLoader.load('/rome/tree-0-inverse-mix-2-50-compressed.png');
+const treeTexture0 = textureLoader.load('/rome/tree-0-inverse-mix-1-50-compressed-test.png');
+const treeTexture1 = textureLoader.load('/rome/tree-0-inverse-mix-2-50-compressed-test.png');
+treeTexture0.premultiplyAlpha = true;
+treeTexture1.premultiplyAlpha = true;
+treeTexture0.minFilter = NearestFilter;
+treeTexture1.minFilter = NearestFilter;
+treeTexture0.magFilter = NearestFilter;
+treeTexture1.magFilter = NearestFilter;
+const treeTexture2 = textureLoader.load('/rome/tree-0-inverse-mix-1-50-compressed.png');
+const treeTexture3 = textureLoader.load('/rome/tree-0-inverse-mix-2-50-compressed.png');
+
 const originVector = new Vector3(0, 0, 0,);
 
 const RomeTreeMaterial0: React.FC = (): JSX.Element => {
@@ -21,7 +32,7 @@ const RomeTreeMaterial0: React.FC = (): JSX.Element => {
     return (
         <meshStandardMaterial
             color={whiteColor}
-            map={treeTexture0}
+            map={treeTexture2}
             transparent={true}
             alphaTest={0.5}
             side={DoubleSide}
@@ -34,7 +45,7 @@ const RomeTreeMaterial1: React.FC = (): JSX.Element => {
     return (
         <meshStandardMaterial
             color={whiteColor}
-            map={treeTexture1}
+            map={treeTexture3}
             transparent={true}
             alphaTest={0.5}
             side={DoubleSide}
@@ -49,7 +60,8 @@ const RomeTreeRing = ({texture, distance}) => {
         transparent: true,
         map: texture,
         alphaTest: 0.5,
-        side: DoubleSide
+        side: DoubleSide,
+        color: new Color(0xccaaaa)
     });
     const geo = new PlaneGeometry(1, 1, 1, 1);
     const instanceCount = mobileDevice ? 25 : 50;
