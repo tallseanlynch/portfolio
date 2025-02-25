@@ -183,6 +183,8 @@ const InsectsWebSocketUI = () => {
                 clientPatternSpots={clientPatternSpots}
             />
             {Object.keys(clientData.memory).map(socketInsectKey => {
+                if(clientData.memory[socketInsectKey] === undefined || clientData.memory[socketInsectKey].insectPatternSpots === undefined) { return }
+
                 const spotsArray = clientData.memory[socketInsectKey].insectPatternSpots;
                 
                 clientData.memory[socketInsectKey].patternSpotsCalc[0].set(spotsArray[0].x, spotsArray[0].y, spotsArray[0].z)
