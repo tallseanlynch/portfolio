@@ -56,7 +56,7 @@ const InsectsControls: React.FC<InsectsControlsProps> = ({
     clientColor,
     clientPatternSpots
 }) => {
-    const butterflyWingTextureLeft = useLoader(TextureLoader, './insects/butterfly-wings.png');
+    const butterflyWingTextureLeft = useLoader(TextureLoader, './insects/butterfly-wings-alpha.png');
     const [mouseCoors, setMouseCoors] = useState<Vector2Type>([0, 0])
     const groupRef = useRef(null);
     const backDirMeshRef = useRef<Mesh | null>(null);

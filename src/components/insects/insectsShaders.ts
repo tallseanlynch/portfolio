@@ -25,6 +25,7 @@ const insectWingsShader = {
                 vUvCopy.x = 1.0 - vUvCopy.x;
             }
             vec4 finalColor = texture2D(wingTexture, vUvCopy);
+            vec4 finalColorAlpha = finalColor;
             vec3 whiteColor = vec3(1.0, 1.0, 1.0);
             if(finalColor.a > 0.001) {
                 // finalColor = vec4(mix(color, skyColorLight, abs(vUvCopy.x) * 2.0), 1.0);
@@ -81,7 +82,7 @@ const insectWingsShader = {
             float saturation = 1.5;
             float avg = (finalColor.r + finalColor.g + finalColor.b) / 3.0;
             vec3 gray = vec3(avg, avg, avg);
-            gl_FragColor = vec4(mix(gray, finalColor.rgb, saturation), finalColor.a);
+            gl_FragColor = vec4(mix(gray, finalColor.rgb, saturation), finalColorAlpha.a);
 
 //            gl_FragColor = finalColor;
             // gl_FragColor = vec4(vPosition, 1.0);
