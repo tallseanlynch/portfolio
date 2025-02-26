@@ -41,7 +41,7 @@ const lerpEulerCalcB = new Euler();
 const resultEuler = new Euler();
 
 const InsectsSocketInsect: React.FC<SocketInsectsProps> = ({position, rotation, color, patternSpots}) => {
-    const butterflyWingTextureLeft = useLoader(TextureLoader, './insects/butterfly-wings.png');
+    const butterflyWingTextureLeft = useLoader(TextureLoader, './insects/butterfly-wings-alpha.png');
     const groupRef = useRef(null);
     const insectGroupRef = useRef<Group | null>(null);
     const [insectWingRotation, setInsectWingRotation] = useState<number>(0);

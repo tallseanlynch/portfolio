@@ -96,16 +96,24 @@ const InsectsControls: React.FC<InsectsControlsProps> = ({
 
     const handleKeyDown = useCallback((keyboardEvent) => {
         const key = keyboardEvent.key.toLowerCase();
-        if (controlsState[key] !== undefined) {
-            setControlsState(prevState => ({ ...prevState, [key]: true }));
-        }
+        setControlsState(prevState => {
+            if(prevState[key] !== undefined) {
+                return { ...prevState, [key]: true }
+            } else {
+                return prevState
+            }
+        })
     }, []);
 
     const handleKeyUp = useCallback((keyboardEvent) => {
         const key = keyboardEvent.key.toLowerCase();
-        if (controlsState[key] !== undefined) {
-            setControlsState(prevState => ({ ...prevState, [key]: false }));
-        }
+        setControlsState(prevState => {
+            if(prevState[key] !== undefined) {
+                return { ...prevState, [key]: false }
+            } else {
+                return prevState
+            }
+        })
     }, []);
 
     const handleMouseMove = useCallback((mouseEvent) => {
@@ -113,19 +121,21 @@ const InsectsControls: React.FC<InsectsControlsProps> = ({
             const leftMouseState = mouseEvent.clientX - (window.innerWidth / 2) < 0 && Math.abs(mouseEvent.clientX - (window.innerWidth / 2)) > 50;
             const rightMouseState = mouseEvent.clientX - (window.innerWidth / 2) > 0 && Math.abs(mouseEvent.clientX - (window.innerWidth / 2)) > 50;
 
-            if(controlsState.w === false) {
-                setControlsState(prevState => ({
-                    ...prevState, 
-                    a: false,
-                    d: false
-                }));    
-            } else {
-                setControlsState(prevState => ({
-                    ...prevState, 
-                    a: leftMouseState,
-                    d: rightMouseState
-                }));    
-            }
+            setControlsState(prevState => {
+                if(prevState.w === false) {
+                    return {
+                        ...prevState, 
+                        a: false,
+                        d: false    
+                    }    
+                } else {
+                    return {
+                        ...prevState, 
+                        a: leftMouseState,
+                        d: rightMouseState
+                    }
+                }
+            });    
         }
         setMouseCoors([mouseEvent.clientX, mouseEvent.clientY]);
     }, []);
@@ -411,9 +421,6 @@ const InsectsControls: React.FC<InsectsControlsProps> = ({
                             side={DoubleSide}
                             uniforms={butterflyShaderBodyUniforms}
                         />
-                        {/* <meshBasicMaterial 
-                            color={whiteColor}
-                        /> */}
                     </mesh>
                     <mesh 
                         rotation={[0, .5 + insectWingRotation, 0]}
