@@ -1,7 +1,8 @@
 import {
     useState,
     useEffect,
-    useRef
+    useRef,
+    useCallback
 } from 'react';
 import {
     useThree,
@@ -42,6 +43,7 @@ const deadZoneNormalizeMouseCoorCalc = new Vector2(0,0,);
 const normalizeMouseCoorScaled = new Vector2(0, 0);
 const movementRate = .0125;
 
+const touchEvents = isTouchDevice();
 
 interface InsectsControlsProps {
     sendUpdate: (payload) => void;
@@ -71,7 +73,6 @@ const InsectsControls: React.FC<InsectsControlsProps> = ({
         s: false,
         d: false
     });
-    const touchEvents = isTouchDevice();
     const [frameCount, setFrameCount] = useState<number>(0)
 
     useEffect(() => {
@@ -93,121 +94,145 @@ const InsectsControls: React.FC<InsectsControlsProps> = ({
         }
     }, [frameCount]);
 
-    useEffect(() => {
-        const handleKeyDown = (keyboardEvent) => {
-            const key = keyboardEvent.key.toLowerCase();
-            if (controlsState[key] !== undefined) {
-                setControlsState(prevState => ({ ...prevState, [key]: true }));
-            }
-        };
-
-        const handleKeyUp = (keyboardEvent) => {
-            const key = keyboardEvent.key.toLowerCase();
-            if (controlsState[key] !== undefined) {
-                setControlsState(prevState => ({ ...prevState, [key]: false }));
-            }
-        };
-
-        const handleMouseMove = (mouseEvent) => {
-            if(mouseEvent.buttons > 0) {
-                const leftMouseState = mouseEvent.clientX - (window.innerWidth / 2) < 0 && Math.abs(mouseEvent.clientX - (window.innerWidth / 2)) > 50;
-                const rightMouseState = mouseEvent.clientX - (window.innerWidth / 2) > 0 && Math.abs(mouseEvent.clientX - (window.innerWidth / 2)) > 50;
-    
-                if(controlsState.w === false) {
-                    setControlsState(prevState => ({
-                        ...prevState, 
-                        a: false,
-                        d: false
-                    }));    
-                } else {
-                    setControlsState(prevState => ({
-                        ...prevState, 
-                        a: leftMouseState,
-                        d: rightMouseState
-                    }));    
-                }
-            }
-            setMouseCoors([mouseEvent.clientX, mouseEvent.clientY]);
+    const handleKeyDown = useCallback((keyboardEvent) => {
+        const key = keyboardEvent.key.toLowerCase();
+        if (controlsState[key] !== undefined) {
+            setControlsState(prevState => ({ ...prevState, [key]: true }));
         }
+    }, []);
 
-        const handleTouchMove = (touchEvent) => {
-            setMouseCoors([touchEvent.touches[0].clientX, touchEvent.touches[0].clientY]);
-
-            const leftTouchState = (touchEvent.touches[0].clientX - (window.innerWidth / 2) < 0) && (Math.abs(touchEvent.touches[0].clientX - (window.innerWidth / 2)) > 50);
-            const rightTouchState = (touchEvent.touches[0].clientX - (window.innerWidth / 2) > 0) && (Math.abs(touchEvent.touches[0].clientX - (window.innerWidth / 2)) > 50);
-
-            setControlsState(prevState => ({
-                ...prevState, 
-                w: true,
-                a: leftTouchState,
-                d: rightTouchState
-            }));
-
-            touchEvent.preventDefault();
+    const handleKeyUp = useCallback((keyboardEvent) => {
+        const key = keyboardEvent.key.toLowerCase();
+        if (controlsState[key] !== undefined) {
+            setControlsState(prevState => ({ ...prevState, [key]: false }));
         }
+    }, []);
 
-        const handleMouseDown = (mouseEvent) => {
+    const handleMouseMove = useCallback((mouseEvent) => {
+        if(mouseEvent.buttons > 0) {
             const leftMouseState = mouseEvent.clientX - (window.innerWidth / 2) < 0 && Math.abs(mouseEvent.clientX - (window.innerWidth / 2)) > 50;
             const rightMouseState = mouseEvent.clientX - (window.innerWidth / 2) > 0 && Math.abs(mouseEvent.clientX - (window.innerWidth / 2)) > 50;
 
-            setControlsState(prevState => ({
-                ...prevState, 
-                w: true,
-                a: leftMouseState,
-                d: rightMouseState
-            }));
+            if(controlsState.w === false) {
+                setControlsState(prevState => ({
+                    ...prevState, 
+                    a: false,
+                    d: false
+                }));    
+            } else {
+                setControlsState(prevState => ({
+                    ...prevState, 
+                    a: leftMouseState,
+                    d: rightMouseState
+                }));    
+            }
         }
+        setMouseCoors([mouseEvent.clientX, mouseEvent.clientY]);
+    }, []);
 
-        const handleMouseUp = () => {
-            setControlsState(prevState => ({
-                ...prevState, 
-                w: false,
-                a: false,
-                d: false
-            }));
-        }
+    const handleTouchMove = useCallback((touchEvent) => {
+        setMouseCoors([touchEvent.touches[0].clientX, touchEvent.touches[0].clientY]);
 
-        const handleTouchEnd = (touchEvent) => {
-            setControlsState({
-                a: false,
-                w: false,
-                s: false,
-                d: false
-            });
-            touchEvent.preventDefault();
-        }
+        const leftTouchState = (touchEvent.touches[0].clientX - (window.innerWidth / 2) < 0) && (Math.abs(touchEvent.touches[0].clientX - (window.innerWidth / 2)) > 50);
+        const rightTouchState = (touchEvent.touches[0].clientX - (window.innerWidth / 2) > 0) && (Math.abs(touchEvent.touches[0].clientX - (window.innerWidth / 2)) > 50);
 
+        setControlsState(prevState => ({
+            ...prevState, 
+            w: true,
+            a: leftTouchState,
+            d: rightTouchState
+        }));
+
+        touchEvent.preventDefault();
+    }, [])
+
+    const handleMouseDown = useCallback((mouseEvent) => {
+        const leftMouseState = mouseEvent.clientX - (window.innerWidth / 2) < 0 && Math.abs(mouseEvent.clientX - (window.innerWidth / 2)) > 50;
+        const rightMouseState = mouseEvent.clientX - (window.innerWidth / 2) > 0 && Math.abs(mouseEvent.clientX - (window.innerWidth / 2)) > 50;
+
+        setControlsState(prevState => ({
+            ...prevState, 
+            w: true,
+            a: leftMouseState,
+            d: rightMouseState
+        }));
+    }, [])
+
+    const handleMouseUp = useCallback(() => {
+        setControlsState(prevState => ({
+            ...prevState, 
+            w: false,
+            a: false,
+            d: false
+        }));
+    }, [])
+
+    const handleTouchStart = useCallback((touchEvent) => {
+        setControlsState({
+            a: false,
+            w: true,
+            s: false,
+            d: false
+        });
+        touchEvent.preventDefault();
+    }, [])
+
+    const handleTouchEnd = useCallback((touchEvent) => {
+        setControlsState({
+            a: false,
+            w: false,
+            s: false,
+            d: false
+        });
+        touchEvent.preventDefault();
+    }, [])
+
+    useEffect(() => {
         const eventElement = document.querySelector('.container-100');
+
         if(eventElement !== null) {
-            document.addEventListener('keydown', handleKeyDown);
-            document.addEventListener('keyup', handleKeyUp);
-            eventElement.addEventListener('mousemove', handleMouseMove);
-            eventElement.addEventListener('touchmove', handleTouchMove, {passive: false});
-            eventElement.addEventListener('touchend', handleTouchEnd, {passive: false});
-            if(touchEvents === false) {
+            if(touchEvents === true) {
+                eventElement.addEventListener('touchmove', handleTouchMove, {passive: false});
+                eventElement.addEventListener('touchstart', handleTouchStart, {passive: false});
+                eventElement.addEventListener('touchend', handleTouchEnd, {passive: false});
+            } else {
+                document.addEventListener('keydown', handleKeyDown);
+                document.addEventListener('keyup', handleKeyUp);
                 eventElement.addEventListener('mousedown', handleMouseDown);
                 eventElement.addEventListener('mouseup', handleMouseUp);    
+                eventElement.addEventListener('mousemove', handleMouseMove);
             }
     
             return () => {
-                document.removeEventListener('keydown', handleKeyDown);
-                document.removeEventListener('keyup', handleKeyUp);
-                eventElement.removeEventListener('mousemove', handleMouseMove);
-                eventElement.removeEventListener('touchmove', handleTouchMove);
-                eventElement.removeEventListener('touchend', handleTouchEnd);
-                if(touchEvents === false) {
+                if(touchEvents === true) {
+                    eventElement.removeEventListener('touchmove', handleTouchMove);
+                    eventElement.addEventListener('touchstart', handleTouchStart, {passive: false});
+                    eventElement.removeEventListener('touchend', handleTouchEnd);    
+                } else {
+                    document.removeEventListener('keydown', handleKeyDown);
+                    document.removeEventListener('keyup', handleKeyUp);
                     eventElement.removeEventListener('mousedown', handleMouseDown);
                     eventElement.removeEventListener('mouseup', handleMouseUp);    
+                    eventElement.removeEventListener('mousemove', handleMouseMove);    
                 }
             };    
         }
-    }, [controlsState, touchEvents]);
+    }, [
+        controlsState, 
+        handleKeyDown, 
+        handleKeyUp,
+        handleMouseMove,
+        handleTouchMove,
+        handleMouseDown,
+        handleMouseUp,
+        handleTouchStart,
+        handleTouchEnd
+    ]);
 
     const mouseCoorHeightModifier = touchEvents === true ? (window.innerHeight - 125) : (window.innerHeight / 2);
     const deadZone = 0.1;
 
     useFrame(({ clock }) => {
-        // numberOfFrames = numberOfFrames + 1;
         setFrameCount(current => current + 1);
 
         // normalize coors
@@ -240,7 +265,7 @@ const InsectsControls: React.FC<InsectsControlsProps> = ({
             }
         }
 
-        // scale the mouth coor
+        // scale the mouse coor
         normalizeMouseCoorScaled.copy(deadZoneNormalizeMouseCoorCalc).multiplyScalar(.25);
 
         // apply all transformations using refs

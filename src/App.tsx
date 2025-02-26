@@ -78,7 +78,8 @@ const App = (): JSX.Element => {
     history.pushState(null, '', `?scene=${startingSceneMap[calculateSceneIndex({startingSceneIndex, sceneCounter})]}`)
   }, [sceneCounter, startingSceneIndex])
 
-  const SceneToRender = scenes[calculateSceneIndex({startingSceneIndex, sceneCounter})];
+  const sceneIndex = calculateSceneIndex({startingSceneIndex, sceneCounter});
+  const SceneToRender = scenes[sceneIndex];
 
   return (
     <>
