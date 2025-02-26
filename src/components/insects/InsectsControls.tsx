@@ -9,8 +9,7 @@ import {
     useFrame,
     Vector3 as Vector3Type,
     Euler as EulerType,
-    Vector2 as Vector2Type,
-    useLoader
+    Vector2 as Vector2Type
 } from '@react-three/fiber';
 import {
     Vector3,
@@ -18,15 +17,10 @@ import {
     Mesh,
     Vector2,
     Group,
-    TextureLoader,
-    DoubleSide,
     Color
 } from 'three';
-import {
-    skyColorLight
-} from './insectsColors';
 import { isTouchDevice } from '../../assets/js/util';
-import { insectBodyShader, insectWingsShader } from './insectsShaders';
+import { InsectsButterfly } from './InsectsButterfly';
 
 const positionCalc = new Vector3(0, 5, 0);
 const rotationCalc = new Euler(0, 0, 0);
@@ -56,14 +50,12 @@ const InsectsControls: React.FC<InsectsControlsProps> = ({
     clientColor,
     clientPatternSpots
 }) => {
-    const butterflyWingTextureLeft = useLoader(TextureLoader, './insects/butterfly-wings-alpha.png');
     const [mouseCoors, setMouseCoors] = useState<Vector2Type>([0, 0])
     const groupRef = useRef(null);
     const backDirMeshRef = useRef<Mesh | null>(null);
     const cameraPositionMeshRef = useRef<Mesh | null>(null);
     const insectGroupRef = useRef<Group | null>(null);
     const { camera } = useThree();
-    const [insectWingRotation, setInsectWingRotation] = useState<number>(0)
     const [insectPosition, setInsectPosition] = useState<Vector3Type>([positionCalc.x, positionCalc.y, positionCalc.z]);
     const [insectRotation, setInsectRotation] = useState<EulerType>([rotationCalc.x, rotationCalc.y, rotationCalc.z]);
     const [cameraRotation, setCameraRotation] = useState<EulerType>([rotationCalc.x, rotationCalc.y, rotationCalc.z]);
@@ -154,7 +146,7 @@ const InsectsControls: React.FC<InsectsControlsProps> = ({
         }));
 
         touchEvent.preventDefault();
-    }, [])
+    }, []);
 
     const handleMouseDown = useCallback((mouseEvent) => {
         const leftMouseState = mouseEvent.clientX - (window.innerWidth / 2) < 0 && Math.abs(mouseEvent.clientX - (window.innerWidth / 2)) > 50;
@@ -242,7 +234,7 @@ const InsectsControls: React.FC<InsectsControlsProps> = ({
     const mouseCoorHeightModifier = touchEvents === true ? (window.innerHeight - 125) : (window.innerHeight / 2);
     const deadZone = 0.1;
 
-    useFrame(({ clock }) => {
+    useFrame(() => {
         setFrameCount(current => current + 1);
 
         // normalize coors
@@ -354,32 +346,7 @@ const InsectsControls: React.FC<InsectsControlsProps> = ({
             rotationCalc.y + normalizeMouseCoorScaled.x,
             rotationCalc.z
         ]);    
-
-        // flap insect wings
-        setInsectWingRotation(Math.sin(clock.elapsedTime * 6) / (1.5));
     });
-
-
-    const butterflyShaderLeftUniforms = {
-        wingTexture: { value: butterflyWingTextureLeft },
-        color: { value: clientColor },
-        skyColorLight: { value: skyColorLight },
-        flipX: { value: false },
-        clientPatternSpots: { value: clientPatternSpots }
-    };
-
-    const butterflyShaderRightUniforms = {
-        wingTexture: { value: butterflyWingTextureLeft },
-        color: { value: clientColor },
-        skyColorLight: { value: skyColorLight },
-        flipX: { value: true },
-        clientPatternSpots: { value: clientPatternSpots }
-    };
-
-    const butterflyShaderBodyUniforms = {
-        color: { value: clientColor },
-        skyColorLight: { value: skyColorLight }
-    };
 
     return (
         <>
@@ -388,69 +355,11 @@ const InsectsControls: React.FC<InsectsControlsProps> = ({
                 rotation={insectRotation}
                 position={insectPosition}
             >
-                <group
-                    ref={insectGroupRef}
-                    rotation={[-.75, 0, 0]}
-                >
-                    <mesh
-                        position={[-.05,.75,.175]}
-                        rotation={[.5,0,.125]}
-                    >
-                        <cylinderGeometry args={[.02, .02, .75, 4, 1]} />
-                        <meshBasicMaterial 
-                            color={clientColor}
-                        />
-                    </mesh>
-                    <mesh
-                        position={[.05,.75,.175]}
-                        rotation={[.5,0,-.125]}
-                    >
-                        <cylinderGeometry args={[.02, .02, .75, 4, 1]} />
-                        <meshBasicMaterial 
-                            color={clientColor}
-                        />
-                    </mesh>
-
-                    <mesh>
-                        <cylinderGeometry args={[.05, .05, .85, 8, 1]} />
-                        <shaderMaterial
-                            vertexShader={insectBodyShader.vertexShader}
-                            fragmentShader={insectBodyShader.fragmentShader}
-                            transparent={true}
-                            depthWrite={false}
-                            side={DoubleSide}
-                            uniforms={butterflyShaderBodyUniforms}
-                        />
-                    </mesh>
-                    <mesh 
-                        rotation={[0, .5 + insectWingRotation, 0]}
-                        position={[-0.05,0,0]}
-                    >
-                        <planeGeometry args={[1.5, 1.5, 1, 1]} />
-                        <shaderMaterial
-                            vertexShader={insectWingsShader.vertexShader}
-                            fragmentShader={insectWingsShader.fragmentShader}
-                            transparent={true}
-                            depthWrite={false}
-                            side={DoubleSide}
-                            uniforms={butterflyShaderLeftUniforms}
-                        />
-                    </mesh>
-                    <mesh 
-                        rotation={[-0, -.5 - insectWingRotation, 0]}
-                        position={[0.05,0,0]}
-                    >
-                        <planeGeometry args={[1.5, 1.5, 1, 1]} />
-                        <shaderMaterial
-                            vertexShader={insectWingsShader.vertexShader}
-                            fragmentShader={insectWingsShader.fragmentShader}
-                            transparent={true}
-                            depthWrite={false}
-                            side={DoubleSide}
-                            uniforms={butterflyShaderRightUniforms}
-                        />
-                    </mesh>
-                </group>
+                <InsectsButterfly
+                    insectGroupRef={insectGroupRef}
+                    color={clientColor}
+                    patternSpots={clientPatternSpots}
+                />
                 <mesh
                     ref={backDirMeshRef}
                     position={[0, 0, 3]}

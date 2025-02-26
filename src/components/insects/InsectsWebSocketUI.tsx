@@ -57,7 +57,6 @@ const createPatternSpots = (patternSpots: {x: number, y: number, z: number}[]) =
 }
 
 const clientPatternSpots = createPatternSpots(patternSpotInitialValues)
-console.log(clientPatternSpots)
 const InsectsWebSocketUI = () => {
     const [clientData, setClientData] = useState<ClientData>({ uuid: '', status: 'unconnected', memory: {} });
     const ws = useRef<WebSocket | null>(null);
@@ -85,16 +84,10 @@ const InsectsWebSocketUI = () => {
            console.log('WebSocket Error: ', error);
         };
 
-        console.log('InsectsWebSocketUI')
-
         return () => {
             ws.current?.close();
         };
     }, []);
-
-    // useEffect(() => {
-    //     console.log(`${JSON.stringify(clientData, null, 2)}`);
-    // }, [clientData])
 
     const handleIncomingMessage = (eventData: EventData) => {
         switch (eventData.messageType) {
@@ -109,9 +102,6 @@ const InsectsWebSocketUI = () => {
                 break;
             case 'broadcastUpdateFromServer': {
                 const { uuid, updatePayload } = eventData.payload;
-                // if(updatePayload.payload.insectColor !== undefined) {
-                //     console.log(updatePayload.payload.insectColor);
-                // }
                 setClientData((prevData) => {
                     if(prevData.memory[uuid] === undefined) {
                         return {
