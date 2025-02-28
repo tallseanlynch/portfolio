@@ -239,6 +239,7 @@ const WaterShader: React.FC<WaterShaderProps> = ({
   )
 };
 
+
 interface WaterShaderCanvasProps {
   classNames?: string
 };

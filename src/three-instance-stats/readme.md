@@ -2,6 +2,8 @@
 
 Simple Proxy around three.js classes to allow a count of how many instances of that class have been created. This only works with classes from three and not everything is supported. Simple classes like Color, Euler and Vector3 are best to test.
 
+<img src="./preview.png">
+
 This is only for testing three.js variables introduced into components, not variables instantiated outside of a component, like variable instantiated by react-three/fiber.
 
 Make sure this is not imported into any production builds and only used for dev testing.
