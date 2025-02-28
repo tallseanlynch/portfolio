@@ -1,0 +1,24 @@
+.instance-stats-text {
+    width: 200px;
+    position: absolute;
+    left: 0px;
+    bottom: 0px;
+    background: #ffffff;
+    box-sizing: border-box;
+    margin: 16px;
+    padding: 8px;
+    display: flex;
+    flex-direction: column;
+    pointer-events: none;
+    opacity: .9;
+}
+
+.instance-stat {
+    display: flex;
+    justify-content: space-between;
+    padding: 4px;
+}
+
+.gray-stat {
+    background-color: #dddddd;
+}

@@ -1,13 +1,20 @@
 import {
   TextureLoader,
-  Vector2,
-  Vector3,
   ShaderMaterial,
   DoubleSide,
+  // Color,
+  // Euler,
+  Mesh,
+  // Vector2,
+  // Vector3,
+  Vector3 as ThreeVector3
+} from 'three';
+import { 
   Color,
   Euler,
-  Mesh
-} from 'three';
+  Vector3
+} from '../../three-instance-stats';
+import { InstanceStats } from '../../three-instance-stats/InstanceStats';
 import {
   Canvas,
   useLoader,
@@ -21,7 +28,7 @@ import {
 import { OrbitControls } from '@react-three/drei';
 
 const createUniformData = (numberOfWaves: number) => {
-  const mouseClicksArray: Vector3[] = [];
+  const mouseClicksArray: ThreeVector3[] = [];
   const clickMagnitudesArray: number[] = [];
   for (let i = 0; i < numberOfWaves; i++) {
     mouseClicksArray.push(new Vector3(-100, -100, -100));
@@ -54,8 +61,6 @@ const WaterShader: React.FC<WaterShaderProps> = ({
   const eventDebounceTime = 200;
   const uniforms = {
     'numberOfWaves': { value: numberOfWaves },
-    'texture1Resolution': { value: new Vector2(2034, 2106) },
-    'texture2Resolution': { value: new Vector2(2034, 2106) },
     'time': { value: 1.0 },
     'texture1': { value: pattern1 },
     'texture2': { value: pattern2 },
@@ -250,20 +255,27 @@ const WaterShaderCanvas: React.FC<WaterShaderCanvasProps> = ({
   classNames = ''
 }) => {
   return (
-    <Canvas
-      camera={{ position: new Vector3(0, 0, 15) }}
-      className={classNames}
-    >
-      <WaterShader render={classNames === '' ? true : false} />
-      <OrbitControls
-        enableDamping={true}
-        dampingFactor={0.05}
-        screenSpacePanning={false}
-        zoomSpeed={.1}
-        panSpeed={.1}
-        rotateSpeed={.1}
+    <>
+      <Canvas
+        camera={{ position: [0, 0, 15] }}
+        className={classNames}
+      >
+        <WaterShader render={classNames === '' ? true : false} />
+        <OrbitControls
+          enableDamping={true}
+          dampingFactor={0.05}
+          screenSpacePanning={false}
+          zoomSpeed={.1}
+          panSpeed={.1}
+          rotateSpeed={.1}
+        />
+      </Canvas>
+      <InstanceStats 
+        updateTimeMS={500} 
+        // stats={['Vector3', 'Vector2', 'Euler']}
+        // showAll={true}
       />
-    </Canvas>
+    </>
   )
 };
 
