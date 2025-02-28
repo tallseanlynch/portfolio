@@ -33,7 +33,7 @@ import {
 Added InstanceStats component into your app / component.
 
 ```js
-// will increment the instance count for Vector3 by 1.
+// Will increment the instance count for Vector3 by 1.
 const startingPosition = new Vector3(0.5, 1.0, 2.0);
 
 const ComponentWithStats = () => {
