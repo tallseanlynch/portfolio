@@ -1,6 +1,8 @@
 # three-instance-stats
 
-Simple Proxy around three classes to allow a count of how many instances of that class have been created. This only works with classes from three and not everything is supported. Simple classes like Color, Euler and Vector3 are best to test.
+Simple Proxy around three.js classes to allow a count of how many instances of that class have been created. This only works with classes from three and not everything is supported. Simple classes like Color, Euler and Vector3 are best to test.
+
+This is only for testing three.js variables introduced into components, not variables instantiated outside of a component, like variable instantiated by react-three/fiber.
 
 Make sure this is not imported into any production builds and only used for dev testing.
 
@@ -21,7 +23,7 @@ import {
     Vector2,
     Vector3,
     Quaternion,
-    InstanceStats // React component displays stats
+    InstanceStats // React component that displays stats
 } from '../path-in-project/three-instance-stats'
 ```
 
@@ -29,33 +31,26 @@ import {
 Added InstanceStats component into your app / component.
 
 ```js
+// will increment the instance count for Vector3 by 1.
+const startingPosition = new Vector3(0.5, 1.0, 2.0);
+
 const ComponentWithStats = () => {
     return (
         <>
             <InstanceStats 
-                // Number of miliseconds between each update
-                updateTimeMS={500} 
+                // Number of miliseconds between each update.
+                // Default is 500
+                updateTimeMS={1000} 
                 // Array of strings selecting which stats to display.
                 // If empty display all stats with instance counts > 0
                 stats={['Color', 'Euler', 'Vector2', 'Vector3']}
                 // Boolean to display all stats regardless of stats value
                 showAll={false}
             />
-            <Canvas
-                camera={{ position: [0, 0, 15] }}
-                className={classNames}
-            >
-                <WaterShader render={classNames === '' ? true : false} />
-                <OrbitControls
-                    enableDamping={true}
-                    dampingFactor={0.05}
-                    screenSpacePanning={false}
-                    zoomSpeed={.1}
-                    panSpeed={.1}
-                    rotateSpeed={.1}
-                />
+            <Canvas>
+                <InstanceScene startingPosition={startingPosition}/>
             </Canvas>
         </>
     )
-}
+};
 ```
