@@ -3,7 +3,7 @@ type ClientDataStatus = string;
 interface ClientData {
     uuid: string;
     status: ClientDataStatus;
-    memory: {[key: string]: any}
+    memory: {[key: string]: any};
 }
 
 interface EventData {

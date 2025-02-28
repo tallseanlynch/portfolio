@@ -16,10 +16,10 @@ import {
 import { InsectsButterfly } from './InsectsButterfly';
 
 interface SocketInsectsProps {
-    position: Vector3Type,
-    rotation: EulerType,
-    color: Color,
-    patternSpots: Vector3Type[]
+    position: Vector3Type;
+    rotation: EulerType;
+    color: Color;
+    patternSpots: Vector3Type[];
 }
 
 const lerpCalcVector3A = new Vector3();

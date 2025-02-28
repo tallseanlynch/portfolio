@@ -42,7 +42,7 @@ const touchEvents = isTouchDevice();
 interface InsectsControlsProps {
     sendUpdate: (payload) => void;
     clientColor: Color;
-    clientPatternSpots: Vector3[]
+    clientPatternSpots: Vector3[];
 }
 
 const InsectsControls: React.FC<InsectsControlsProps> = ({

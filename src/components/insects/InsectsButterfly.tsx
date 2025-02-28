@@ -58,7 +58,7 @@ const InsectsButterfly = ({color, patternSpots, insectGroupRef}) => {
 
     useFrame(({clock}) => {
         setInsectWingRotation(Math.sin((clock.elapsedTime + butterWingFlapInitial) * 6) / (1.5));
-    })
+    });
 
     return (
         <group
@@ -125,6 +125,6 @@ const InsectsButterfly = ({color, patternSpots, insectGroupRef}) => {
             </mesh>
         </group>
     )
-}
+};
 
-export { InsectsButterfly }
+export { InsectsButterfly };

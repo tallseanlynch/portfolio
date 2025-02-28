@@ -51,13 +51,13 @@ const grassShader = {
 };
 
 interface GrassProps {
-    baseColor: Color,
-    skyColor: Color,
-    instanceNumber: number, 
-    instanceOrigin: Vector3,
-    planeGeometryArgs: number[],
-    placementScale: number,
-    instanceScale: number    
+    baseColor: Color;
+    skyColor: Color;
+    instanceNumber: number; 
+    instanceOrigin: Vector3;
+    planeGeometryArgs: number[];
+    placementScale: number;
+    instanceScale: number;  
 };
 
 const InsectsGrass: React.FC<GrassProps> = ({

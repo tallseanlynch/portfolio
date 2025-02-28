@@ -2,19 +2,11 @@ import {
   TextureLoader,
   ShaderMaterial,
   DoubleSide,
-  // Color,
-  // Euler,
-  Mesh,
-  // Vector2,
-  // Vector3,
-  Vector3 as ThreeVector3
-} from 'three';
-import { 
   Color,
   Euler,
+  Mesh,
   Vector3
-} from '../../three-instance-stats';
-import { InstanceStats } from '../../three-instance-stats/InstanceStats';
+} from 'three';
 import {
   Canvas,
   useLoader,
@@ -28,7 +20,7 @@ import {
 import { OrbitControls } from '@react-three/drei';
 
 const createUniformData = (numberOfWaves: number) => {
-  const mouseClicksArray: ThreeVector3[] = [];
+  const mouseClicksArray: Vector3[] = [];
   const clickMagnitudesArray: number[] = [];
   for (let i = 0; i < numberOfWaves; i++) {
     mouseClicksArray.push(new Vector3(-100, -100, -100));
@@ -270,11 +262,6 @@ const WaterShaderCanvas: React.FC<WaterShaderCanvasProps> = ({
           rotateSpeed={.1}
         />
       </Canvas>
-      <InstanceStats 
-        updateTimeMS={500} 
-        // stats={['Vector3', 'Vector2', 'Euler']}
-        // showAll={true}
-      />
     </>
   )
 };

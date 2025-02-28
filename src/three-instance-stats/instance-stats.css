@@ -1,24 +1,48 @@
-.instance-stats-text {
-    width: 200px;
+.instance-stats-container {
     position: absolute;
     left: 0px;
-    bottom: 0px;
-    background: #ffffff;
+    bottom: 0px;    
     box-sizing: border-box;
-    margin: 16px;
     padding: 8px;
-    display: flex;
-    flex-direction: column;
     pointer-events: none;
+}
+
+.instance-stats-button {
+    pointer-events: all;
+    margin-left: 16px;
+    padding: 8px;
+    background: #ffffff;
     opacity: .9;
 }
 
+.length-25-plus .instance-stats-button {
+    padding-left: 18px;
+}
+
+.instance-stats-text {
+    background: #ffffff;
+    display: flex;
+    flex-direction: column;
+    opacity: .9;
+    justify-content: space-around;
+    margin-left: 16px;
+    padding: 8px;
+    padding-top: 0px;
+}
+
+.length-25-plus .instance-stats-text {
+    flex-direction: unset;
+    flex-wrap: wrap;
+}
+
 .instance-stat {
+    width: 200px;
     display: flex;
     justify-content: space-between;
     padding: 4px;
+    border-bottom: 1px solid #aaaaaa;
 }
 
-.gray-stat {
+/* .gray-stat {
     background-color: #dddddd;
-}
+} */

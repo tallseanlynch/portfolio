@@ -89,7 +89,7 @@ const App = (): JSX.Element => {
           </div>
       </Suspense>
       <BrandSection />
-      </>
+    </>
   );
 }
 

@@ -153,7 +153,7 @@ const InsectsWebSocketUI = () => {
     };
 
     interface PayloadProps {
-        [key: string]: any
+        [key: string]: any;
     }
 
     const sendUpdate = (payload: PayloadProps) => {

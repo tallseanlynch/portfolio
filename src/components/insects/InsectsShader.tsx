@@ -32,7 +32,7 @@ const InsectsShader: React.FC = (): JSX.Element => {
 };
 
 interface InsectShaderCanvasProps {
-    classNames?: string
+    classNames?: string;
 };
 
 const InsectsShaderCanvas: React.FC<InsectShaderCanvasProps> = ({
