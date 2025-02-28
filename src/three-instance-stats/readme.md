@@ -1,15 +1,15 @@
 # three-instance-stats
 
-Simple Proxy around three.js classes to allow a count of how many instances of that class have been created. This only works with classes from three and not everything is supported. Simple classes like Color, Euler and Vector3 are best to test.
+Simple Proxy around Three.js classes to allow a count of how many instances of that class have been created. This only works with classes from Three.js and not everything is supported. Simple classes like Color, Euler and Vector3 are best to test.
 
 <img src="./preview.png">
 
-This is only for testing three.js variables introduced into components, not variables instantiated outside of a component, like variable instantiated by react-three/fiber.
+This is only for testing Three.js variables introduced into components, not variables instantiated outside of a component, like variable instantiated by react-three/fiber.
 
 Make sure this is not imported into any production builds and only used for dev testing.
 
 ## Usage step 1
-Comment out variables which you would like to get an instance count of, import then from three-instance-stats instead. If using TypeScript, you will need to import some classes from three for their types. Include InstanceStats for a React component that will display stats as a table.
+Comment out variables which you would like to get an instance count of, import then from three-instance-stats instead. If using TypeScript, you will need to import some classes from Three.js for their types. Include InstanceStats for a React component that will display stats as a table.
 
 ```js
 import {
