@@ -5,7 +5,7 @@ Simple Proxy around three classes to allow a count of how many instances of that
 Make sure this is not imported into any production builds and only used for dev testing.
 
 ## Usage step 1
-Comment out variables which you would like to get an instance count. If using TypeScript, you will need to import some classes from three for their types. Include InstanceStats for a React component that will display stats as a table.
+Comment out variables which you would like to get an instance count of, import then from three-instance-stats instead. If using TypeScript, you will need to import some classes from three for their types. Include InstanceStats for a React component that will display stats as a table.
 
 ```js
 import {
@@ -47,12 +47,12 @@ const ComponentWithStats = () => {
             >
                 <WaterShader render={classNames === '' ? true : false} />
                 <OrbitControls
-                enableDamping={true}
-                dampingFactor={0.05}
-                screenSpacePanning={false}
-                zoomSpeed={.1}
-                panSpeed={.1}
-                rotateSpeed={.1}
+                    enableDamping={true}
+                    dampingFactor={0.05}
+                    screenSpacePanning={false}
+                    zoomSpeed={.1}
+                    panSpeed={.1}
+                    rotateSpeed={.1}
                 />
             </Canvas>
         </>
