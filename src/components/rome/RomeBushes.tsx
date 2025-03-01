@@ -1,11 +1,11 @@
-import {
-    TextureLoader,
-    Vector3,
-    DoubleSide,
-    Euler
-} from 'three';
-import { useLoader } from '@react-three/fiber';
 import { whiteColor } from './romeColors';
+import { useLoader } from '@react-three/fiber';
+import {
+    DoubleSide,
+    Euler,
+    TextureLoader,
+    Vector3
+} from 'three';
 
 const RomeBushMaterial: React.FC = (): JSX.Element => {
     const bushTexture0 = useLoader(TextureLoader, '/rome/bush-0-50-compressed.png')
@@ -19,13 +19,6 @@ const RomeBushMaterial: React.FC = (): JSX.Element => {
             side={DoubleSide}
         />
     )
-};
-
-type PlaneGeometryArgs = [number, number, number?, number?];
-interface RomeBushProps {
-    position?: Vector3,
-    planeArgs?: PlaneGeometryArgs,
-    rotation?: Euler
 };
 
 const RomeBush: React.FC<RomeBushProps> = ({
@@ -45,11 +38,6 @@ const RomeBush: React.FC<RomeBushProps> = ({
             <RomeBushMaterial />
         </mesh>
     )
-};
-
-interface RomeBushesProps {
-    groupPosition?: Vector3,
-    groupRotation?: Euler
 };
 
 const RomeBushes: React.FC<RomeBushesProps> = ({

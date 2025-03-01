@@ -1,17 +1,12 @@
-import { BufferAttribute } from 'three';
+import { whiteColor } from './snowColors';
 import { useFrame } from '@react-three/fiber';
 import React, {
     useMemo,
     useRef
 } from 'react';
-import { whiteColor } from './snowColors';
+import { BufferAttribute } from 'three';
 
-interface SnowflakesProps {
-    count?: number;
-    scale?: number;
-};
-
-const Snowflakes: React.FC<SnowflakesProps> = ({ count = 10000, scale = 100 }) => {
+const SnowSnowflakes: React.FC<SnowSnowflakesProps> = ({ count = 10000, scale = 100 }) => {
     const bufferRef = useRef<BufferAttribute>(null);
     const positions = useMemo(() => {
         const pos = new Float32Array(count * 3);
@@ -59,4 +54,4 @@ const Snowflakes: React.FC<SnowflakesProps> = ({ count = 10000, scale = 100 }) =
     );
 };
 
-export { Snowflakes };
+export { SnowSnowflakes };

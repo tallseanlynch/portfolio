@@ -1,32 +1,37 @@
-import {
-  TextureLoader,
-  ShaderMaterial,
-  DoubleSide,
-  Color,
-  Euler,
-  Mesh,
-  Vector3
-} from 'three';
+import { OrbitControls } from '@react-three/drei';
 import {
   Canvas,
-  useLoader,
   useFrame,
+  useLoader,
   ThreeEvent
 } from '@react-three/fiber';
 import {
+  useCallback,
   useEffect,
-  useRef,
-  useCallback
+  useRef
 } from 'react';
-import { OrbitControls } from '@react-three/drei';
+import {
+  Color,
+  DoubleSide,
+  Euler,
+  Mesh,
+  ShaderMaterial,
+  TextureLoader,
+  Vector3
+} from 'three';
 
-const createUniformData = (numberOfWaves: number) => {
+const createUniformData = (numberOfWaves: number): {
+  mouseClicksArray: Vector3[],
+  clickMagnitudesArray: number[]
+} => {
   const mouseClicksArray: Vector3[] = [];
   const clickMagnitudesArray: number[] = [];
+  
   for (let i = 0; i < numberOfWaves; i++) {
     mouseClicksArray.push(new Vector3(-100, -100, -100));
     clickMagnitudesArray.push(0.0);
   }
+
   return {
     mouseClicksArray,
     clickMagnitudesArray
@@ -40,6 +45,7 @@ const planeRotation = new Euler(0, 0, 0);
 let mouseClicks = 0;
 let lastMouseClick = new Date().getTime();
 const randomRippleInterval = 125;
+
 const shader = {
   vertexShader: `
     uniform int numberOfWaves;
@@ -110,14 +116,7 @@ const shader = {
   `
 };
 
-
-interface WaterShaderProps {
-  render: boolean
-};
-
-const WaterShader: React.FC<WaterShaderProps> = ({
-  render = true
-}): JSX.Element => {
+const WaterShader: React.FC = (): JSX.Element => {
   const materialRef = useRef<ShaderMaterial | null>(null);
   const planeRef = useRef<Mesh | null>(null);
   const raycastPlaneRef = useRef<Mesh | null>(null);
@@ -149,7 +148,6 @@ const WaterShader: React.FC<WaterShaderProps> = ({
   }, []);
 
   useFrame(({ clock }) => {
-    if (render === false) { return }
     if (materialRef.current) {
       materialRef.current.uniforms.time.value = clock.getElapsedTime();
       for (let clickMagnitudeIndex = 0; clickMagnitudeIndex < materialRef.current.uniforms.clickMagnitudes.value.length; clickMagnitudeIndex++) {
@@ -240,21 +238,13 @@ const WaterShader: React.FC<WaterShaderProps> = ({
   )
 };
 
-
-interface WaterShaderCanvasProps {
-  classNames?: string
-};
-
-const WaterShaderCanvas: React.FC<WaterShaderCanvasProps> = ({
-  classNames = ''
-}) => {
+const WaterShaderCanvas: React.FC = (): JSX.Element => {
   return (
     <>
       <Canvas
         camera={{ position: [0, 0, 15] }}
-        className={classNames}
       >
-        <WaterShader render={classNames === '' ? true : false} />
+        <WaterShader />
         <OrbitControls
           enableDamping={true}
           dampingFactor={0.05}

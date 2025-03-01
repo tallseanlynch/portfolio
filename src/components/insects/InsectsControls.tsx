@@ -1,26 +1,25 @@
+import { isTouchDevice } from '../../assets/js/util';
 import {
-    useState,
-    useEffect,
-    useRef,
-    useCallback
-} from 'react';
-import {
+    Euler as EulerType,
     useThree,
     useFrame,
     Vector3 as Vector3Type,
-    Euler as EulerType,
     Vector2 as Vector2Type
 } from '@react-three/fiber';
+import { InsectsButterfly } from './InsectsButterfly';
 import {
-    Vector3,
+    useCallback,
+    useEffect,
+    useRef,
+    useState
+} from 'react';
+import {
     Euler,
+    Group,
     Mesh,
     Vector2,
-    Group,
-    Color
+    Vector3
 } from 'three';
-import { isTouchDevice } from '../../assets/js/util';
-import { InsectsButterfly } from './InsectsButterfly';
 
 const positionCalc = new Vector3(0, 5, 0);
 const rotationCalc = new Euler(0, 0, 0);
@@ -36,20 +35,13 @@ const normalizeMouseCoorCalc = new Vector2(0, 0);
 const deadZoneNormalizeMouseCoorCalc = new Vector2(0,0,);
 const normalizeMouseCoorScaled = new Vector2(0, 0);
 const movementRate = .0125;
-
 const touchEvents = isTouchDevice();
-
-interface InsectsControlsProps {
-    sendUpdate: (payload) => void;
-    clientColor: Color;
-    clientPatternSpots: Vector3[];
-}
 
 const InsectsControls: React.FC<InsectsControlsProps> = ({
     sendUpdate,
     clientColor,
     clientPatternSpots
-}) => {
+}): JSX.Element => {
     const [mouseCoors, setMouseCoors] = useState<Vector2Type>([0, 0])
     const groupRef = useRef(null);
     const backDirMeshRef = useRef<Mesh | null>(null);
@@ -158,7 +150,7 @@ const InsectsControls: React.FC<InsectsControlsProps> = ({
             a: leftMouseState,
             d: rightMouseState
         }));
-    }, [])
+    }, []);
 
     const handleMouseUp = useCallback(() => {
         setControlsState(prevState => ({
@@ -167,7 +159,7 @@ const InsectsControls: React.FC<InsectsControlsProps> = ({
             a: false,
             d: false
         }));
-    }, [])
+    }, []);
 
     const handleTouchStart = useCallback((touchEvent) => {
         setControlsState({
@@ -177,7 +169,7 @@ const InsectsControls: React.FC<InsectsControlsProps> = ({
             d: false
         });
         touchEvent.preventDefault();
-    }, [])
+    }, []);
 
     const handleTouchEnd = useCallback((touchEvent) => {
         setControlsState({
@@ -187,7 +179,7 @@ const InsectsControls: React.FC<InsectsControlsProps> = ({
             d: false
         });
         touchEvent.preventDefault();
-    }, [])
+    }, []);
 
     useEffect(() => {
         const eventElement = document.querySelector('.container-100');
@@ -236,6 +228,7 @@ const InsectsControls: React.FC<InsectsControlsProps> = ({
 
         // handle deadzone in middle
         deadZoneNormalizeMouseCoorCalc.copy(normalizeMouseCoorCalc);
+        
         const absXCoor = Math.abs(normalizeMouseCoorCalc.x);
         if(absXCoor < deadZone) {
             deadZoneNormalizeMouseCoorCalc.x = 0;        
@@ -246,6 +239,7 @@ const InsectsControls: React.FC<InsectsControlsProps> = ({
                 deadZoneNormalizeMouseCoorCalc.x = normalizeMouseCoorCalc.x + deadZone;
             }
         }
+
         const absYCoor = Math.abs(normalizeMouseCoorCalc.y);
         if(absYCoor < deadZone) {
             deadZoneNormalizeMouseCoorCalc.y = 0;        
@@ -258,13 +252,15 @@ const InsectsControls: React.FC<InsectsControlsProps> = ({
         }
 
         // scale the mouse coor
-        normalizeMouseCoorScaled.copy(deadZoneNormalizeMouseCoorCalc).multiplyScalar(.25);
+        normalizeMouseCoorScaled
+            .copy(deadZoneNormalizeMouseCoorCalc)
+            .multiplyScalar(.25);
 
         // apply all transformations using refs
         if (
-            cameraPositionMeshRef && cameraPositionMeshRef.current &&
-            backDirMeshRef && backDirMeshRef.current &&
-            insectGroupRef && insectGroupRef.current
+            cameraPositionMeshRef.current &&
+            backDirMeshRef.current &&
+            insectGroupRef.current
         ) {
             // get position of camera reference mesh
             cameraPositionCalc.copy(cameraPositionMeshRef.current.position);
@@ -292,7 +288,11 @@ const InsectsControls: React.FC<InsectsControlsProps> = ({
             camera.lookAt(insectPositionWorldCalc);
 
             // create direction for insect to move
-            backDirToPlayerDirection.copy(insectPositionWorldCalc).sub(backDirCalc).normalize().multiplyScalar(movementRate);
+            backDirToPlayerDirection
+                .copy(insectPositionWorldCalc)
+                .sub(backDirCalc)
+                .normalize()
+                .multiplyScalar(movementRate);
         }
 
         // add player control transformations using controlsState

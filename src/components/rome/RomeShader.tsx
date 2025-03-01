@@ -1,25 +1,25 @@
 import {
-    Vector3,
-    Euler
-} from 'three';
+    blackColor,
+    ambientLightColor
+} from './romeColors';
 import { 
     Canvas, 
     useFrame 
 } from '@react-three/fiber';
 import { OrbitControls } from '@react-three/drei';
-import {
-    blackColor,
-    ambientLightColor
-} from './romeColors';
-import { RomeWalls } from './RomeWalls';
 import { RomeArch } from './RomeArch';
-import { RomeGround } from './RomeGround';
-import { RomeTrees } from './RomeTrees';
 import { RomeBushes } from './RomeBushes';
+import { RomeDistanceRing } from './RomeDistanceRing';
+import { RomeGround } from './RomeGround';
+import { RomeLightningBolt } from './RomeLightningBolt';
 import { RomeLights } from './RomeLights';
 import { RomeRain } from './RomeRain';
-import { RomeLightningBolt } from './RomeLightningBolt';
-import { RomeDistanceRing } from './RomeDistanceRing';
+import { RomeTrees } from './RomeTrees';
+import { RomeWalls } from './RomeWalls';
+import {
+    Euler,
+    Vector3
+} from 'three';
 
 const RomeShader: React.FC = (): JSX.Element => {
     useFrame(({camera }) => {
@@ -36,7 +36,7 @@ const RomeShader: React.FC = (): JSX.Element => {
                 panSpeed={1}
                 rotateSpeed={1}
                 maxPolarAngle={Math.PI/1.8}
-                maxDistance={2.5}
+                maxDistance={2.25}
             />
             <group position={[0, -.5, 0]}>
                 <ambientLight
@@ -65,19 +65,12 @@ const RomeShader: React.FC = (): JSX.Element => {
     )
 };
 
-interface RomeShaderCanvasProps {
-    classNames?: string
-};
-
-const RomeShaderCanvas: React.FC<RomeShaderCanvasProps> = ({
-    classNames = ''
-}) => {
+const RomeShaderCanvas: React.FC = (): JSX.Element => {
 
     return (
         <Canvas
             scene={{ background: blackColor }}
             camera={{ position: new Vector3(0, .01, 2.5) }}
-            className={classNames}
         >
             <RomeShader />
         </Canvas>

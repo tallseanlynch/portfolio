@@ -18,7 +18,6 @@ const clientLightGray = new Color(0x999999);
 const clientBlack = new Color(0x000000);
 
 const colors = [
-//   new Color(0x000000)
     clientGray,
     clientBrown,
     clientPurple,

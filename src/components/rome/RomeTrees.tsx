@@ -1,21 +1,20 @@
-import {
-    TextureLoader,
-    DoubleSide,
-    Object3D,
-    MeshStandardMaterial,
-    InstancedMesh,
-    PlaneGeometry,
-    Vector3,
-    NearestFilter,
-    Color
-} from 'three';
-import { whiteColor } from './romeColors';
 import { isMobileDevice } from '../../assets/js/util';
+import { whiteColor } from './romeColors';
+import { useRef, useEffect } from 'react';
+import {
+    Color,
+    DoubleSide,
+    InstancedMesh,
+    NearestFilter,
+    Object3D,
+    TextureLoader,
+    Vector3
+} from 'three';
 
 const mobileDevice = isMobileDevice();
 const textureLoader = new TextureLoader();
-const treeTexture0 = textureLoader.load('/rome/tree-0-inverse-mix-1-50-compressed-test.png');
-const treeTexture1 = textureLoader.load('/rome/tree-0-inverse-mix-2-50-compressed-test.png');
+const treeTexture0 = textureLoader.load('/rome/tree-0-inverse-mix-1-50-compressed-bw.png');
+const treeTexture1 = textureLoader.load('/rome/tree-0-inverse-mix-2-50-compressed-bw.png');
 treeTexture0.premultiplyAlpha = true;
 treeTexture1.premultiplyAlpha = true;
 treeTexture0.minFilter = NearestFilter;
@@ -24,7 +23,6 @@ treeTexture0.magFilter = NearestFilter;
 treeTexture1.magFilter = NearestFilter;
 const treeTexture2 = textureLoader.load('/rome/tree-0-inverse-mix-1-50-compressed.png');
 const treeTexture3 = textureLoader.load('/rome/tree-0-inverse-mix-2-50-compressed.png');
-
 const originVector = new Vector3(0, 0, 0,);
 
 const RomeTreeMaterial0: React.FC = (): JSX.Element => {
@@ -53,45 +51,57 @@ const RomeTreeMaterial1: React.FC = (): JSX.Element => {
     )
 };
 
-const RomeTreeRing = ({texture, distance}) => {
+const matrixCalcObject = new Object3D();
 
-    const matrixCalcObject = new Object3D();
-    const mat = new MeshStandardMaterial({
-        transparent: true,
-        map: texture,
-        alphaTest: 0.5,
-        side: DoubleSide,
-        color: new Color(0xccaaaa)
-    });
-    const geo = new PlaneGeometry(1, 1, 1, 1);
+const RomeTreeRing: React.FC<RomeTreeRingProps> = ({
+    texture, 
+    distance
+}): JSX.Element => {
+    const instancedMeshRef = useRef<InstancedMesh>(null);
     const instanceCount = mobileDevice ? 25 : 50;
-    const instancedMesh = new InstancedMesh(geo, mat, instanceCount);
     
-    for (let instanceIndex = 0; instanceIndex < instanceCount; instanceIndex++) {
-        const angle = (instanceIndex / instanceCount) * Math.PI * 2;
-        const x = distance * Math.cos(angle); 
-        const z = distance * Math.sin(angle); 
-        const randomHeight = 2 + Math.random() * 4.0; 
-    
-        matrixCalcObject.scale.set(
-            3 + Math.random() * 2.0,
-            randomHeight,
-            2 + Math.random() * 2.0
-        );
-    
-        matrixCalcObject.position.set(
-            x,
-            (randomHeight / 2.0) - Math.random(),
-            z
-        );
-    
-        matrixCalcObject.lookAt(originVector);    
-        matrixCalcObject.updateMatrix();
-        instancedMesh.setMatrixAt(instanceIndex, matrixCalcObject.matrix);
-    }
+    useEffect(() => {
+        if(instancedMeshRef.current) {
+            for (let instanceIndex = 0; instanceIndex < instanceCount; instanceIndex++) {
+                const angle = (instanceIndex / instanceCount) * Math.PI * 2;
+                const x = distance * Math.cos(angle); 
+                const z = distance * Math.sin(angle); 
+                const randomHeight = 2 + Math.random() * 4.0; 
+                matrixCalcObject.scale.set(
+                    3 + Math.random() * 2.0,
+                    randomHeight,
+                    2 + Math.random() * 2.0
+                );
+                matrixCalcObject.position.set(
+                    x,
+                    (randomHeight / 2.0) - Math.random(),
+                    z
+                );
+                matrixCalcObject.lookAt(originVector);    
+                matrixCalcObject.updateMatrix();
+                instancedMeshRef.current.setMatrixAt(instanceIndex, matrixCalcObject.matrix);
+            }
+            instancedMeshRef.current.instanceMatrix.needsUpdate = true;
+            instancedMeshRef.current.frustumCulled = false;
+        }
+    }, [])
 
     return (
-        <primitive object={instancedMesh}/>
+        <instancedMesh
+            args={[null as any, null as any, instanceCount]}
+            ref={instancedMeshRef}
+        >
+            <planeGeometry 
+                args={[1, 1, 1, 1]}
+            />
+            <meshStandardMaterial 
+                transparent={true}
+                map={texture}
+                alphaTest={0.5}
+                side={DoubleSide}
+                color={new Color(0xccaaaa)} 
+            />
+        </instancedMesh>
     )
 }
 

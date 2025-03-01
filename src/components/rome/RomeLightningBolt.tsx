@@ -1,18 +1,14 @@
 import {
-    ShaderMaterial,
-    DoubleSide,
-    Vector3
-} from 'three';
-import { 
-    // useEffect, 
-    // useState,
-    useRef
- } from 'react';
-import { useFrame } from '@react-three/fiber';
-import {
     ambientLightColor,
     whiteColor
 } from './romeColors';
+import { useFrame } from '@react-three/fiber';
+import React, { useRef } from 'react';
+import {
+    DoubleSide,
+    ShaderMaterial,
+    Vector3
+} from 'three';
 
 const skyDomeShader = {
     vertexShader: `
@@ -113,9 +109,9 @@ const RomeLightningBoltShader = {
             value: new Vector3(0.0, 0.0, 0.0)
         }
     }
-}
+};
 
-const RomeLightningBolt = () => {
+const RomeLightningBolt: React.FC = (): JSX.Element => {
     const lightningBoltRef = useRef<ShaderMaterial>(null);
     const strikeTime = 10;
     const skyDomeRef = useRef<ShaderMaterial>(null);

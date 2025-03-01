@@ -1,5 +1,6 @@
-import { DoubleSide } from 'three';
+import React from 'react';
 import { skyColorLight } from './insectsColors';
+import { DoubleSide } from 'three';
 
 const skyDomeShader = {
     vertexShader: `
@@ -24,7 +25,7 @@ const skyDomeShader = {
     `,
 };
 
-const InsectsSkyDome = () => {
+const InsectsSkyDome: React.FC = (): JSX.Element => {
     return (
         <mesh scale={[300, 300, 300]}>
             <sphereGeometry />

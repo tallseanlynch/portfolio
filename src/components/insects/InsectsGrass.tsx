@@ -1,14 +1,13 @@
+import { useFrame } from '@react-three/fiber';
+import { 
+    useEffect,
+    useRef
+} from 'react';
 import {
-    useFrame,
-} from '@react-three/fiber';
-import {
-    Vector3,
     DoubleSide,
-    Color,
-    ShaderMaterial,
     InstancedMesh,
-    PlaneGeometry,
     Object3D,
+    ShaderMaterial
 } from 'three';
 
 // huge thank you to felixmariotto and the three.js discord
@@ -40,27 +39,15 @@ const grassShader = {
     uniform vec3 baseColor;
     void main() {
         float clarity = ( vUv.y * 0.5 ) + 0.5;
-        // vec3 positionColor = mix(skyColorLight, vPosition, .05);
-        // vec3 mixSkyColorLight = mix(positionColor, baseColor, clarity);
         vec3 mixSkyColorLight = mix(skyColorLight, baseColor, clarity);
-        //mixSkyColorLight = mix(mixSkyColorLight, vPosition / 10.0, .125);
-        // gl_FragColor = vec4(mix(mixSkyColorLight, vPosition, .0125), 1.0);
         gl_FragColor = vec4( mixSkyColorLight, 1 );
     }
   `
 };
 
-interface GrassProps {
-    baseColor: Color;
-    skyColor: Color;
-    instanceNumber: number; 
-    instanceOrigin: Vector3;
-    planeGeometryArgs: number[];
-    placementScale: number;
-    instanceScale: number;  
-};
+const matrixPositionObject = new Object3D();  
 
-const InsectsGrass: React.FC<GrassProps> = ({
+const InsectsGrass: React.FC<InsectsGrassProps> = ({
     baseColor,
     skyColor,
     instanceNumber, 
@@ -68,53 +55,57 @@ const InsectsGrass: React.FC<GrassProps> = ({
     planeGeometryArgs,
     placementScale,
     instanceScale
-}) => {  
+}): JSX.Element => {  
+    const instancedMeshRef = useRef<InstancedMesh>(null);
+    const shaderMaterialRef = useRef<ShaderMaterial>(null);
 
-    const uniforms = {
-    time: {
-        value: 0
-    },
-    skyColorLight: {
-        value: skyColor
-    },
-    baseColor: {
-        value: baseColor
-    }
-  };
-  
-  const leavesMaterial = new ShaderMaterial({
-    vertexShader: grassShader.vertexShader,
-    fragmentShader: grassShader.fragmentShader,
-    uniforms,
-    side: DoubleSide
-  });
-    
-  const matrixPositionObject = new Object3D();  
-  const geometry = new PlaneGeometry(planeGeometryArgs[0], planeGeometryArgs[1], planeGeometryArgs[2], planeGeometryArgs[3])
-  const instancedMesh = new InstancedMesh( geometry, leavesMaterial, instanceNumber );
-    for ( let i=0 ; i<instanceNumber ; i++ ) {
-        const angle = Math.random() * Math.PI * 2; 
-        const radius = Math.sqrt(Math.random()) * placementScale;
-
-        const x = radius * Math.cos(angle);
-        const z = radius * Math.sin(angle);
-
-        matrixPositionObject.position.set(x, 0, z);        
-        matrixPositionObject.scale.setScalar( 0.5 + Math.random() * instanceScale );
-        matrixPositionObject.rotation.y = Math.random() * Math.PI;
-        matrixPositionObject.updateMatrix();
-        instancedMesh.setMatrixAt( i, matrixPositionObject.matrix );
-    }
-
-    instancedMesh.position.copy(instanceOrigin);
+    useEffect(() => {
+        if(instancedMeshRef.current) {
+            for ( let i=0 ; i<instanceNumber ; i++ ) {
+                const angle = Math.random() * Math.PI * 2; 
+                const radius = Math.sqrt(Math.random()) * placementScale;
+                const x = radius * Math.cos(angle);
+                const z = radius * Math.sin(angle);
+                matrixPositionObject.position.set(x, 0, z);        
+                matrixPositionObject.scale.setScalar( 0.5 + Math.random() * instanceScale );
+                matrixPositionObject.rotation.y = Math.random() * Math.PI;
+                matrixPositionObject.updateMatrix();
+                instancedMeshRef.current.setMatrixAt( i, matrixPositionObject.matrix );
+                instancedMeshRef.current.frustumCulled = false;
+            }
+            instancedMeshRef.current.instanceMatrix.needsUpdate = true;
+            instancedMeshRef.current.frustumCulled = false;
+        }
+    }, [])
 
     useFrame(({clock}) => {
-        leavesMaterial.uniforms.time.value = clock.getElapsedTime();
-        leavesMaterial.uniformsNeedUpdate = true;
+        if(shaderMaterialRef.current) {
+            shaderMaterialRef.current.uniforms.time.value = clock.getElapsedTime();
+            shaderMaterialRef.current.uniformsNeedUpdate = true;    
+        }
     });
 
     return (
-        <primitive object={instancedMesh}/>
+        <instancedMesh position={instanceOrigin} args={[null as any, null as any, instanceNumber]} ref={instancedMeshRef} >
+            <planeGeometry args={[planeGeometryArgs[0], planeGeometryArgs[1], planeGeometryArgs[2], planeGeometryArgs[3]]} />
+            <shaderMaterial 
+                ref={shaderMaterialRef}
+                vertexShader={grassShader.vertexShader}
+                fragmentShader={grassShader.fragmentShader}
+                uniforms={{
+                    time: {
+                        value: 0
+                    },
+                    skyColorLight: {
+                        value: skyColor
+                    },
+                    baseColor: {
+                        value: baseColor
+                    }                
+                }}
+                side={DoubleSide}
+            />
+        </instancedMesh>
     )
 };
 

@@ -1,9 +1,9 @@
-import {
-    TextureLoader,
-    DoubleSide
-} from 'three';
-import { useLoader } from '@react-three/fiber';
 import { whiteColor } from './romeColors';
+import { useLoader } from '@react-three/fiber';
+import {
+    DoubleSide,
+    TextureLoader
+} from 'three';
 
 const RomeDistanceMaterial: React.FC = (): JSX.Element => {
     const bushTexture0 = useLoader(TextureLoader, '/rome/bush-0-50-compressed.png')

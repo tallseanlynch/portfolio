@@ -6,11 +6,9 @@ import ChevronRight from '../../assets/images/chevron-right.svg';
 import { useDispatch } from 'react-redux'
 import { decrement, increment } from '../../features/sceneCounter'
 
-interface BrandHeaderProps {
-    brandHasBeenClicked?: boolean; 
-}
-
-const BrandHeader: React.FC<BrandHeaderProps> = ({brandHasBeenClicked = false}) => {
+const BrandHeader: React.FC<BrandHeaderProps> = ({
+    brandHasBeenClicked = false
+}) => {
     const dispatch = useDispatch();
 
     const handleChevronLeftClick = () => {

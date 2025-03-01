@@ -3,7 +3,7 @@ import { BrandHeader } from './BrandHeader';
 import { BrandLanding } from './BrandLanding';
 import '../../assets/css/brand.css';
 
-const BrandSection: React.FC = () => {
+const BrandSection: React.FC = (): JSX.Element => {
   const brandRef = useRef<HTMLDivElement>(null);
   const [brandClickStatus, setBrandClickStatus] = useState<boolean>(false);
 

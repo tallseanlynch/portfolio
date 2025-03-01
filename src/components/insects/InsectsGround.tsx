@@ -1,8 +1,4 @@
-import {
-    Vector3,
-    DoubleSide,
-    PlaneGeometry
-} from 'three';
+import React from 'react';
 import {
     grassBaseColor,
     dryTallGrassColor,
@@ -12,8 +8,13 @@ import {
     roseColor,
     dirtColor
 } from './insectsColors';
-import { InsectsSmallFlowers } from './InsectsSmallFlowers';
 import { InsectsGrass } from './InsectsGrass';
+import { InsectsSmallFlowers } from './InsectsSmallFlowers';
+import {
+    Vector3,
+    DoubleSide,
+    PlaneGeometry
+} from 'three';
 
 const elevationPositions = [
     new Vector3(1.0, -2.0, -30.0),
@@ -48,8 +49,7 @@ const elevationPositions = [
     new Vector3(-21.0, 1.5, -12.0),
     new Vector3(51.0, 2.0, -15.0),
     new Vector3(17.0, 2.0, -15.0),
-
-]
+];
 
 const groundShader = {
     vertexShader: `
@@ -79,11 +79,8 @@ const groundShader = {
         void main() {
             vUv = uv;
             vPosition = position;
-
             vec3 hillPosition = vec3(1.0, 0.0, -30.0);
-
             vPosition = returnElevation(vPosition, elevationPositions);
-
             gl_Position = projectionMatrix * modelViewMatrix * vec4(vPosition, 1.0);
         }
     `,
@@ -97,7 +94,6 @@ const groundShader = {
             float distanceFromCenter = distance(vPosition, vec3(0.0,0.0,0.0)) / 100.0;
             vec3 uvModColor = vec3(vPosition) * .25;
             vec3 groundColor = vec3(0.0, 1.0, 0.0);
-            // vec3 groundColorUvModColorMix = mix(groundColor, uvModColor, .05);
             vec3 groundColorSkyMix = mix(groundColor, vec3(1.0, 1.0, 1.0), distanceFromCenter);
             vec3 groundHeightMix = vec3(0.0, 0.0, 0.0);
             if(vPosition.y < 0.0) {
@@ -106,8 +102,6 @@ const groundShader = {
                 groundHeightMix = mix(groundColorSkyMix, dryTallGrassColor, vPosition.y / (2.0 + distanceFromCenter));
             }
             gl_FragColor = vec4(groundHeightMix, 1.0);
-            // gl_FragColor = vec4(vPosition.z, vPosition.z, vPosition.z, 1.0);
-            // gl_FragColor = vec4(vPosition.y, vPosition.y, vPosition.y, 1.0);
         }
     `,
 };
@@ -115,7 +109,7 @@ const groundShader = {
 const rotatedPlaneGeometry = new PlaneGeometry(200, 200, 500, 500);
 rotatedPlaneGeometry.rotateX(Math.PI / 2);
 
-const InsectsGround = () => {
+const InsectsGround: React.FC = (): JSX.Element => {
 
     return (
         <>

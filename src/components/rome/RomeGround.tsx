@@ -1,32 +1,34 @@
-import { 
-    useRef,
-    useEffect
-} from 'react'
 import { MeshReflectorMaterial } from '@react-three/drei';
 import { 
-    TextureLoader,
+  useFrame,
+  useLoader
+} from "@react-three/fiber";
+import { 
+  useEffect,
+  useRef
+} from 'react'
+import { 
+    DoubleSide,
+    Euler,
     Mesh,
     ShaderMaterial,
-    Vector3,
-    Euler,
-    DoubleSide
+    TextureLoader,
+    Vector3
 } from 'three'; 
-import { 
-    useLoader, 
-    useFrame,
-} from "@react-three/fiber";
 
 const createUniformData = (numberOfWaves: number) => {
   const mouseClicksArray: Vector3[] = [];
   const clickMagnitudesArray: number[] = [];
+  
   for (let i = 0; i < numberOfWaves; i++) {
     mouseClicksArray.push(new Vector3(-100, -100, -100));
     clickMagnitudesArray.push(0.0);
-  }
+  };
+
   return {
     mouseClicksArray,
     clickMagnitudesArray
-  }
+  };
 };
 
 const RomeGroundRippleShader: React.FC = (): JSX.Element => {
@@ -72,7 +74,6 @@ const RomeGroundRippleShader: React.FC = (): JSX.Element => {
                     }
                 }
             }
-            // gl_FragColor = vec4(positionDiff, positionDiff, positionDiff, positionDiff /2.0); // Red color
             float distanceFromOrigin = distance(vUv, vec2(0.5, 0.5)) * 2.0;
             if(distanceFromOrigin < .65) {
                 distanceFromOrigin = 0.0;
@@ -86,7 +87,9 @@ const RomeGroundRippleShader: React.FC = (): JSX.Element => {
         }
     `,
   };
+
   const randomRippleInterval = 10;
+
   useEffect(() => {
     const interval = setInterval(() => {
       uniforms.mouseClicks.value[mouseClicks % numberOfWaves].set((Math.random() * 5) -2.5, (Math.random() * 5) -2.5, 0);
@@ -148,25 +151,25 @@ const RomeGround: React.FC = (): JSX.Element => {
         <>
             <RomeGroundRippleShader />
             <mesh
-                position={[0, 0, 0]}
-                rotation={[-Math.PI * .5, 0, 0]}
+              position={[0, 0, 0]}
+              rotation={[-Math.PI * .5, 0, 0]}
             >
                 <planeGeometry 
-                    args={[5, 5, 1, 1]}
+                  args={[5, 5, 1, 1]}
                 />
                 <MeshReflectorMaterial
-                    blur={[0, 0]}
-                    mixBlur={0}
-                    mixStrength={10}
-                    mixContrast={1}
-                    resolution={256}
-                    mirror={1}
-                    depthScale={0}
-                    minDepthThreshold={0.9}
-                    maxDepthThreshold={1}
-                    depthToBlurRatioBias={0.25}
-                    distortion={1}
-                    distortionMap={groundTexture}
+                  blur={[0, 0]}
+                  mixBlur={0}
+                  mixStrength={10}
+                  mixContrast={1}
+                  resolution={256}
+                  mirror={1}
+                  depthScale={0}
+                  minDepthThreshold={0.9}
+                  maxDepthThreshold={1}
+                  depthToBlurRatioBias={0.25}
+                  distortion={1}
+                  distortionMap={groundTexture}
                 />
             </mesh>
         </>

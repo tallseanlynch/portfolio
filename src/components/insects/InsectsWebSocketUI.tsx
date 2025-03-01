@@ -4,7 +4,6 @@ import {
     useRef
 } from 'react';
 import { Vector3, Color } from 'three';
-import { ClientData, EventData } from './websocket-types';
 import { InsectsControls } from './InsectsControls';
 import { InsectsSocketInsect } from './InsectsSocketInsect';
 import { colors } from './insectsColors';
@@ -16,50 +15,32 @@ const wssAddress = window.location.href.includes('localhost') ? localhostAddress
 const clientColorNumber = Math.floor(Math.random() * colors.length);
 const clientColor = colors[clientColorNumber];
 
-const patternSpotInitialValues = [
-    {
-        "x": -0.2697212401556805,
-        "y": 0.15278923470877115,
-        "z": 0.0
-    },
-    {
-        "x": -0.2697212401556805,
-        "y": 0.3527892347087711,
-        "z": 0.0
-    },
-    {
-        "x": -0.2697212401556805,
-        "y": -0.15278923470877115,
-        "z": 0.0
-    },
-    {
-        "x": -0.4697212401556805,
-        "y": 0.5278923470877115,
-        "z": 0.0
-    },
-    {
-        "x": -0.4697212401556805,
-        "y": -0.5278923470877115,
-        "z": 0.0
-    },
-]
+const patternSpotValues = [
+    new Vector3(-0.2697212401556805, 0.15278923470877115, 0.0),
+    new Vector3(-0.2697212401556805, 0.3527892347087711, 0.0),
+    new Vector3(-0.2697212401556805, -0.15278923470877115, 0.0),
+    new Vector3(-0.4697212401556805, 0.5278923470877115, 0.0),
+    new Vector3(-0.4697212401556805, -0.5278923470877115, 0.0)
+];
 
-const createPatternSpots = (patternSpots: {x: number, y: number, z: number}[]) => {
-    const patternSpotsArray: Vector3[] = []
-    for(let ps = 0; ps < patternSpots.length; ps++) {
-        patternSpotsArray.push(new Vector3(
-            patternSpots[ps].x + (Math.random() * .4) -.2,
-            patternSpots[ps].y + (Math.random() * .4) -.2,
-            patternSpots[ps].z + (Math.random() * .4) -.2
-        ))
+const createPatternSpots = (): void => {
+    for(let ps = 0; ps < patternSpotValues.length; ps++) {
+        patternSpotValues[ps].x += (Math.random() * .4) -.2;
+        patternSpotValues[ps].y += (Math.random() * .4) -.2;
+        patternSpotValues[ps].z += (Math.random() * .4) -.2;
+        
     }
-    return patternSpotsArray;
 }
+createPatternSpots();
 
-const clientPatternSpots = createPatternSpots(patternSpotInitialValues)
-const InsectsWebSocketUI = () => {
-    const [clientData, setClientData] = useState<ClientData>({ uuid: '', status: 'unconnected', memory: {} });
+const InsectsWebSocketUI: React.FC = (): JSX.Element => {
+    const [clientData, setClientData] = useState<ClientData>({ 
+        uuid: '', 
+        status: 'unconnected', 
+        memory: {} 
+    });
     const ws = useRef<WebSocket | null>(null);
+
     const handleIncomingMessage = (eventData: EventData) => {
         switch (eventData.messageType) {
             case 'connectedFromServer':
@@ -103,8 +84,8 @@ const InsectsWebSocketUI = () => {
                         }    
                     }
                 });
-            }
                 break;
+            }
             case 'broadcastDisconnectedFromServer': {
                 const uuidToDelete = eventData.payload.uuid;
                 setClientData((prevData) => {
@@ -121,7 +102,7 @@ const InsectsWebSocketUI = () => {
         if (ws.current?.readyState === WebSocket.OPEN) {
             ws.current.send(JSON.stringify(message));
         }
-    }
+    };
 
     useEffect(() => {
         ws.current = new WebSocket(wssAddress);
@@ -167,20 +148,18 @@ const InsectsWebSocketUI = () => {
             <InsectsControls 
                 sendUpdate={sendUpdate} 
                 clientColor={clientColor}
-                clientPatternSpots={clientPatternSpots}
+                clientPatternSpots={patternSpotValues}
             />
             {Object.keys(clientData.memory).map(socketInsectKey => {
                 if(clientData.memory[socketInsectKey] === undefined || clientData.memory[socketInsectKey].insectPatternSpots === undefined) { return }
 
-                const spotsArray = clientData.memory[socketInsectKey].insectPatternSpots;
-                
-                clientData.memory[socketInsectKey].patternSpotsCalc[0].set(spotsArray[0].x, spotsArray[0].y, spotsArray[0].z)
-                clientData.memory[socketInsectKey].patternSpotsCalc[1].set(spotsArray[1].x, spotsArray[1].y, spotsArray[1].z)
-                clientData.memory[socketInsectKey].patternSpotsCalc[2].set(spotsArray[2].x, spotsArray[2].y, spotsArray[2].z)
-                clientData.memory[socketInsectKey].patternSpotsCalc[3].set(spotsArray[3].x, spotsArray[3].y, spotsArray[3].z)
-                clientData.memory[socketInsectKey].patternSpotsCalc[4].set(spotsArray[4].x, spotsArray[4].y, spotsArray[4].z)
-
-                clientData.memory[socketInsectKey].colorCalc.set(clientData.memory[socketInsectKey].insectColor)
+                const spotsArray = clientData.memory[socketInsectKey].insectPatternSpots;                
+                clientData.memory[socketInsectKey].patternSpotsCalc[0].set(spotsArray[0].x, spotsArray[0].y, spotsArray[0].z);
+                clientData.memory[socketInsectKey].patternSpotsCalc[1].set(spotsArray[1].x, spotsArray[1].y, spotsArray[1].z);
+                clientData.memory[socketInsectKey].patternSpotsCalc[2].set(spotsArray[2].x, spotsArray[2].y, spotsArray[2].z);
+                clientData.memory[socketInsectKey].patternSpotsCalc[3].set(spotsArray[3].x, spotsArray[3].y, spotsArray[3].z);
+                clientData.memory[socketInsectKey].patternSpotsCalc[4].set(spotsArray[4].x, spotsArray[4].y, spotsArray[4].z);
+                clientData.memory[socketInsectKey].colorCalc.set(clientData.memory[socketInsectKey].insectColor);
 
                 return (
                     <InsectsSocketInsect
@@ -190,7 +169,7 @@ const InsectsWebSocketUI = () => {
                         color={clientData.memory[socketInsectKey].colorCalc}
                         patternSpots={clientData.memory[socketInsectKey].patternSpotsCalc}
                     />
-                )
+                );
             })}
         </>
     );

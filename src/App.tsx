@@ -1,29 +1,18 @@
 import {
-  SnowShaderCanvas,
   BrandSection,
-  WaterShaderCanvas,
+  InsectsShaderCanvas,
   RomeShaderCanvas,
-  InsectsShaderCanvas
+  SnowShaderCanvas,
+  WaterShaderCanvas
 } from './components';
 import './assets/css/brand.css';
 import {
-  useEffect,
   memo,
-  useState,
-  Suspense
+  Suspense,
+  useEffect,
+  useState
 } from 'react';
 import { useSelector } from 'react-redux';
-
-interface SceneCounterState {
-  sceneCounter: {
-    value: number
-  }
-};
-
-type calculateSceneIndexType = {
-  startingSceneIndex: number;
-  sceneCounter: number;
-};
 
 const scenes = [
   memo(WaterShaderCanvas),
@@ -58,15 +47,15 @@ const calculateStartingSceneParams = (): string => {
   return startingSceneParam;
 };
 
-const Loading = () => {
+const Loading: React.FC = (): JSX.Element => {
     return (
-        <div className='loading-container'>
-          <div className="lds-ring"><div></div><div></div><div></div><div></div></div>
-        </div>
+      <div className='loading-container'>
+        <div className="lds-ring"><div></div><div></div><div></div><div></div></div>
+      </div>
     )
-}
+};
 
-const App = (): JSX.Element => {
+const App: React.FC = (): JSX.Element => {
   const sceneCounter = useSelector((state: SceneCounterState) => state.sceneCounter.value);
   const [startingSceneIndex, setStartingSceneIndex] = useState(0);
 
@@ -75,7 +64,7 @@ const App = (): JSX.Element => {
   }, [])
 
   useEffect(() => {
-    history.pushState(null, '', `?scene=${startingSceneMap[calculateSceneIndex({startingSceneIndex, sceneCounter})]}`)
+    history.pushState(null, '', `?scene=${startingSceneMap[calculateSceneIndex({startingSceneIndex, sceneCounter})]}`);
   }, [sceneCounter, startingSceneIndex])
 
   const sceneIndex = calculateSceneIndex({startingSceneIndex, sceneCounter});
@@ -85,12 +74,12 @@ const App = (): JSX.Element => {
     <>
       <Suspense fallback={<Loading />}>
         <div className='container-100'>
-            <SceneToRender />
-          </div>
+          <SceneToRender />
+        </div>
       </Suspense>
       <BrandSection />
     </>
   );
-}
+};
 
 export default App;

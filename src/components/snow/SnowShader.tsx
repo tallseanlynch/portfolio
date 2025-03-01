@@ -1,36 +1,37 @@
 import {
-  TextureLoader,
-  Vector3,
-  DoubleSide,
-  Color,
-  NearestFilter,
-  PlaneGeometry,
-  MeshBasicMaterial,
-  InstancedMesh,
-  Object3D,
-  NoToneMapping,
-  Fog
-} from 'three';
+  defaultFogColor, 
+  defaultSceneFog
+} from './snowColors';
+import { SnowGroundPlane } from './SnowGroundPlane';
+import { SnowSnowflakes } from './SnowSnowflakes';
+import { spritePaths } from './spritePaths';
+import { OrbitControls } from '@react-three/drei';
 import {
   Canvas,
   useLoader
 } from '@react-three/fiber';
-import { useMemo, useRef } from 'react';
-import { OrbitControls } from '@react-three/drei';
+import { 
+  useMemo, 
+  useRef 
+} from 'react';
 import {
-  defaultFogColor, 
-  defaultSceneFog
-} from './snowColors';
-import { Snowflakes } from './Snowflakes';
-import { SnowGroundPlane } from './SnowGroundPlane';
-import { spritePaths } from './spritePaths';
+  DoubleSide,
+  InstancedMesh,
+  MeshBasicMaterial,
+  NearestFilter,
+  NoToneMapping,
+  Object3D,
+  PlaneGeometry,
+  TextureLoader,
+  Vector3
+} from 'three';
 
-const SnowShader:React.FC = (): JSX.Element => {
+const positionInterval = 50;
+const scaleDivision = 400;
+
+const SnowShader: React.FC = (): JSX.Element => {
   const sprites = useRef<InstancedMesh[]>([]);
-  const positionInterval = 50;
-  const scaleDivision = 400;
   const texturePaths = useMemo(() => spritePaths, []);
-
   const allTextures = useLoader(TextureLoader, texturePaths);
 
   useMemo(() => { 
@@ -73,16 +74,9 @@ const SnowShader:React.FC = (): JSX.Element => {
   )
 };
 
-interface SnowShaderCanvasProps {
-  sceneFog?: Fog,
-  backgroundColor?: Color,
-  classNames?: string
-};
-
 const SnowShaderCanvas: React.FC<SnowShaderCanvasProps> = ({
-  sceneFog = defaultSceneFog, 
   backgroundColor = defaultFogColor,
-  classNames = ''
+  sceneFog = defaultSceneFog
 }) => {
   return (
     <Canvas
@@ -90,9 +84,8 @@ const SnowShaderCanvas: React.FC<SnowShaderCanvasProps> = ({
       gl={{ antialias: true, toneMapping: NoToneMapping }}
       linear
       scene={{ fog: sceneFog, background: backgroundColor }}
-      className={classNames}
     >
-      <Snowflakes />
+      <SnowSnowflakes />
       <SnowGroundPlane />
       <SnowShader />
       <OrbitControls

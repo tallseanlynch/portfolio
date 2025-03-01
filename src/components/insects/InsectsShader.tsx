@@ -1,16 +1,16 @@
+import { isTouchDevice } from '../../assets/js/util';
 import {
     Canvas
 } from '@react-three/fiber';
+import { InsectsClouds } from './InsectsClouds';
+import { whiteColor, skyColorLight } from './insectsColors';
+import { InsectsGround } from './InsectsGround';
+import { InsectsSkyDome } from './InsectsSkyDome';
+import { InsectsWebSocketUI } from './InsectsWebSocketUI';
 import {
     NoToneMapping,
     Vector3
 } from 'three';
-import { isTouchDevice } from '../../assets/js/util';
-import { InsectsSkyDome } from './InsectsSkyDome';
-import { InsectsGround } from './InsectsGround';
-import { InsectsWebSocketUI } from './InsectsWebSocketUI';
-import { InsectsClouds } from './InsectsClouds';
-import { whiteColor, skyColorLight } from './insectsColors';
 
 const InsectsShader: React.FC = (): JSX.Element => {
     return (
@@ -31,13 +31,7 @@ const InsectsShader: React.FC = (): JSX.Element => {
     )
 };
 
-interface InsectShaderCanvasProps {
-    classNames?: string;
-};
-
-const InsectsShaderCanvas: React.FC<InsectShaderCanvasProps> = ({
-    classNames = ''
-}) => {
+const InsectsShaderCanvas: React.FC = () => {
 
     const touchDevice = isTouchDevice();
 
@@ -46,7 +40,6 @@ const InsectsShaderCanvas: React.FC<InsectShaderCanvasProps> = ({
             <Canvas
                 gl={{ antialias: true, toneMapping: NoToneMapping }}
                 linear
-                className={classNames}
             >
                 <InsectsShader />
             </Canvas>

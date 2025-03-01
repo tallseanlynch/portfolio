@@ -1,16 +1,23 @@
-import { useState } from 'react';
 import {
     useFrame,
     useLoader
 } from '@react-three/fiber';
-import {
-    TextureLoader,
-    DoubleSide
-} from 'three';
+import { 
+    insectBodyShader, 
+    insectWingsShader 
+} from './insectsButterflyShaders';
 import { skyColorLight } from './insectsColors';
-import { insectBodyShader, insectWingsShader } from './insectsShaders';
+import { useState } from 'react';
+import {
+    DoubleSide,
+    TextureLoader
+} from 'three';
 
-const InsectsButterfly = ({color, patternSpots, insectGroupRef}) => {
+const InsectsButterfly: React.FC<InsectsButterflyProps> = ({
+    color, 
+    patternSpots, 
+    insectGroupRef
+}): JSX.Element => {
     const butterflyWingTextureLeft = useLoader(TextureLoader, './insects/butterfly-wings-alpha.png');
     const [insectWingRotation, setInsectWingRotation] = useState<number>(0);
     const [butterWingFlapInitial] = useState(Math.random() * 100);

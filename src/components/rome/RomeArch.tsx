@@ -1,9 +1,9 @@
+import { useLoader } from '@react-three/fiber';
+import { whiteColor } from './romeColors';
 import {
     TextureLoader,
     DoubleSide,
 } from 'three';
-import { useLoader } from '@react-three/fiber';
-import { whiteColor } from './romeColors';
 
 const RomeArch: React.FC = (): JSX.Element => {
     const archTexture = useLoader(TextureLoader, '/rome/arch-50-compressed-gray-compressed.png')

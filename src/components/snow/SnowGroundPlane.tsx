@@ -1,12 +1,12 @@
-import {
-  TextureLoader,
-  DoubleSide,
-  NearestFilter,
-} from 'three';
+import { whiteColor } from './snowColors';
 import {
   useLoader
 } from '@react-three/fiber';
-import { whiteColor } from './snowColors';
+import {
+  DoubleSide,
+  NearestFilter,
+  TextureLoader
+} from 'three';
 
 const SnowGroundPlane: React.FC = (): JSX.Element => {
   const groundTexture = useLoader(TextureLoader, './sprites/ground.png')

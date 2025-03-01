@@ -1,13 +1,13 @@
 import {
-    TextureLoader,
-    Vector3,
-    DoubleSide
-} from 'three';
+    pointLightColor,
+    whiteColor
+} from './romeColors';
 import {  useLoader } from '@react-three/fiber';
 import {
-    whiteColor,
-    pointLightColor
-} from './romeColors';
+    DoubleSide,
+    TextureLoader,
+    Vector3
+} from 'three';
 
 const RomeLightMaterial: React.FC = (): JSX.Element => {
     const lightTexture0 = useLoader(TextureLoader, '/rome/light-post-0-50-compressed.png');
@@ -21,12 +21,6 @@ const RomeLightMaterial: React.FC = (): JSX.Element => {
             side={DoubleSide}
         />
     )
-};
-
-interface RomeLightProps {
-    position?: Vector3,
-    backLight?: boolean,
-    castShadow?: boolean
 };
 
 const RomeLight: React.FC<RomeLightProps> = ({

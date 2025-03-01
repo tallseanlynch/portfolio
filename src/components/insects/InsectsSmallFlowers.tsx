@@ -1,12 +1,14 @@
+import React, {
+  useRef,
+  useEffect
+} from 'react';
 import {
-    DoubleSide,
-    ShaderMaterial,
-    InstancedMesh,
-    Object3D,
-    CircleGeometry,
+  DoubleSide,
+  InstancedMesh,
+  Object3D
 } from 'three';
 
-const flowerShader = {
+const smallFlowerShader = {
     vertexShader: `
     varying vec2 vUv;
     uniform float time;
@@ -34,65 +36,68 @@ const flowerShader = {
     void main() {
         float clarity = ( vUv.y * 0.5 ) + 0.5;
         vec3 mixSkyColorLight = mix(skyColorLight, baseColor, clarity);
-//        mixSkyColorLight = mix(mixSkyColorLight, vPosition / 10.0, .125);
         gl_FragColor = vec4( mixSkyColorLight, 1 );
     }
   `
 };
 
-const InsectsSmallFlowers = ({
-    baseColor,
-    skyColor,
-    instanceNumber, 
-    instanceOrigin,
-    circleGeometryArgs,
-    placementScale,
-    instanceScale
-}) => {  
-    const uniforms = {
-        time: {
-          value: 0
-      },
-      skyColorLight: {
-          value: skyColor
-      },
-      baseColor: {
-        value: baseColor
-      }
-    };
+const matrixPositionObject = new Object3D();
 
-    const leavesMaterial = new ShaderMaterial({
-      vertexShader: flowerShader.vertexShader,
-      fragmentShader: flowerShader.fragmentShader,
-      uniforms,
-      side: DoubleSide
-    });
+const InsectsSmallFlowers: React.FC<InsectsSmalFlowersProps> = ({
+  baseColor,
+  skyColor,
+  instanceNumber, 
+  instanceOrigin,
+  circleGeometryArgs,
+  placementScale,
+  instanceScale
+}): JSX.Element => { 
+  const instancedMeshRef = useRef<InstancedMesh>(null);
       
-    const matrixPositionObject = new Object3D();
-    const geometry = new CircleGeometry(circleGeometryArgs[0], circleGeometryArgs[1]);    
-    const instancedMesh = new InstancedMesh( geometry, leavesMaterial, instanceNumber );
+  useEffect(() => {
+    if(instancedMeshRef.current) {
       for ( let i=0 ; i<instanceNumber ; i++ ) {
-          const angle = Math.random() * Math.PI * 2; // Random angle between 0 and 2π
-          const radius = Math.sqrt(Math.random()) * placementScale; // Square root of random number times the radius of the circle
-  
-          const x = radius * Math.cos(angle);
-          const z = radius * Math.sin(angle);
-  
-          matrixPositionObject.position.set(x, Math.random() / 5, z);    
-          matrixPositionObject.scale.setScalar( 0.1 + Math.random() * instanceScale );
-          matrixPositionObject.rotation.set(Math.PI / Math.random() * 2, Math.random() / 10, Math.random() / 10);
-          matrixPositionObject.updateMatrix();
-          instancedMesh.setMatrixAt( i, matrixPositionObject.matrix );
+        const angle = Math.random() * Math.PI * 2;
+        const radius = Math.sqrt(Math.random()) * placementScale;
+        const x = radius * Math.cos(angle);
+        const z = radius * Math.sin(angle);
+        matrixPositionObject.position.set(x, Math.random() / 5, z);    
+        matrixPositionObject.scale.setScalar( 0.1 + Math.random() * instanceScale );
+        matrixPositionObject.rotation.set(Math.PI / Math.random() * 2, Math.random() / 10, Math.random() / 10);
+        matrixPositionObject.updateMatrix();
+        instancedMeshRef.current.setMatrixAt( i, matrixPositionObject.matrix );
       }
-      instancedMesh.position.copy(instanceOrigin);
-  
-    //   useFrame(({clock}) => {
-    //       leavesMaterial.uniforms.time.value = clock.getElapsedTime();
-    //       leavesMaterial.uniformsNeedUpdate = true;
-    //   });
-  
+      instancedMeshRef.current.instanceMatrix.needsUpdate = true;
+      instancedMeshRef.current.frustumCulled = false;
+    }
+  }, []);
+    
     return (
-        <primitive object={instancedMesh}/>
+      <instancedMesh 
+        args={[null as any, null as any, instanceNumber]} 
+        position={instanceOrigin} 
+        ref={instancedMeshRef}
+      >
+        <circleGeometry args={[circleGeometryArgs[0], circleGeometryArgs[1]]} />
+        <shaderMaterial 
+          vertexShader={smallFlowerShader.vertexShader}
+          fragmentShader={smallFlowerShader.fragmentShader}
+          uniforms={
+            {
+              time: {
+                  value: 0
+              },
+              skyColorLight: {
+                  value: skyColor
+              },
+              baseColor: {
+                value: baseColor
+              }
+            }
+          }
+          side={DoubleSide}
+        />
+      </instancedMesh>
     )
 };
 

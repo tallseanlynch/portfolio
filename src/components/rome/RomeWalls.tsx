@@ -1,9 +1,9 @@
 import { whiteColor } from "./romeColors";
+import { useLoader } from "@react-three/fiber";
 import { 
     DoubleSide,
     TextureLoader
  } from "three";
-import { useLoader } from "@react-three/fiber";
 
 const RomeWallMaterial0: React.FC = (): JSX.Element => {
     const wall0 = useLoader(TextureLoader, '/rome/wall-0-50-compressed.png');

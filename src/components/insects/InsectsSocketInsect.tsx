@@ -1,38 +1,34 @@
 import {
-    useState,
-    useRef
-} from 'react';
-import {
     useFrame,
     Vector3 as Vector3Type,
     Euler as EulerType
 } from '@react-three/fiber';
+import { InsectsButterfly } from './InsectsButterfly';
+import {
+    useState,
+    useRef
+} from 'react';
 import {
     Vector3,
     Euler,
-    Quaternion,
-    Color
+    Quaternion
 } from 'three';
-import { InsectsButterfly } from './InsectsButterfly';
-
-interface SocketInsectsProps {
-    position: Vector3Type;
-    rotation: EulerType;
-    color: Color;
-    patternSpots: Vector3Type[];
-}
 
 const lerpCalcVector3A = new Vector3();
 const lerpCalcVector3B = new Vector3();
 const lerpCalcVector3C = new Vector3();
-
 const currentQuaternionA = new Quaternion();
 const currentQuaternionB = new Quaternion();
 const lerpEulerCalcA = new Euler();
 const lerpEulerCalcB = new Euler();
 const resultEuler = new Euler();
 
-const InsectsSocketInsect: React.FC<SocketInsectsProps> = ({position, rotation, color, patternSpots}) => {
+const InsectsSocketInsect: React.FC<InsectsSocketInsectsProps> = ({
+    position, 
+    rotation, 
+    color, 
+    patternSpots
+}): JSX.Element => {
     const groupRef = useRef(null);
     const insectGroupRef = useRef(null);
     const [insectPosition, setInsectPosition] = useState<Vector3Type>(position);
@@ -44,7 +40,7 @@ const InsectsSocketInsect: React.FC<SocketInsectsProps> = ({position, rotation, 
             lerpCalcVector3B.set(position[0], position[1], position[2]);
             lerpCalcVector3C.lerpVectors(lerpCalcVector3A, lerpCalcVector3B, .1);
             return [lerpCalcVector3C.x, lerpCalcVector3C.y, lerpCalcVector3C.z];
-        })
+        });
 
         setInsectRotation(current => {
             lerpEulerCalcA.set(current[0], current[1], current[2]);
@@ -54,9 +50,8 @@ const InsectsSocketInsect: React.FC<SocketInsectsProps> = ({position, rotation, 
             currentQuaternionA.slerp(currentQuaternionB, 0.1); 
             resultEuler.setFromQuaternion(currentQuaternionA);
             return [resultEuler.x, resultEuler.y, resultEuler.z];
-        })
+        });
     });
-
 
     return (
         <>

@@ -1,11 +1,11 @@
+import { useFrame } from '@react-three/fiber';
+import { useRef, useEffect } from 'react';
 import {
     DoubleSide,
     Group,
     InstancedMesh,
     Object3D
 } from 'three';
-import { useRef, useEffect } from 'react';
-import { useFrame } from '@react-three/fiber';
 
 const cloudsShader = {
     vertexShader: `
@@ -47,14 +47,14 @@ const cloudsShader = {
 
 const matrixPositionObject = new Object3D();
 
-const InsectsClouds = ({
+const InsectsClouds: React.FC<InsectsCloudsProps> = ({
     whiteColor,
     skyColor,
     instanceNumber, 
     instanceOrigin,
     placementScale,
     instanceScale
-}) => {
+}): JSX.Element => {
     const groupRef = useRef<Group>(null);
     const instancedMeshRef = useRef<InstancedMesh>(null);
 
@@ -75,10 +75,10 @@ const InsectsClouds = ({
             instancedMeshRef.current.instanceMatrix.needsUpdate = true;
             instancedMeshRef.current.frustumCulled = false;
         }
-    }, [])
+    }, []);
   
     useFrame(({clock}) => {
-        if(groupRef && groupRef.current) {
+        if(groupRef.current) {
             groupRef.current.rotation.y = clock.elapsedTime / 75.0;
         }
     });
