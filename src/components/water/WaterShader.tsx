@@ -15,7 +15,8 @@ import {
 } from '@react-three/fiber';
 import {
   useEffect,
-  useRef
+  useRef,
+  useCallback
 } from 'react';
 import { OrbitControls } from '@react-three/drei';
 
@@ -31,6 +32,84 @@ const createUniformData = (numberOfWaves: number) => {
     clickMagnitudesArray
   }
 };
+
+const numberOfWaves = 80;
+const { mouseClicksArray, clickMagnitudesArray } = createUniformData(80);
+const eventDebounceTime = 200;
+const planeRotation = new Euler(0, 0, 0);
+let mouseClicks = 0;
+let lastMouseClick = new Date().getTime();
+const randomRippleInterval = 125;
+const shader = {
+  vertexShader: `
+    uniform int numberOfWaves;
+    uniform vec3 mouseClicks[80];
+    uniform float clickMagnitudes[80];
+    uniform float time;
+    varying vec2 vUv;
+    varying float positionDiff;
+
+    void main() {
+      vUv = uv;
+      vec3 clickPositionModifier = vec3(0.0, 0.0, 0.0);
+      positionDiff = 0.0;
+
+      for (int i = 0; i < numberOfWaves; i++) {
+        if(clickMagnitudes[i] >= 0.0) {
+          float distanceFromMouseClick = distance(position, mouseClicks[i]);
+
+          float waveWidth = 1.0;  // Width of a single wave crest
+          float damping = 2.5;  // Damping factor to smooth out the ripples
+
+          float normalizedDistance = (distanceFromMouseClick - clickMagnitudes[i]) / waveWidth;
+
+          if(abs(normalizedDistance) <= waveWidth) {
+            float waveAmplitude = (10.0 - clickMagnitudes[i]) * 0.125;
+            float decay = exp(-damping * abs(normalizedDistance));
+            clickPositionModifier.z += sin(3.141592 * normalizedDistance) * waveAmplitude * decay;
+            positionDiff += clickPositionModifier.z;
+          }
+        }
+      }
+      vec3 finalPos = vec3(0.0, 0.0, 0.0);
+      finalPos.x = sin(position.y * 0.5 + time) * .25;
+      finalPos.y = sin(position.z * 0.5 + time) * .15;
+      finalPos.z = sin(position.x * 0.5 + time) * .25;
+
+      gl_Position = projectionMatrix * modelViewMatrix * vec4(position + finalPos + clickPositionModifier, 1.0);
+    }
+  `,
+  fragmentShader: `
+    uniform float time;
+    uniform sampler2D texture1;
+    uniform sampler2D texture2;
+    varying vec2 vUv;
+    varying float positionDiff;
+    void main() {
+      float angleRadians = radians((positionDiff * .0125) * 360.0);
+      vec2 uv = vUv - vec2(0.5, 0.5);
+      mat2 rotation = mat2(
+        cos(angleRadians), -sin(angleRadians),
+        sin(angleRadians), cos(angleRadians)
+      );
+      uv = rotation * uv + vec2(0.5, 0.5);
+      vec4 color1 = texture2D(texture1, uv);
+      vec4 color2 = texture2D(texture2, uv);
+      vec4 mixColor = mix(color2, color1, abs(sin(time/6.0)));
+      
+      float distanceColor = (distance(vUv, vec2( 0.5, 0.5)) * 2.0);
+      if(distanceColor > .5) {
+        mixColor = vec4( mixColor.rgb, ( (1.0 - distanceColor) - ((distanceColor - .95) * 10.0) ));
+      }
+
+      float saturation = 2.25;
+      float avg = (mixColor.r + mixColor.g + mixColor.b) / 3.0;
+      vec3 gray = vec3(avg, avg, avg);
+      gl_FragColor = vec4(mix(gray, mixColor.rgb, saturation), mixColor.a);
+    }
+  `
+};
+
 
 interface WaterShaderProps {
   render: boolean
@@ -48,9 +127,6 @@ const WaterShader: React.FC<WaterShaderProps> = ({
     '/water/pattern-2-optimized.jpg'
   ]);
 
-  const numberOfWaves = 80;
-  const { mouseClicksArray, clickMagnitudesArray } = createUniformData(80);
-  const eventDebounceTime = 200;
   const uniforms = {
     'numberOfWaves': { value: numberOfWaves },
     'time': { value: 1.0 },
@@ -58,80 +134,7 @@ const WaterShader: React.FC<WaterShaderProps> = ({
     'texture2': { value: pattern2 },
     'clickMagnitudes': { value: clickMagnitudesArray },
     'mouseClicks': { value: mouseClicksArray }
-  };
-
-  let mouseClicks = 0;
-  let lastMouseClick = new Date().getTime();
-  const randomRippleInterval = 125;
-  const shader = {
-    vertexShader: `
-      uniform int numberOfWaves;
-      uniform vec3 mouseClicks[80];
-      uniform float clickMagnitudes[80];
-      uniform float time;
-      varying vec2 vUv;
-      varying float positionDiff;
-  
-      void main() {
-        vUv = uv;
-        vec3 clickPositionModifier = vec3(0.0, 0.0, 0.0);
-        positionDiff = 0.0;
-
-        for (int i = 0; i < numberOfWaves; i++) {
-          if(clickMagnitudes[i] >= 0.0) {
-            float distanceFromMouseClick = distance(position, mouseClicks[i]);
-
-            float waveWidth = 1.0;  // Width of a single wave crest
-            float damping = 2.5;  // Damping factor to smooth out the ripples
-
-            float normalizedDistance = (distanceFromMouseClick - clickMagnitudes[i]) / waveWidth;
-
-            if(abs(normalizedDistance) <= waveWidth) {
-              float waveAmplitude = (10.0 - clickMagnitudes[i]) * 0.125;
-              float decay = exp(-damping * abs(normalizedDistance));
-              clickPositionModifier.z += sin(3.141592 * normalizedDistance) * waveAmplitude * decay;
-              positionDiff += clickPositionModifier.z;
-            }
-          }
-        }
-        vec3 finalPos = vec3(0.0, 0.0, 0.0);
-        finalPos.x = sin(position.y * 0.5 + time) * .25;
-        finalPos.y = sin(position.z * 0.5 + time) * .15;
-        finalPos.z = sin(position.x * 0.5 + time) * .25;
-
-        gl_Position = projectionMatrix * modelViewMatrix * vec4(position + finalPos + clickPositionModifier, 1.0);
-      }
-    `,
-    fragmentShader: `
-      uniform float time;
-      uniform sampler2D texture1;
-      uniform sampler2D texture2;
-      varying vec2 vUv;
-      varying float positionDiff;
-      void main() {
-        float angleRadians = radians((positionDiff * .0125) * 360.0);
-        vec2 uv = vUv - vec2(0.5, 0.5);
-        mat2 rotation = mat2(
-          cos(angleRadians), -sin(angleRadians),
-          sin(angleRadians), cos(angleRadians)
-        );
-        uv = rotation * uv + vec2(0.5, 0.5);
-        vec4 color1 = texture2D(texture1, uv);
-        vec4 color2 = texture2D(texture2, uv);
-        vec4 mixColor = mix(color2, color1, abs(sin(time/6.0)));
-        
-        float distanceColor = (distance(vUv, vec2( 0.5, 0.5)) * 2.0);
-        if(distanceColor > .5) {
-          mixColor = vec4( mixColor.rgb, ( (1.0 - distanceColor) - ((distanceColor - .95) * 10.0) ));
-        }
-
-        float saturation = 2.25;
-        float avg = (mixColor.r + mixColor.g + mixColor.b) / 3.0;
-        vec3 gray = vec3(avg, avg, avg);
-        gl_FragColor = vec4(mix(gray, mixColor.rgb, saturation), mixColor.a);
-      }
-    `
-  };
+  };  
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -144,8 +147,6 @@ const WaterShader: React.FC<WaterShaderProps> = ({
       clearInterval(interval);
     };
   }, []);
-
-  const planeRotation = new Euler(0, 0, 0);
 
   useFrame(({ clock }) => {
     if (render === false) { return }
@@ -166,28 +167,28 @@ const WaterShader: React.FC<WaterShaderProps> = ({
     }
   });
 
-  const createRipple = (event: ThreeEvent<MouseEvent>) => {
+  const createRipple = useCallback((event: ThreeEvent<MouseEvent>) => {
     if (event.intersections.length > 0) {
       const intersect = event.intersections[0];
       uniforms.mouseClicks.value[mouseClicks % numberOfWaves] = intersect.object.worldToLocal(intersect.point);
       uniforms.clickMagnitudes.value[mouseClicks % numberOfWaves] = 0.1;
       mouseClicks++;
     }
-  }
+  }, [])
 
-  const handleRaycastPlaneClick = (event: ThreeEvent<MouseEvent>) => {
+  const handleRaycastPlaneClick = useCallback((event: ThreeEvent<MouseEvent>) => {
     if (new Date().getTime() - lastMouseClick < eventDebounceTime) { return; }
     createRipple(event);
     lastMouseClick = new Date().getTime();
-  }
+  }, [createRipple])
 
-  const handleRaycastPlaneMouseMove = (event: ThreeEvent<MouseEvent>) => {
+  const handleRaycastPlaneMouseMove = useCallback((event: ThreeEvent<MouseEvent>) => {
     if (new Date().getTime() - lastMouseClick < eventDebounceTime) { return; }
     if (event.buttons > 0) {
       createRipple(event);
       lastMouseClick = new Date().getTime();
     }
-  }
+  }, [createRipple])
 
   return (
     <>

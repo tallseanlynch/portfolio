@@ -9,7 +9,7 @@ import {
 import { useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
 
-const flowerShader = {
+const cloudShader = {
     vertexShader: `
     varying vec2 vUv;
     uniform float time;
@@ -40,17 +40,15 @@ const flowerShader = {
     uniform vec3 skyColorLight;
 
     void main() {
-        // float distanceToBottom = distance(vPosition, vec3(0.0, -1.0, 0.0));
         vec3 skyColorLighter = mix(skyColorLight, whiteColor, .85);
         vec3 skyColorMix = mix(skyColorLighter, whiteColor, (vPosition.y + 2.0));
-        // gl_FragColor = vec4(vPosition.y, vPosition.y, vPosition.y, 1.0);
-        // vec3 originVector = vec3(0.0, 0.0, 0.0);
-        // float distanceFromOrigin = distance(originVector, vPosition) / 150.0;
-        // gl_FragColor = vec4(skyColorMix, 1.0 - distanceFromOrigin);
         gl_FragColor = vec4(skyColorMix, 1.0);
     }
   `
 };
+
+const cloudGeometry = new SphereGeometry(1, 20, 20);
+const matrixPositionObject = new Object3D();
 
 const InsectsClouds = ({
     whiteColor,
@@ -73,31 +71,23 @@ const InsectsClouds = ({
     };
 
     const cloudsMaterial = new ShaderMaterial({
-      vertexShader: flowerShader.vertexShader,
-      fragmentShader: flowerShader.fragmentShader,
+      vertexShader: cloudShader.vertexShader,
+      fragmentShader: cloudShader.fragmentShader,
       uniforms,
       side: DoubleSide
     });
 
-    const cloudGeometry = new SphereGeometry(1, 20, 20);
-      
-    const matrixPositionObject = new Object3D();
-    const geometry = cloudGeometry;    
+    const geometry = cloudGeometry;
     const instancedMesh = new InstancedMesh( geometry, cloudsMaterial, instanceNumber );
     for ( let i=0 ; i<instanceNumber ; i++ ) {
-        const angle = Math.random() * Math.PI * 2; // Random angle between 0 and 2π
-        const radius = Math.sqrt(Math.random()) * placementScale; // Square root of random number times the radius of the circle
-
+        const angle = Math.random() * Math.PI * 2;
+        const radius = Math.sqrt(Math.random()) * placementScale;
         const x = radius * Math.cos(angle);
         const z = radius * Math.sin(angle);
-
         matrixPositionObject.position.set(x, Math.random() * 5, z);    
-//          matrixPositionObject.scale.setScalar( 0.1 + Math.random() * instanceScale );
-
         matrixPositionObject.scale.x = 1 + Math.random() * instanceScale * 2;
         matrixPositionObject.scale.y = matrixPositionObject.scale.x / 2.0;
         matrixPositionObject.scale.z = matrixPositionObject.scale.x;
-        //   matrixPositionObject.rotation.set(Math.PI / Math.random() * 2, Math.random() / 10, Math.random() / 10);
         matrixPositionObject.updateMatrix();
         instancedMesh.setMatrixAt( i, matrixPositionObject.matrix );
     }

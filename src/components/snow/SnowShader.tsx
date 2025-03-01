@@ -15,7 +15,7 @@ import {
   Canvas,
   useLoader
 } from '@react-three/fiber';
-import { useMemo } from 'react';
+import { useMemo, useRef } from 'react';
 import { OrbitControls } from '@react-three/drei';
 import {
   defaultFogColor, 
@@ -26,14 +26,14 @@ import { SnowGroundPlane } from './SnowGroundPlane';
 import { spritePaths } from './spritePaths';
 
 const SnowShader:React.FC = (): JSX.Element => {
-  let sprites: InstancedMesh[] = [];
+  const sprites = useRef<InstancedMesh[]>([]);
   const positionInterval = 50;
   const scaleDivision = 400;
   const texturePaths = useMemo(() => spritePaths, []);
 
   const allTextures = useLoader(TextureLoader, texturePaths);
 
-  if(sprites.length === 0) { 
+  useMemo(() => { 
     const matrixCalcObject = new Object3D();
     const meshes = allTextures.map(texture => {
       texture.magFilter = NearestFilter;
@@ -59,12 +59,14 @@ const SnowShader:React.FC = (): JSX.Element => {
       }
       return instancedMesh;
     });
-    sprites = meshes;
-  }
+    if(sprites.current) {
+      sprites.current = meshes;
+    }
+  }, [allTextures])
 
   return (
     <>
-      {sprites.map((mesh, index) => {
+      {sprites.current && sprites.current.map((mesh, index) => {
         return <primitive key={index} object={mesh} />
       })}
     </>
