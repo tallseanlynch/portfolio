@@ -219,17 +219,7 @@ const InsectsControls: React.FC<InsectsControlsProps> = ({
                 }
             };    
         }
-    }, [
-        controlsState, 
-        handleKeyDown, 
-        handleKeyUp,
-        handleMouseMove,
-        handleTouchMove,
-        handleMouseDown,
-        handleMouseUp,
-        handleTouchStart,
-        handleTouchEnd
-    ]);
+    }, []);
 
     const mouseCoorHeightModifier = touchEvents === true ? (window.innerHeight - 125) : (window.innerHeight / 2);
     const deadZone = 0.1;

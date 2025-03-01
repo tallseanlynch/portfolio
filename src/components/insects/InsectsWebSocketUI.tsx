@@ -1,7 +1,8 @@
 import {
     useState,
     useEffect,
-    useRef
+    useRef,
+    useCallback
 } from 'react';
 import { Vector3, Color } from 'three';
 import { ClientData, EventData } from './websocket-types';
@@ -60,36 +61,7 @@ const clientPatternSpots = createPatternSpots(patternSpotInitialValues)
 const InsectsWebSocketUI = () => {
     const [clientData, setClientData] = useState<ClientData>({ uuid: '', status: 'unconnected', memory: {} });
     const ws = useRef<WebSocket | null>(null);
-
-    (window as any).clientData = clientData;
-
-    useEffect(() => {
-        ws.current = new WebSocket(wssAddress);
-        ws.current.onopen = () => {
-            sendMessage({
-                messageType: 'connectedFromClient',
-                uuid: clientData.uuid,
-                timeStamp: new Date().getTime(),
-                payload: {}
-            });
-        };
-        ws.current.onmessage = (event) => {
-            const eventData: EventData = JSON.parse(event.data);
-            handleIncomingMessage(eventData);
-        };
-        ws.current.onclose = () => {
-           console.log('WebSocket connection closed');
-        };
-        ws.current.onerror = (error) => {
-           console.log('WebSocket Error: ', error);
-        };
-
-        return () => {
-            ws.current?.close();
-        };
-    }, []);
-
-    const handleIncomingMessage = (eventData: EventData) => {
+    const handleIncomingMessage = useCallback((eventData: EventData) => {
         switch (eventData.messageType) {
             case 'connectedFromServer':
                 setClientData((prevData) => {return { 
@@ -144,26 +116,52 @@ const InsectsWebSocketUI = () => {
                 break;
             }
         }
-    };
+    }, []);
 
-    const sendMessage = (message: EventData) => {
+    const sendMessage = useCallback((message: EventData) => {
         if (ws.current?.readyState === WebSocket.OPEN) {
             ws.current.send(JSON.stringify(message));
         }
-    };
+    }, []);
+
+    useEffect(() => {
+        ws.current = new WebSocket(wssAddress);
+        ws.current.onopen = () => {
+            sendMessage({
+                messageType: 'connectedFromClient',
+                uuid: clientData.uuid,
+                timeStamp: new Date().getTime(),
+                payload: {}
+            });
+        };
+        ws.current.onmessage = (event) => {
+            const eventData: EventData = JSON.parse(event.data);
+            handleIncomingMessage(eventData);
+        };
+        ws.current.onclose = () => {
+           console.log('WebSocket connection closed');
+        };
+        ws.current.onerror = (error) => {
+           console.log('WebSocket Error: ', error);
+        };
+
+        return () => {
+            ws.current?.close();
+        };
+    }, []);
 
     interface PayloadProps {
         [key: string]: any;
     }
 
-    const sendUpdate = (payload: PayloadProps) => {
+    const sendUpdate = useCallback((payload: PayloadProps) => {
         sendMessage({
             messageType: 'updateFromClient',
             uuid: clientData.uuid,
             payload,
             timeStamp: new Date().getTime()
         });
-    };
+    }, []);
 
     return (
         <>
