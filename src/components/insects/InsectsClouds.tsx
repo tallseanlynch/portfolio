@@ -1,15 +1,13 @@
 import {
     DoubleSide,
-    ShaderMaterial,
+    Group,
     InstancedMesh,
-    Object3D,
-    SphereGeometry,
-    Group
+    Object3D
 } from 'three';
-import { useRef } from 'react';
+import { useRef, useEffect } from 'react';
 import { useFrame } from '@react-three/fiber';
 
-const cloudShader = {
+const cloudsShader = {
     vertexShader: `
     varying vec2 vUv;
     uniform float time;
@@ -47,7 +45,6 @@ const cloudShader = {
   `
 };
 
-const cloudGeometry = new SphereGeometry(1, 20, 20);
 const matrixPositionObject = new Object3D();
 
 const InsectsClouds = ({
@@ -58,40 +55,27 @@ const InsectsClouds = ({
     placementScale,
     instanceScale
 }) => {
-    const uniforms = {
-        time: {
-          value: 0
-      },
-      skyColorLight: {
-          value: skyColor
-      },
-      whiteColor: {
-        value: whiteColor
-      }
-    };
+    const groupRef = useRef<Group>(null);
+    const instancedMeshRef = useRef<InstancedMesh>(null);
 
-    const cloudsMaterial = new ShaderMaterial({
-      vertexShader: cloudShader.vertexShader,
-      fragmentShader: cloudShader.fragmentShader,
-      uniforms,
-      side: DoubleSide
-    });
-
-    const geometry = cloudGeometry;
-    const instancedMesh = new InstancedMesh( geometry, cloudsMaterial, instanceNumber );
-    for ( let i=0 ; i<instanceNumber ; i++ ) {
-        const angle = Math.random() * Math.PI * 2;
-        const radius = Math.sqrt(Math.random()) * placementScale;
-        const x = radius * Math.cos(angle);
-        const z = radius * Math.sin(angle);
-        matrixPositionObject.position.set(x, Math.random() * 5, z);    
-        matrixPositionObject.scale.x = 1 + Math.random() * instanceScale * 2;
-        matrixPositionObject.scale.y = matrixPositionObject.scale.x / 2.0;
-        matrixPositionObject.scale.z = matrixPositionObject.scale.x;
-        matrixPositionObject.updateMatrix();
-        instancedMesh.setMatrixAt( i, matrixPositionObject.matrix );
-    }
-    instancedMesh.position.copy(instanceOrigin);
+    useEffect(() => {
+        if(instancedMeshRef.current) {
+            for ( let i=0 ; i<instanceNumber ; i++ ) {
+                const angle = Math.random() * Math.PI * 2;
+                const radius = Math.sqrt(Math.random()) * placementScale;
+                const x = radius * Math.cos(angle);
+                const z = radius * Math.sin(angle);
+                matrixPositionObject.position.set(x, Math.random() * 5, z);    
+                matrixPositionObject.scale.x = 1 + Math.random() * instanceScale * 2;
+                matrixPositionObject.scale.y = matrixPositionObject.scale.x / 2.0;
+                matrixPositionObject.scale.z = matrixPositionObject.scale.x;
+                matrixPositionObject.updateMatrix();
+                instancedMeshRef.current.setMatrixAt( i, matrixPositionObject.matrix );
+            }
+            instancedMeshRef.current.instanceMatrix.needsUpdate = true;
+            instancedMeshRef.current.frustumCulled = false;
+        }
+    }, [])
   
     useFrame(({clock}) => {
         if(groupRef && groupRef.current) {
@@ -99,11 +83,27 @@ const InsectsClouds = ({
         }
     });
 
-    const groupRef = useRef<Group>(null)
-
     return (
         <group ref={groupRef}>
-            <primitive object={instancedMesh}/>
+            <instancedMesh position={instanceOrigin} ref={instancedMeshRef} args={[null as any, null as any, instanceNumber]} >
+                <sphereGeometry args={[1, 20, 20]} />
+                <shaderMaterial 
+                    vertexShader={cloudsShader.vertexShader}
+                    fragmentShader={cloudsShader.fragmentShader}
+                    uniforms={{
+                        time: {
+                            value: 0
+                        },
+                        skyColorLight: {
+                            value: skyColor
+                        },
+                        whiteColor: {
+                            value: whiteColor
+                        }
+                    }}
+                    side={DoubleSide}
+                />
+            </instancedMesh>
         </group>
     )
 };
