@@ -1,8 +1,7 @@
 import {
     useState,
     useEffect,
-    useRef,
-    useCallback
+    useRef
 } from 'react';
 import { Vector3, Color } from 'three';
 import { ClientData, EventData } from './websocket-types';
@@ -61,7 +60,7 @@ const clientPatternSpots = createPatternSpots(patternSpotInitialValues)
 const InsectsWebSocketUI = () => {
     const [clientData, setClientData] = useState<ClientData>({ uuid: '', status: 'unconnected', memory: {} });
     const ws = useRef<WebSocket | null>(null);
-    const handleIncomingMessage = useCallback((eventData: EventData) => {
+    const handleIncomingMessage = (eventData: EventData) => {
         switch (eventData.messageType) {
             case 'connectedFromServer':
                 setClientData((prevData) => {return { 
@@ -116,13 +115,13 @@ const InsectsWebSocketUI = () => {
                 break;
             }
         }
-    }, []);
+    };
 
-    const sendMessage = useCallback((message: EventData) => {
+    const sendMessage = (message: EventData) => {
         if (ws.current?.readyState === WebSocket.OPEN) {
             ws.current.send(JSON.stringify(message));
         }
-    }, []);
+    }
 
     useEffect(() => {
         ws.current = new WebSocket(wssAddress);
@@ -154,14 +153,14 @@ const InsectsWebSocketUI = () => {
         [key: string]: any;
     }
 
-    const sendUpdate = useCallback((payload: PayloadProps) => {
+    const sendUpdate = (payload: PayloadProps) => {
         sendMessage({
             messageType: 'updateFromClient',
             uuid: clientData.uuid,
             payload,
             timeStamp: new Date().getTime()
         });
-    }, []);
+    };
 
     return (
         <>
