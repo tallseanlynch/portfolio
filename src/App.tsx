@@ -3,7 +3,8 @@ import {
   InsectsShaderCanvas,
   RomeShaderCanvas,
   SnowShaderCanvas,
-  WaterShaderCanvas
+  WaterShaderCanvas,
+  WalkingShaderCanvas
 } from './components';
 import './assets/css/brand.css';
 import {
@@ -18,7 +19,8 @@ const scenes = [
   memo(WaterShaderCanvas),
   memo(SnowShaderCanvas),
   memo(RomeShaderCanvas),
-  memo(InsectsShaderCanvas)
+  memo(InsectsShaderCanvas),
+  memo(WalkingShaderCanvas)
 ];
 
 const startingSceneMap = {
@@ -29,7 +31,9 @@ const startingSceneMap = {
   rome: 2,
   [2]: 'rome',
   insects: 3,
-  [3]: 'insects'
+  [3]: 'insects',
+  walking: 4,
+  [4]: 'walking'
 };
 
 const calculateSceneIndex = ({startingSceneIndex, sceneCounter}: calculateSceneIndexType): number => {
