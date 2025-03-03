@@ -3,6 +3,7 @@ import { WaterShader, WaterShaderCanvas } from './water/WaterShader';
 import { SnowShader, SnowShaderCanvas } from './snow/SnowShader';
 import { RomeShader, RomeShaderCanvas } from './rome/RomeShader';
 import { InsectsShader, InsectsShaderCanvas } from './insects/InsectsShader';
+import { WalkingShaderCanvas } from './walking/WalkingShader';
 
 export { 
     BrandSection,
@@ -13,5 +14,6 @@ export {
     RomeShader,
     RomeShaderCanvas,
     InsectsShader, 
-    InsectsShaderCanvas
+    InsectsShaderCanvas,
+    WalkingShaderCanvas
 }
