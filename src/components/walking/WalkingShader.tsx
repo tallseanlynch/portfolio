@@ -8,6 +8,7 @@ import {
     useRef
 } from 'react';
 import {
+    Color,
     DoubleSide,
     InstancedMesh,
     InstancedBufferAttribute,
@@ -20,7 +21,7 @@ import {
 } from 'three';
 import { GPUComputationRenderer } from 'three/addons/misc/GPUComputationRenderer.js';
 
-const simBounds = 10;
+const simBounds = 1;
 
 const fillPositionTexture = ( texture ) => {
 
@@ -35,6 +36,7 @@ const fillPositionTexture = ( texture ) => {
     theArray[ k + 2 ] = z;
     theArray[ k + 3 ] = 1;
   };
+  console.log(theArray)
 
 };
 
@@ -46,9 +48,9 @@ function fillVelocityTexture( texture ) {
     const x = Math.random() - 0.5;
     const y = Math.random() - 0.5;
     const z = Math.random() - 0.5;
-    theArray[ k + 0 ] = x * 10;
-    theArray[ k + 1 ] = y * 10;
-    theArray[ k + 2 ] = z * 10;
+    theArray[ k + 0 ] = x * 1;
+    theArray[ k + 1 ] = y * 1;
+    theArray[ k + 2 ] = z * 1;
     theArray[ k + 3 ] = 1;
   };
 
@@ -63,19 +65,19 @@ let velocityVariable;
 let positionVariable;
 let positionUniforms;
 let velocityUniforms;
-// let peopleUniforms;
 
 const fragmentShaderVelocity = `
   uniform float time;
   void main () {
-    gl_FragColor = vec4(1.0, 1.0, 1.0, 1.0);
+    gl_FragColor = vec4(0.0, 1.0, 1.0, 1.0);
   }
 `
 const fragmentShaderPosition = `
   uniform float time;
   void main () {
-    gl_FragColor = vec4(1.0, 1.0, 1.0, 1.0);
+    gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);
   }
+
 `
 
 function initComputeRenderer() {
@@ -126,38 +128,44 @@ function initComputeRenderer() {
 
 const personShader = {
     vertexShader: `
-    varying vec2 vUv;
     uniform float time;
+    uniform sampler2D texturePosition;
+
+    varying vec2 vUv;
     varying vec3 vPosition;
-    attribute float instanceIndex;
     varying float vInstanceIndex;
-      void main() {
-        vUv = uv;      
-        vec4 mvPosition = vec4( position, 1.0 );
-        #ifdef USE_INSTANCING
-            mvPosition = instanceMatrix * mvPosition;
-            vPosition = vec3(mvPosition.x, mvPosition.y, mvPosition.z);
-            vInstanceIndex = instanceIndex;
-        #endif
-        // float dispPower = 1.0 - cos( uv.y * 3.1416 / 2.0 );
-        // float displacement = sin( mvPosition.z + time * 7.0 ) * ( 0.1 * dispPower );
-        // mvPosition.z += displacement;
-        vec4 modelViewPosition = modelViewMatrix * mvPosition;
-        gl_Position = projectionMatrix * modelViewPosition;
-      }
+    varying vec4 vfTexturePosition;
+
+    attribute float instanceIndex;
+
+    void main() {
+      // float vTexturePositionXCoor = mod(instanceIndex, 4.0) / 3.0;
+      // float vTexturePositionYCoor = floor(instanceIndex / 4.0) / 3.0;
+      // // vec2 vTexturePositionVec2 = vec2(vTexturePositionXCoor, vTexturePositionYCoor);
+      vec2 vTexturePositionVec2 = vec2(0.5, 0.5);
+      // vec4 vTexturePosition = texture2D(texturePosition, vTexturePositionVec2);
+      vec4 vTexturePosition = texture2D(texturePosition, uv);
+      vfTexturePosition = vTexturePosition;
+      vUv = uv;
+      vec4 mvPosition = vec4( position, 1.0 );
+      #ifdef USE_INSTANCING
+        mvPosition = instanceMatrix * mvPosition;
+        vPosition = vec3(mvPosition.x, mvPosition.y, mvPosition.z);
+        vInstanceIndex = instanceIndex;
+      #endif
+
+      vec4 modelViewPosition = modelViewMatrix * (mvPosition + vTexturePosition * 2.0);
+      gl_Position = projectionMatrix * modelViewPosition;
+    }
   `,
   fragmentShader: `
     varying vec3 vPosition;
     varying vec2 vUv;
     varying float vInstanceIndex;
+    varying vec4 vfTexturePosition;
 
-    // uniform vec3 skyColorLight;
-    // uniform vec3 baseColor;
     void main() {
-        // float clarity = ( vUv.y * 0.5 ) + 0.5;
-        // vec3 mixSkyColorLight = mix(skyColorLight, baseColor, clarity);
-        // gl_FragColor = vec4( mixSkyColorLight, 1 );
-      gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);
+      gl_FragColor = vfTexturePosition;
     }
   `
 };
@@ -194,12 +202,12 @@ const WalkingPerson: React.FC = (): JSX.Element => {
 
             const instanceIndices = new Float32Array(instanceNumber);
             for (let i = 0; i < instanceNumber; i++) {
-                instanceIndices[i] = i;
+                instanceIndices[i] = Number(i.toFixed(2));
             }
 
             const instanceIndexAttribute = new InstancedBufferAttribute(instanceIndices, 1, false);
             instancedMeshRef.current.geometry.setAttribute('instanceIndex', instanceIndexAttribute);            
-
+            console.log(instancedMeshRef.current.geometry)
             instancedMeshRef.current.instanceMatrix.needsUpdate = true;
             instancedMeshRef.current.frustumCulled = false;
         }
@@ -208,7 +216,6 @@ const WalkingPerson: React.FC = (): JSX.Element => {
     useFrame(({clock}) => {
         if(shaderMaterialRef.current) {
             shaderMaterialRef.current.uniforms.time.value = clock.getElapsedTime();
-            shaderMaterialRef.current.uniformsNeedUpdate = true;
             gpuCompute.compute();
 
             // positionUniforms[ 'time' ].value = clock.elapsedTime;
@@ -217,7 +224,11 @@ const WalkingPerson: React.FC = (): JSX.Element => {
             // velocityUniforms[ 'delta' ].value = clock.getDelta();
 
             shaderMaterialRef.current.uniforms[ 'texturePosition' ].value = gpuCompute.getCurrentRenderTarget( positionVariable ).texture;
+            gpuCompute.getCurrentRenderTarget( positionVariable ).texture.needsUpdate = true;
     				shaderMaterialRef.current.uniforms[ 'textureVelocity' ].value = gpuCompute.getCurrentRenderTarget( velocityVariable ).texture;
+            shaderMaterialRef.current.uniformsNeedUpdate = true;
+            shaderMaterialRef.current.needsUpdate = true;
+
         }
     });
 
@@ -226,6 +237,14 @@ const WalkingPerson: React.FC = (): JSX.Element => {
         <mesh position={[0.0, 0.0, 0.0]}>
           <primitive object={rotatedPlaneGeometry} />
           <meshBasicMaterial color={0x00ff00} side={DoubleSide}/>
+        </mesh>
+        <mesh position={[0.0, 1.0, 0.0]}>
+          <planeGeometry args={[5, 5, 1, 1]}/>
+          <meshBasicMaterial 
+            color={0x00ff00} 
+            side={DoubleSide}
+            map={gpuCompute.getCurrentRenderTarget( positionVariable ).texture}
+          />
         </mesh>
         <gridHelper args={[100, 100, 100, 100]} position={[0, 0.01, 0]}/>
         <instancedMesh position={instanceOrigin} args={[null as any, null as any, instanceNumber]} ref={instancedMeshRef} >
@@ -239,10 +258,10 @@ const WalkingPerson: React.FC = (): JSX.Element => {
                       value: 0
                   },
                   texturePosition: {
-                    value: null
+                    value: gpuCompute.getCurrentRenderTarget( positionVariable ).texture
                   },
                   textureVelocity: {
-                    value: null
+                    value: gpuCompute.getCurrentRenderTarget( positionVariable ).texture
                   }
               }}
               side={DoubleSide}
@@ -257,6 +276,9 @@ const WalkingShaderCanvas: React.FC = (): JSX.Element => {
     <>
       <Canvas
         camera={{ position: [0, 0, 15] }}
+        scene={{
+          background: new Color(0xf000ff)
+        }}
       >
         <WalkingPerson />
         <OrbitControls
