@@ -13,6 +13,7 @@ import {
   DoubleSide,
   InstancedMesh,
   MeshBasicMaterial,
+  // MeshBasicMaterial,
   Object3D,
   PlaneGeometry,
   ShaderMaterial
@@ -27,9 +28,9 @@ const WalkingPeople = ({ width = 100, spread = 50.0 }) => {
   const instancedMeshRef = useRef<InstancedMesh>();
   const numPeople = width * width;
   const { gpgpuRenderer, data } = useGPGPU(numPeople, spread);
-  // const velocityCheckMaterialRef = useRef<MeshBasicMaterial>()
-
-  console.log(numPeople)
+  const velocityCheckMaterialRef = useRef<MeshBasicMaterial>();
+  const destinationCheckMaterialRef = useRef<MeshBasicMaterial>();
+  const positionCheckMaterialRef = useRef<MeshBasicMaterial>();
 
   useEffect(() => {
     if(instancedMeshRef.current) {
@@ -49,11 +50,13 @@ const WalkingPeople = ({ width = 100, spread = 50.0 }) => {
     uniforms: {
       gPositionMap: { value: data.position.texture},
       gVelocityMap: { value: data.velocity.texture},
+      gDestinationMap: { value: data.destination.texture },
       time: { value: 0 }
     },
     vertexShader: `
       uniform sampler2D gVelocityMap;
       uniform sampler2D gPositionMap;
+      uniform sampler2D gDestinationMap;
       uniform float time;
       varying vec4 vPosition;
       varying vec3 vOriginalPosition;
@@ -67,6 +70,7 @@ const WalkingPeople = ({ width = 100, spread = 50.0 }) => {
         vec2 uv = vec2(xCoor / ${width}.0, yCoor / ${width}.0);
         vec4 gVelocityData = texture2D(gVelocityMap, uv);        
         vec4 gPositionData = texture2D(gPositionMap, uv);
+        vec4 gDestinationData = texture2D(gDestinationMap, uv);
         vgPosition = gPositionData;
         vec4 mvPosition = vec4( position, 1.0 );
         #ifdef USE_INSTANCING
@@ -106,7 +110,8 @@ const WalkingPeople = ({ width = 100, spread = 50.0 }) => {
   }), [
     width, 
     data.position.texture,
-    data.velocity.texture
+    data.velocity.texture,
+    data.destination.texture
   ]);
 
   useFrame(({
@@ -120,18 +125,42 @@ const WalkingPeople = ({ width = 100, spread = 50.0 }) => {
       .getCurrentRenderTarget(data.position.variables.positionVariable).texture;
     data.position.variables.positionVariable.material.uniforms.uTime.value = clock.elapsedTime;
     data.position.variables.positionVariable.material.uniforms.uDeltaTime.value = clock.getDelta();
+    // input position texture back into position fragment
     data.position.variables.positionVariable.material.uniforms.uInitialPosition.value = gpgpuRenderer
     .getCurrentRenderTarget(data.position.variables.positionVariable).texture;
+    // input velocity texture back into position fragment
+    data.position.variables.positionVariable.material.uniforms.uInitialVelocity.value = gpgpuRenderer
+    .getCurrentRenderTarget(data.velocity.variables.velocityVariable).texture;
 
     shaderMaterial.uniforms.gVelocityMap.value = gpgpuRenderer
       .getCurrentRenderTarget(data.velocity.variables.velocityVariable).texture;
     data.velocity.variables.velocityVariable.material.uniforms.uTime.value = clock.elapsedTime;
     data.velocity.variables.velocityVariable.material.uniforms.uDeltaTime.value = clock.getDelta();
+    // input position texture back into velocity fragment
+    data.velocity.variables.velocityVariable.material.uniforms.uInitialPosition.value = gpgpuRenderer
+    .getCurrentRenderTarget(data.position.variables.positionVariable).texture;
 
-    // if (velocityCheckMaterialRef.current) {
-    //   velocityCheckMaterialRef.current.map = gpgpuRenderer.getCurrentRenderTarget(data.velocity.variables.velocityVariable).texture;
-    //   velocityCheckMaterialRef.current.needsUpdate = true; // Ensure Three.js knows the texture has updated
-    // }
+
+    shaderMaterial.uniforms.gDestinationMap.value = gpgpuRenderer
+      .getCurrentRenderTarget(data.destination.variables.destinationVariable).texture;
+    data.destination.variables.destinationVariable.material.uniforms.uTime.value = clock.elapsedTime;
+    data.destination.variables.destinationVariable.material.uniforms.uDeltaTime.value = clock.getDelta();
+
+    if (positionCheckMaterialRef.current) {
+      positionCheckMaterialRef.current.map = gpgpuRenderer.getCurrentRenderTarget(data.position.variables.positionVariable).texture;
+      positionCheckMaterialRef.current.needsUpdate = true; // Ensure Three.js knows the texture has updated
+    }
+
+    if (velocityCheckMaterialRef.current) {
+      velocityCheckMaterialRef.current.map = gpgpuRenderer.getCurrentRenderTarget(data.velocity.variables.velocityVariable).texture;
+      velocityCheckMaterialRef.current.needsUpdate = true; // Ensure Three.js knows the texture has updated
+    }
+
+    if (destinationCheckMaterialRef.current) {
+      destinationCheckMaterialRef.current.map = gpgpuRenderer.getCurrentRenderTarget(data.destination.variables.destinationVariable).texture;
+      destinationCheckMaterialRef.current.needsUpdate = true; // Ensure Three.js knows the texture has updated
+    }
+
 
   });
 
@@ -145,24 +174,41 @@ const WalkingPeople = ({ width = 100, spread = 50.0 }) => {
       <instancedMesh ref={instancedMeshRef} args={[null as any, null as any, numPeople]} material={shaderMaterial}>
         <boxGeometry args={[1, 1, .1, 1, 1, 1]} />
       </instancedMesh>
-      {/* <mesh position={[0, 10, -10]}>
-        <planeGeometry args={[100, 100, 1, 1]} />
+
+      <mesh position={[-10, 10, -10]}>
+        <planeGeometry args={[10, 10, 1, 1]} />
+        <meshBasicMaterial 
+          ref={positionCheckMaterialRef}
+          map={data.position.texture} 
+          color={0xffffff}
+        />
+      </mesh>
+      <mesh position={[0, 10, -10]}>
+        <planeGeometry args={[10, 10, 1, 1]} />
         <meshBasicMaterial 
           ref={velocityCheckMaterialRef}
           map={data.velocity.texture} 
           color={0xffffff}
         />
-      </mesh> */}
+      </mesh>
+      <mesh position={[10, 10, -10]}>
+        <planeGeometry args={[10, 10, 1, 1]} />
+        <meshBasicMaterial 
+          ref={destinationCheckMaterialRef}
+          map={data.destination.texture} 
+          color={0xffffff}
+        />
+      </mesh>
     </>
   );
 };
 
 const WalkingShaderCanvas = () => {
   return (
-    <Canvas camera={{position: [0, 5, 5]}}>
+    <Canvas camera={{position: [0, 50, 50]}}>
       <ambientLight intensity={0.5} />
       <pointLight position={[10, 10, 10]} />
-      <WalkingPeople width={100} spread={50}/>
+      <WalkingPeople width={100} spread={100}/>
       <OrbitControls/>
     </Canvas>
   );
