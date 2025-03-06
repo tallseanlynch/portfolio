@@ -1,297 +1,171 @@
+import useGPGPU from './useGPGPU';
+import { OrbitControls } from '@react-three/drei';
 import { 
-  Canvas,
-  useFrame
+  Canvas, 
+  useFrame 
 } from '@react-three/fiber';
-import { OrbitControls } from '@react-three/drei'
 import { 
-    useEffect,
-    useRef
+  useEffect, 
+  useRef, 
+  useMemo 
 } from 'react';
-import {
-    Color,
-    DoubleSide,
-    InstancedMesh,
-    InstancedBufferAttribute,
-    Object3D,
-    PlaneGeometry,
-    RepeatWrapping,
-    ShaderMaterial,
-    Vector3,
-    WebGLRenderer
+import { 
+  DoubleSide,
+  InstancedMesh,
+  MeshBasicMaterial,
+  Object3D,
+  PlaneGeometry,
+  ShaderMaterial
 } from 'three';
-import { GPUComputationRenderer } from 'three/addons/misc/GPUComputationRenderer.js';
 
-const simBounds = 1;
-
-const fillPositionTexture = ( texture ) => {
-
-  const theArray = texture.image.data;
-
-  for ( let k = 0, kl = theArray.length; k < kl; k += 4 ) {
-    const x = Math.random() * simBounds - simBounds/2;
-    const y = Math.random() * simBounds - simBounds/2;
-    const z = Math.random() * simBounds - simBounds/2;
-    theArray[ k + 0 ] = x;
-    theArray[ k + 1 ] = y;
-    theArray[ k + 2 ] = z;
-    theArray[ k + 3 ] = 1;
-  };
-  console.log(theArray)
-
-};
-
-function fillVelocityTexture( texture ) {
-
-  const theArray = texture.image.data;
-
-  for ( let k = 0, kl = theArray.length; k < kl; k += 4 ) {
-    const x = Math.random() - 0.5;
-    const y = Math.random() - 0.5;
-    const z = Math.random() - 0.5;
-    theArray[ k + 0 ] = x * 1;
-    theArray[ k + 1 ] = y * 1;
-    theArray[ k + 2 ] = z * 1;
-    theArray[ k + 3 ] = 1;
-  };
-
-};
-
-const gpgpuWidth = 4;
-const people = gpgpuWidth * gpgpuWidth;
-const gpgpuRenderer = new WebGLRenderer();
-
-let gpuCompute;
-let velocityVariable;
-let positionVariable;
-let positionUniforms;
-let velocityUniforms;
-
-const fragmentShaderVelocity = `
-  uniform float time;
-  void main () {
-    gl_FragColor = vec4(0.0, 1.0, 1.0, 1.0);
-  }
-`
-const fragmentShaderPosition = `
-  uniform float time;
-  void main () {
-    gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);
-  }
-
-`
-
-function initComputeRenderer() {
-
-  gpuCompute = new GPUComputationRenderer( gpgpuWidth, gpgpuWidth, gpgpuRenderer );
-
-  const dtPosition = gpuCompute.createTexture();
-  const dtVelocity = gpuCompute.createTexture();
-  fillPositionTexture( dtPosition );
-  fillVelocityTexture( dtVelocity );
-
-  velocityVariable = gpuCompute.addVariable( 'textureVelocity', fragmentShaderVelocity, dtVelocity );
-  positionVariable = gpuCompute.addVariable( 'texturePosition', fragmentShaderPosition, dtPosition );
-
-  gpuCompute.setVariableDependencies( velocityVariable, [ positionVariable, velocityVariable ] );
-  gpuCompute.setVariableDependencies( positionVariable, [ positionVariable, velocityVariable ] );
-
-  positionUniforms = positionVariable.material.uniforms;
-  velocityUniforms = velocityVariable.material.uniforms;
-
-  positionUniforms[ 'time' ] = { value: 0.0 };
-  positionUniforms[ 'delta' ] = { value: 0.0 };
-  velocityUniforms[ 'time' ] = { value: 1.0 };
-  velocityUniforms[ 'delta' ] = { value: 0.0 };
-  velocityUniforms[ 'testing' ] = { value: 1.0 };
-  velocityUniforms[ 'separationDistance' ] = { value: 1.0 };
-  velocityUniforms[ 'alignmentDistance' ] = { value: 1.0 };
-  velocityUniforms[ 'cohesionDistance' ] = { value: 1.0 };
-  velocityUniforms[ 'freedomFactor' ] = { value: 1.0 };
-  velocityVariable.material.defines.simBounds = simBounds.toFixed( 2 );
-
-  velocityVariable.wrapS = RepeatWrapping;
-  velocityVariable.wrapT = RepeatWrapping;
-  positionVariable.wrapS = RepeatWrapping;
-  positionVariable.wrapT = RepeatWrapping;
-
-  const error = gpuCompute.init();
-
-  if ( error !== null ) {
-
-    console.error( error );
-
-  }
-  (window as any).gpuCompute = gpuCompute;
-  console.log(gpuCompute);
-  console.log(gpuCompute.getCurrentRenderTarget( positionVariable ).texture);
-}
-
-const personShader = {
-    vertexShader: `
-    uniform float time;
-    uniform sampler2D texturePosition;
-
-    varying vec2 vUv;
-    varying vec3 vPosition;
-    varying float vInstanceIndex;
-    varying vec4 vfTexturePosition;
-
-    attribute float instanceIndex;
-
-    void main() {
-      // float vTexturePositionXCoor = mod(instanceIndex, 4.0) / 3.0;
-      // float vTexturePositionYCoor = floor(instanceIndex / 4.0) / 3.0;
-      // // vec2 vTexturePositionVec2 = vec2(vTexturePositionXCoor, vTexturePositionYCoor);
-      vec2 vTexturePositionVec2 = vec2(0.5, 0.5);
-      // vec4 vTexturePosition = texture2D(texturePosition, vTexturePositionVec2);
-      vec4 vTexturePosition = texture2D(texturePosition, uv);
-      vfTexturePosition = vTexturePosition;
-      vUv = uv;
-      vec4 mvPosition = vec4( position, 1.0 );
-      #ifdef USE_INSTANCING
-        mvPosition = instanceMatrix * mvPosition;
-        vPosition = vec3(mvPosition.x, mvPosition.y, mvPosition.z);
-        vInstanceIndex = instanceIndex;
-      #endif
-
-      vec4 modelViewPosition = modelViewMatrix * (mvPosition + vTexturePosition * 2.0);
-      gl_Position = projectionMatrix * modelViewPosition;
-    }
-  `,
-  fragmentShader: `
-    varying vec3 vPosition;
-    varying vec2 vUv;
-    varying float vInstanceIndex;
-    varying vec4 vfTexturePosition;
-
-    void main() {
-      gl_FragColor = vfTexturePosition;
-    }
-  `
-};
-
-initComputeRenderer();
-
-const matrixPositionObject = new Object3D();  
-const instanceNumber = people;
-const placementScale = 2;
-const instanceScale = .75;
-const instanceOrigin = new Vector3(0, 0, 0);
-
-const rotatedPlaneGeometry = new PlaneGeometry(100, 100, 100, 100);
+const rotatedPlaneGeometry = new PlaneGeometry(100, 100, 1, 1);
 rotatedPlaneGeometry.rotateX(Math.PI / 2);
+const matrixPositionObject =  new Object3D;
+const instanceScale = .75;
 
-const WalkingPerson: React.FC = (): JSX.Element => {  
-    const instancedMeshRef = useRef<InstancedMesh>(null);
-    const shaderMaterialRef = useRef<ShaderMaterial>(null);
+const WalkingPeople = ({ width = 100, spread = 50.0 }) => {
+  const instancedMeshRef = useRef<InstancedMesh>();
+  const numPeople = width * width;
+  const { gpgpuRenderer, data } = useGPGPU(numPeople, spread);
+  // const velocityCheckMaterialRef = useRef<MeshBasicMaterial>()
 
-    useEffect(() => {
-        if(instancedMeshRef.current) {
-            for ( let i=0 ; i<instanceNumber ; i++ ) {
-                const angle = Math.random() * Math.PI * 2; 
-                const radius = Math.sqrt(Math.random()) * placementScale;
-                const x = radius * Math.cos(angle);
-                const z = radius * Math.sin(angle);
-                matrixPositionObject.scale.y = 1.5 + (Math.random() * instanceScale) - instanceScale / 2;
-                matrixPositionObject.position.set(x, matrixPositionObject.scale.y / 2, z);        
-                matrixPositionObject.rotation.y = Math.random() * Math.PI;
-                matrixPositionObject.updateMatrix();
-                instancedMeshRef.current.setMatrixAt( i, matrixPositionObject.matrix );
-                instancedMeshRef.current.frustumCulled = false;
-            }
+  console.log(numPeople)
 
-            const instanceIndices = new Float32Array(instanceNumber);
-            for (let i = 0; i < instanceNumber; i++) {
-                instanceIndices[i] = Number(i.toFixed(2));
-            }
+  useEffect(() => {
+    if(instancedMeshRef.current) {
+      for ( let i=0 ; i<numPeople ; i++ ) {
+        matrixPositionObject.scale.y = 1.5 + (Math.random() * instanceScale) - instanceScale / 2;
+        matrixPositionObject.position.set(0, matrixPositionObject.scale.y / 2, 0);        
+        matrixPositionObject.updateMatrix();
+        instancedMeshRef.current.setMatrixAt( i, matrixPositionObject.matrix );
+        instancedMeshRef.current.frustumCulled = false;
+      }
+      instancedMeshRef.current.instanceMatrix.needsUpdate = true;
+      instancedMeshRef.current.frustumCulled = false;
+    }
+  }, [])
 
-            const instanceIndexAttribute = new InstancedBufferAttribute(instanceIndices, 1, false);
-            instancedMeshRef.current.geometry.setAttribute('instanceIndex', instanceIndexAttribute);            
-            console.log(instancedMeshRef.current.geometry)
-            instancedMeshRef.current.instanceMatrix.needsUpdate = true;
-            instancedMeshRef.current.frustumCulled = false;
+  const shaderMaterial = useMemo(() => new ShaderMaterial({
+    uniforms: {
+      gPositionMap: { value: data.position.texture},
+      gVelocityMap: { value: data.velocity.texture},
+      time: { value: 0 }
+    },
+    vertexShader: `
+      uniform sampler2D gVelocityMap;
+      uniform sampler2D gPositionMap;
+      uniform float time;
+      varying vec4 vPosition;
+      varying vec3 vOriginalPosition;
+      varying vec4 vgPosition;
+      void main() {
+        vOriginalPosition = position;
+        int index = gl_InstanceID;
+        float floatIndex = float(index);
+        float xCoor = mod(floatIndex, ${width}.0);
+        float yCoor = mod(floatIndex / ${width}.0, ${width}.0);
+        vec2 uv = vec2(xCoor / ${width}.0, yCoor / ${width}.0);
+        vec4 gVelocityData = texture2D(gVelocityMap, uv);        
+        vec4 gPositionData = texture2D(gPositionMap, uv);
+        vgPosition = gPositionData;
+        vec4 mvPosition = vec4( position, 1.0 );
+        #ifdef USE_INSTANCING
+            mvPosition = instanceMatrix * mvPosition;
+            vPosition = mvPosition;
+        #endif
+
+        float angle = atan(gVelocityData.x, gVelocityData.z);
+        mat4 rotationMatrix = mat4(
+            cos(angle), 0.0, -sin(angle), 0.0,
+            0.0, 1.0, 0.0, 0.0,
+            sin(angle), 0.0, cos(angle), 0.0,
+            0.0, 0.0, 0.0, 1.0
+        );
+
+        vPosition = rotationMatrix * vPosition;
+        vPosition.x = vPosition.x + gPositionData.x;// + (gVelocityData.x * (time));
+        vPosition.y = vPosition.y + gPositionData.y;// + (gVelocityData.y * (time));
+        vPosition.z = vPosition.z + gPositionData.z;// + (gVelocityData.z * (time));
+
+        gl_Position = projectionMatrix * modelViewMatrix * vPosition;
+      }
+    `,
+    fragmentShader: `
+      varying vec4 vgPosition;
+      varying vec3 vOriginalPosition;
+      void main() {
+        vec4 positionColor = vgPosition;
+
+        if(vOriginalPosition.z > 0.0) {
+          positionColor = vec4(1.0, 1.0, 1.0, 1.0);
         }
-    }, [])
+        gl_FragColor = positionColor;
+      }
+    `,
+    side: DoubleSide
+  }), [
+    width, 
+    data.position.texture,
+    data.velocity.texture
+  ]);
 
-    useFrame(({clock}) => {
-        if(shaderMaterialRef.current) {
-            shaderMaterialRef.current.uniforms.time.value = clock.getElapsedTime();
-            gpuCompute.compute();
+  useFrame(({
+    clock
+  }) => {
+    gpgpuRenderer.compute();
 
-            // positionUniforms[ 'time' ].value = clock.elapsedTime;
-            // positionUniforms[ 'delta' ].value = clock.getDelta();
-            // velocityUniforms[ 'time' ].value = clock.elapsedTime;
-            // velocityUniforms[ 'delta' ].value = clock.getDelta();
+    shaderMaterial.uniforms.time.value = clock.elapsedTime;
 
-            shaderMaterialRef.current.uniforms[ 'texturePosition' ].value = gpuCompute.getCurrentRenderTarget( positionVariable ).texture;
-            gpuCompute.getCurrentRenderTarget( positionVariable ).texture.needsUpdate = true;
-    				shaderMaterialRef.current.uniforms[ 'textureVelocity' ].value = gpuCompute.getCurrentRenderTarget( velocityVariable ).texture;
-            shaderMaterialRef.current.uniformsNeedUpdate = true;
-            shaderMaterialRef.current.needsUpdate = true;
+    shaderMaterial.uniforms.gPositionMap.value = gpgpuRenderer
+      .getCurrentRenderTarget(data.position.variables.positionVariable).texture;
+    data.position.variables.positionVariable.material.uniforms.uTime.value = clock.elapsedTime;
+    data.position.variables.positionVariable.material.uniforms.uDeltaTime.value = clock.getDelta();
+    data.position.variables.positionVariable.material.uniforms.uInitialPosition.value = gpgpuRenderer
+    .getCurrentRenderTarget(data.position.variables.positionVariable).texture;
 
-        }
-    });
+    shaderMaterial.uniforms.gVelocityMap.value = gpgpuRenderer
+      .getCurrentRenderTarget(data.velocity.variables.velocityVariable).texture;
+    data.velocity.variables.velocityVariable.material.uniforms.uTime.value = clock.elapsedTime;
+    data.velocity.variables.velocityVariable.material.uniforms.uDeltaTime.value = clock.getDelta();
 
-    return (
-      <>
-        <mesh position={[0.0, 0.0, 0.0]}>
-          <primitive object={rotatedPlaneGeometry} />
-          <meshBasicMaterial color={0x00ff00} side={DoubleSide}/>
-        </mesh>
-        <mesh position={[0.0, 1.0, 0.0]}>
-          <planeGeometry args={[5, 5, 1, 1]}/>
-          <meshBasicMaterial 
-            color={0x00ff00} 
-            side={DoubleSide}
-            map={gpuCompute.getCurrentRenderTarget( positionVariable ).texture}
-          />
-        </mesh>
-        <gridHelper args={[100, 100, 100, 100]} position={[0, 0.01, 0]}/>
-        <instancedMesh position={instanceOrigin} args={[null as any, null as any, instanceNumber]} ref={instancedMeshRef} >
-          <planeGeometry args={[1, 1, 1, 1]} />
-          <shaderMaterial 
-              ref={shaderMaterialRef}
-              vertexShader={personShader.vertexShader}
-              fragmentShader={personShader.fragmentShader}
-              uniforms={{
-                  time: {
-                      value: 0
-                  },
-                  texturePosition: {
-                    value: gpuCompute.getCurrentRenderTarget( positionVariable ).texture
-                  },
-                  textureVelocity: {
-                    value: gpuCompute.getCurrentRenderTarget( positionVariable ).texture
-                  }
-              }}
-              side={DoubleSide}
-            />
-        </instancedMesh>
-      </>
-    )
-};
+    // if (velocityCheckMaterialRef.current) {
+    //   velocityCheckMaterialRef.current.map = gpgpuRenderer.getCurrentRenderTarget(data.velocity.variables.velocityVariable).texture;
+    //   velocityCheckMaterialRef.current.needsUpdate = true; // Ensure Three.js knows the texture has updated
+    // }
 
-const WalkingShaderCanvas: React.FC = (): JSX.Element => {
+  });
+
   return (
     <>
-      <Canvas
-        camera={{ position: [0, 0, 15] }}
-        scene={{
-          background: new Color(0xf000ff)
-        }}
-      >
-        <WalkingPerson />
-        <OrbitControls
-          enableDamping={true}
-          dampingFactor={0.05}
-          screenSpacePanning={false}
-          zoomSpeed={.1}
-          panSpeed={.1}
-          rotateSpeed={.1}
+      <mesh position={[0.0, 0.0, 0.0]}>
+        <primitive object={rotatedPlaneGeometry} />
+        <meshBasicMaterial color={0x00ff00} side={DoubleSide}/>
+      </mesh>
+      <gridHelper args={[100, 100, 100, 100]} position={[0, 0.01, 0]}/>
+      <instancedMesh ref={instancedMeshRef} args={[null as any, null as any, numPeople]} material={shaderMaterial}>
+        <boxGeometry args={[1, 1, .1, 1, 1, 1]} />
+      </instancedMesh>
+      {/* <mesh position={[0, 10, -10]}>
+        <planeGeometry args={[100, 100, 1, 1]} />
+        <meshBasicMaterial 
+          ref={velocityCheckMaterialRef}
+          map={data.velocity.texture} 
+          color={0xffffff}
         />
-      </Canvas>
+      </mesh> */}
     </>
-  )
+  );
 };
+
+const WalkingShaderCanvas = () => {
+  return (
+    <Canvas camera={{position: [0, 5, 5]}}>
+      <ambientLight intensity={0.5} />
+      <pointLight position={[10, 10, 10]} />
+      <WalkingPeople width={100} spread={50}/>
+      <OrbitControls/>
+    </Canvas>
+  );
+}
 
 export { WalkingShaderCanvas };

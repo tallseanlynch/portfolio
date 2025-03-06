@@ -4,11 +4,11 @@ import {
   RomeShaderCanvas,
   SnowShaderCanvas,
   WaterShaderCanvas,
+  MixShaderCanvas,
   WalkingShaderCanvas
 } from './components';
 import './assets/css/brand.css';
 import {
-  memo,
   Suspense,
   useEffect,
   useState
@@ -16,11 +16,12 @@ import {
 import { useSelector } from 'react-redux';
 
 const scenes = [
-  memo(WaterShaderCanvas),
-  memo(SnowShaderCanvas),
-  memo(RomeShaderCanvas),
-  memo(InsectsShaderCanvas),
-  memo(WalkingShaderCanvas)
+  WaterShaderCanvas,
+  SnowShaderCanvas,
+  RomeShaderCanvas,
+  InsectsShaderCanvas,
+  MixShaderCanvas,
+  WalkingShaderCanvas
 ];
 
 const startingSceneMap = {
@@ -32,8 +33,10 @@ const startingSceneMap = {
   [2]: 'rome',
   insects: 3,
   [3]: 'insects',
-  walking: 4,
-  [4]: 'walking'
+  mix: 4,
+  [4]: 'mix',
+  walking: 5,
+  [5]: 'walking'
 };
 
 const calculateSceneIndex = ({startingSceneIndex, sceneCounter}: calculateSceneIndexType): number => {
