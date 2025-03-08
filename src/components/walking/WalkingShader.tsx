@@ -1,6 +1,6 @@
 import {
   useGPGPU,
-  useGPGPUTracking
+  // useGPGPUTracking
 } from './useGPGPU';
 import { OrbitControls } from '@react-three/drei';
 import { 
@@ -13,6 +13,7 @@ import {
   useMemo 
 } from 'react';
 import { 
+  CanvasTexture,
   DoubleSide,
   InstancedMesh,
   MeshBasicMaterial,
@@ -24,6 +25,7 @@ import {
 
 const planeSize = 100;
 const planeUnitResolution = 10;
+const trackingPlaneTextureResolution = planeSize * planeUnitResolution;
 const rotatedPlaneGeometry = new PlaneGeometry(planeSize, planeSize, 1, 1);
 rotatedPlaneGeometry.rotateX(Math.PI / 2);
 const matrixPositionObject =  new Object3D;
@@ -33,13 +35,41 @@ const WalkingPeople = ({ width = 100, spread = 50.0}) => {
   const instancedMeshRef = useRef<InstancedMesh>();
   const numPeople = width * width;
   const { gpgpuRenderer, data } = useGPGPU(numPeople, spread);
-  const { gpgpuRenderer: gpgpuTrackingRenderer, data: trackingData } = useGPGPUTracking(planeSize, planeUnitResolution);
+  // const { gpgpuRenderer: gpgpuTrackingRenderer, data: trackingData } = useGPGPUTracking(
+  //   planeSize, 
+  //   planeUnitResolution, 
+  //   width, 
+  //   gpgpuRenderer
+  //     .getCurrentRenderTarget(data.position.variables.positionVariable).texture
+  // );
   const velocityCheckMaterialRef = useRef<MeshBasicMaterial>();
   const destinationCheckMaterialRef = useRef<MeshBasicMaterial>();
   const positionCheckMaterialRef = useRef<MeshBasicMaterial>();
   const trackingCheckMaterialRef = useRef<MeshBasicMaterial>();
+  const goundMaterialRef = useRef<MeshBasicMaterial>();
+
   console.log(planeSize, gpgpuRenderer, data)
-  console.log(planeSize, gpgpuTrackingRenderer, trackingData)
+  // console.log(planeSize, gpgpuTrackingRenderer, trackingData)
+
+  const canvas = useMemo(() => {
+    const offscreenCanvas = new OffscreenCanvas(trackingPlaneTextureResolution, trackingPlaneTextureResolution);
+    const ctx = offscreenCanvas.getContext('2d');
+
+    // Initial drawing setup
+    if(ctx) {
+      ctx.fillStyle = 'white';
+      ctx.fillRect(0, 0, trackingPlaneTextureResolution, trackingPlaneTextureResolution);  
+    }
+
+    // Create a texture from the OffscreenCanvas
+    const texture = new CanvasTexture(offscreenCanvas);
+    texture.needsUpdate = true; // Ensure texture is updated on creation
+
+    return {
+      texture, 
+      ctx
+    };
+  }, []); // Empty dependency array means this runs only once
 
   useEffect(() => {
     if(instancedMeshRef.current) {
@@ -53,6 +83,7 @@ const WalkingPeople = ({ width = 100, spread = 50.0}) => {
       instancedMeshRef.current.instanceMatrix.needsUpdate = true;
       instancedMeshRef.current.frustumCulled = false;
     }
+
   }, [])
 
 
@@ -135,41 +166,68 @@ const WalkingPeople = ({ width = 100, spread = 50.0}) => {
     data.destination.texture
   ]);
 
-//  const trackingPlaneWidth = planeSize * 10;
-  const trackingShaderMaterial = useMemo(() => new ShaderMaterial({
-    uniforms: {
-      gPositionTrackingMap: { value: trackingData.positionTracking.texture}
-    },
-    vertexShader: `
-      varying vec2 vUv;
+  // const trackingShaderMaterial = useMemo(() => new ShaderMaterial({
+  //   uniforms: {
+  //     gPositionTrackingMap: { value: trackingData.positionTracking.texture}
+  //   },
+  //   vertexShader: `
+  //     varying vec2 vUv;
 
-      void main() {
-        vUv = uv;
-        gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-      }
-    `,
-    fragmentShader: `
-      uniform sampler2D gPositionTrackingMap;
-      varying vec2 vUv;
+  //     void main() {
+  //       vUv = uv;
+  //       gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+  //     }
+  //   `,
+  //   fragmentShader: `
+  //     uniform sampler2D gPositionTrackingMap;
+  //     varying vec2 vUv;
 
-      void main() {
-        vec4 gPositionTrackingData = texture2D(gPositionTrackingMap, vUv);
-        gl_FragColor = gPositionTrackingData;
-        // gl_FragColor = vec4(vUv.x, vUv.y, 0.0, 1.0);
-      }
-    `,
-    side: DoubleSide,
-    transparent: true
-  }), [
-    trackingData.positionTracking.texture
-  ]);
+  //     void main() {
+  //       vec4 gPositionTrackingData = texture2D(gPositionTrackingMap, vUv);
+  //       gl_FragColor = gPositionTrackingData;
+  //       // gl_FragColor = vec4(vUv.x, vUv.y, 0.0, 1.0);
+  //     }
+  //   `,
+  //   side: DoubleSide,
+  //   transparent: true
+  // }), [
+  //   trackingData.positionTracking.texture
+  // ]);
 
+  const buffer = useMemo(() => {
+    return new Float32Array(width * width * 4);
+  }, [width])
 
   useFrame(({
-    clock
+    clock,
+    gl
   }) => {
+
+    gl.readRenderTargetPixels(
+      gpgpuRenderer.getCurrentRenderTarget(data.position.variables.positionVariable),
+      0, 0, width, width,
+      buffer
+    );
+
+    if(canvas.ctx && trackingCheckMaterialRef.current && goundMaterialRef.current) {
+
+      // // origin
+      // canvas.ctx.fillStyle = 'blue';
+      // canvas.ctx.fillRect(500, 500, 4, 4);
+
+      canvas.ctx.fillStyle = 'red';
+      for (let i = 0; i < buffer.length; i += 4) {
+            // const x = (i / 4) % width;
+            // const y = Math.floor((i / 4) / width);
+            canvas.ctx.fillRect(500 + buffer[i] * 10, 500 + buffer[i + 2] * -10, 2, 2);
+    }
+    canvas.texture.needsUpdate = true;
+    trackingCheckMaterialRef.current.needsUpdate = true;
+    goundMaterialRef.current.needsUpdate = true;
+  }
+
     // computer renderers
-    gpgpuTrackingRenderer.compute();
+    // gpgpuTrackingRenderer.compute();
     gpgpuRenderer.compute();
 
     shaderMaterial.uniforms.time.value = clock.elapsedTime;
@@ -205,17 +263,17 @@ const WalkingPeople = ({ width = 100, spread = 50.0}) => {
     data.destination.variables.destinationVariable.material.uniforms.uDeltaTime.value = clock.getDelta();
 
 
-    // tracking material
+    // // tracking material
 
-    trackingData.positionTracking.variables.positionTrackingVariable.material.uniforms.uTime.value = clock.elapsedTime;
-    trackingShaderMaterial.uniforms.gPositionTrackingMap.value = gpgpuTrackingRenderer
-     .getCurrentRenderTarget(trackingData.positionTracking.variables.positionTrackingVariable).texture;
-    // trackingData.positionTracking.variables.positionTrackingVariable.material.uniforms.uInitialPositionTracking.value = gpgpuRenderer
+    // trackingData.positionTracking.variables.positionTrackingVariable.material.uniforms.uTime.value = clock.elapsedTime;
+    // trackingShaderMaterial.uniforms.gPositionTrackingMap.value = gpgpuTrackingRenderer
     //  .getCurrentRenderTarget(trackingData.positionTracking.variables.positionTrackingVariable).texture;
- 
-     //  uInitialPositionTracking
+    // // trackingData.positionTracking.variables.positionTrackingVariable.material.uniforms.uInitialPositionTracking.value = gpgpuRenderer
+    // //  .getCurrentRenderTarget(trackingData.positionTracking.variables.positionTrackingVariable).texture; 
+    //  //  uInitialPositionTracking
     
-    // check materials
+
+     // check materials
 
     if (positionCheckMaterialRef.current) {
       positionCheckMaterialRef.current.map = gpgpuRenderer
@@ -235,11 +293,11 @@ const WalkingPeople = ({ width = 100, spread = 50.0}) => {
       destinationCheckMaterialRef.current.needsUpdate = true;
     }
 
-    if (trackingCheckMaterialRef.current) {
-      trackingCheckMaterialRef.current.map = gpgpuRenderer
-        .getCurrentRenderTarget(trackingData.positionTracking.variables.positionTrackingVariable).texture;
-        trackingCheckMaterialRef.current.needsUpdate = true;
-    }
+    // if (trackingCheckMaterialRef.current) {
+    //   trackingCheckMaterialRef.current.map = gpgpuRenderer
+    //     .getCurrentRenderTarget(trackingData.positionTracking.variables.positionTrackingVariable).texture;
+    //     trackingCheckMaterialRef.current.needsUpdate = true;
+    // }
 
   });
 
@@ -247,15 +305,16 @@ const WalkingPeople = ({ width = 100, spread = 50.0}) => {
     <>
       <mesh 
         position={[0.0, 0.0, 0.0]}
-        material={trackingShaderMaterial}
+        // material={trackingShaderMaterial}
       >
         <primitive object={rotatedPlaneGeometry} />
+        <meshBasicMaterial color={0xffffff} side={DoubleSide} map={canvas.texture} ref={goundMaterialRef}/>
         {/* <meshBasicMaterial color={0xffffff} side={DoubleSide} map={trackingData.positionTracking.texture}/> */}
       </mesh>
-      <gridHelper 
+      {/* <gridHelper 
         args={[100, 100, 100, 100]} 
         position={[0, 0.01, 0]}
-      />
+      /> */}
       <instancedMesh 
         ref={instancedMeshRef} 
         args={[null as any, null as any, numPeople]} 
@@ -292,7 +351,7 @@ const WalkingPeople = ({ width = 100, spread = 50.0}) => {
         <planeGeometry args={[10, 10, 1, 1]} />
         <meshBasicMaterial 
           ref={trackingCheckMaterialRef}
-          map={trackingData.positionTracking.texture} 
+          map={canvas.texture} 
           color={0xffffff}
           transparent={true}
         />

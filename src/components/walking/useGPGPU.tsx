@@ -1,6 +1,7 @@
 import { useThree } from '@react-three/fiber';
 import { useEffect, useMemo } from 'react';
 import { GPUComputationRenderer } from 'three/examples/jsm/misc/GPUComputationRenderer.js';
+import { Texture } from 'three';
 
 const simulationPositionFragmentShader = `
     uniform int size;
@@ -27,7 +28,7 @@ const simulationPositionFragmentShader = `
             atDestinationModifier = 0.0;
         };
 
-        float checkDistanceMin = .5;
+        float checkDistanceMin = 1.0;
         float distanceFromAnotherPerson = 0.0;
         for(int i = 0; i < size; i++) {
             for(int j = 0; j < size; j++) {
@@ -57,7 +58,7 @@ const simulationVelocityFragmentShader = `
         vec4 initialVelocityData = texture(uInitialVelocity, uv);
         vec4 initialDestinationData = texture(uInitialDestination, uv);
         vec4 directionToDestination = normalize(initialDestinationData - initialPositionData);
-        vec4 mixVelocityDestination = mix(directionToDestination, initialVelocityData, uTime * .00001);
+        vec4 mixVelocityDestination = mix(initialVelocityData, directionToDestination, uTime * .1);
 
         gl_FragColor = mixVelocityDestination;
     }
@@ -89,7 +90,6 @@ function useGPGPU(count: number, spread: number) {
         const positionTexture = gpgpuRenderer.createTexture();
         const velocityTexture = gpgpuRenderer.createTexture();
         const destinationTexture = gpgpuRenderer.createTexture();
-        // const positionTrackingTexture = gpgpuRenderer.createTexture();
 
         // positions
         for (let i = 0; i < count; i++) {
@@ -182,18 +182,42 @@ function useGPGPU(count: number, spread: number) {
 const simulationPositionTrackingFragmentShader = `
     uniform float uTime;
     uniform sampler2D uInitialPositionTracking;
+    uniform sampler2D uInitialPosition;
+    uniform int uInitialPositionWidth;
+
     void main() {
         vec2 uv = gl_FragCoord.xy / resolution.xy;
         vec4 trackingPositionData = texture(uInitialPositionTracking, uv);
+
+        // float atDestinationModifier = 0.0;
+        // float checkDistanceMin = 3.0;
+        // for(int i = 0; i < uInitialPositionWidth; i++) {
+        //     for(int j = 0; j < uInitialPositionWidth; j++) {
+        //         vec2 checkUV = vec2(float(i), float(j)) / resolution.xy;
+        //         vec4 checkPersonPosition = texture(uInitialPosition, checkUV);
+        //         float checkDistance = distance(trackingPositionData, checkPersonPosition);
+        //         if(checkDistance < checkDistanceMin) {
+        //             atDestinationModifier = 1.0;
+        //         }
+        //     }
+        // }
+
+        // gl_FragColor = mix(trackingPositionData, vec4(0.0, 0.0, 0.0, 1.0), atDestinationModifier);
         gl_FragColor = trackingPositionData;
         // gl_FragColor = vec4(0.0, 0.0, 0.0, sin(uTime));
     }
 `
 
-function useGPGPUTracking(planeSize: number, planeUnitResolution: number) {
+function useGPGPUTracking(
+    planeSize: number, 
+    planeUnitResolution: number,
+    width: number,
+    positionTexture: Texture
+) {
     const size = planeSize * planeUnitResolution;
     const planeCount = size * size;
     const gl = useThree((state) => state.gl);
+    console.log(width, positionTexture);
 
     const [gpgpuRenderer, data] = useMemo(() => {
         const gpgpuRenderer = new GPUComputationRenderer(size, size, gl);
@@ -203,18 +227,16 @@ function useGPGPUTracking(planeSize: number, planeUnitResolution: number) {
         // position tracking
         for (let i = 0; i < planeCount; i++) {
             const i4 = i * 4;
-            (positionTrackingTexture.image.data as any)[i4 + 0] = Math.random(); // x
-            (positionTrackingTexture.image.data as any)[i4 + 1] = Math.random(); // y
+            (positionTrackingTexture.image.data as any)[i4 + 0] = 1.0;// Math.random(); // x
+            (positionTrackingTexture.image.data as any)[i4 + 1] = 1.0;// Math.random(); // y
             (positionTrackingTexture.image.data as any)[i4 + 2] = Math.random(); // z
             (positionTrackingTexture.image.data as any)[i4 + 3] = 1.0; // w
-            // (positionTrackingTexture.image.data as any)[i4 + 0] = .5; // x
-            // (positionTrackingTexture.image.data as any)[i4 + 1] = .5; // y
-            // (positionTrackingTexture.image.data as any)[i4 + 2] = .5; // z
-            // (positionTrackingTexture.image.data as any)[i4 + 3] = 1.0; // w
         }
         const positionTrackingVariable = gpgpuRenderer.addVariable('uPositionTracking', simulationPositionTrackingFragmentShader, positionTrackingTexture);
         positionTrackingVariable.material.uniforms.uTime = { value: 0 };
         positionTrackingVariable.material.uniforms.uInitialPositionTracking = { value: positionTrackingTexture };
+        positionTrackingVariable.material.uniforms.uInitialPosition = { value: positionTexture };
+        positionTrackingVariable.material.uniforms.uInitialPositionWidth = { value: width };
 
         // init
         gpgpuRenderer.setVariableDependencies(positionTrackingVariable, [positionTrackingVariable]);
@@ -232,7 +254,7 @@ function useGPGPUTracking(planeSize: number, planeUnitResolution: number) {
                 }
             },
         ];
-    }, [gl, size, planeCount]);
+    }, [gl, size, planeCount, positionTexture, width]);
 
     useEffect(() => {
         return () => {
