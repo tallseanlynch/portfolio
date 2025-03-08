@@ -1,4 +1,7 @@
-import useGPGPU from './useGPGPU';
+import {
+  useGPGPU,
+  useGPGPUTracking
+} from './useGPGPU';
 import { OrbitControls } from '@react-three/drei';
 import { 
   Canvas, 
@@ -19,23 +22,29 @@ import {
   ShaderMaterial
 } from 'three';
 
-const rotatedPlaneGeometry = new PlaneGeometry(100, 100, 1, 1);
+const planeSize = 100;
+const planeUnitResolution = 10;
+const rotatedPlaneGeometry = new PlaneGeometry(planeSize, planeSize, 1, 1);
 rotatedPlaneGeometry.rotateX(Math.PI / 2);
 const matrixPositionObject =  new Object3D;
 const instanceScale = .75;
 
-const WalkingPeople = ({ width = 100, spread = 50.0 }) => {
+const WalkingPeople = ({ width = 100, spread = 50.0}) => {
   const instancedMeshRef = useRef<InstancedMesh>();
   const numPeople = width * width;
   const { gpgpuRenderer, data } = useGPGPU(numPeople, spread);
+  const { gpgpuRenderer: gpgpuTrackingRenderer, data: trackingData } = useGPGPUTracking(planeSize, planeUnitResolution);
   const velocityCheckMaterialRef = useRef<MeshBasicMaterial>();
   const destinationCheckMaterialRef = useRef<MeshBasicMaterial>();
   const positionCheckMaterialRef = useRef<MeshBasicMaterial>();
+  const trackingCheckMaterialRef = useRef<MeshBasicMaterial>();
+  console.log(planeSize, gpgpuRenderer, data)
+  console.log(planeSize, gpgpuTrackingRenderer, trackingData)
 
   useEffect(() => {
     if(instancedMeshRef.current) {
       for ( let i=0 ; i<numPeople ; i++ ) {
-        matrixPositionObject.scale.y = 1.5 + (Math.random() * instanceScale) - instanceScale / 2;
+        matrixPositionObject.scale.y = 2.0 + (Math.random() * instanceScale) - instanceScale / 2;
         matrixPositionObject.position.set(0, matrixPositionObject.scale.y / 2, 0);        
         matrixPositionObject.updateMatrix();
         instancedMeshRef.current.setMatrixAt( i, matrixPositionObject.matrix );
@@ -45,6 +54,7 @@ const WalkingPeople = ({ width = 100, spread = 50.0 }) => {
       instancedMeshRef.current.frustumCulled = false;
     }
   }, [])
+
 
   const shaderMaterial = useMemo(() => new ShaderMaterial({
     uniforms: {
@@ -61,6 +71,8 @@ const WalkingPeople = ({ width = 100, spread = 50.0 }) => {
       varying vec4 vPosition;
       varying vec3 vOriginalPosition;
       varying vec4 vgPosition;
+      varying vec4 vgDestination;
+
       void main() {
         vOriginalPosition = position;
         int index = gl_InstanceID;
@@ -72,6 +84,7 @@ const WalkingPeople = ({ width = 100, spread = 50.0 }) => {
         vec4 gPositionData = texture2D(gPositionMap, uv);
         vec4 gDestinationData = texture2D(gDestinationMap, uv);
         vgPosition = gPositionData;
+        vgDestination = gDestinationData;
         vec4 mvPosition = vec4( position, 1.0 );
         #ifdef USE_INSTANCING
             mvPosition = instanceMatrix * mvPosition;
@@ -90,20 +103,28 @@ const WalkingPeople = ({ width = 100, spread = 50.0 }) => {
         vPosition.x = vPosition.x + gPositionData.x;// + (gVelocityData.x * (time));
         vPosition.y = vPosition.y + gPositionData.y;// + (gVelocityData.y * (time));
         vPosition.z = vPosition.z + gPositionData.z;// + (gVelocityData.z * (time));
-
         gl_Position = projectionMatrix * modelViewMatrix * vPosition;
       }
     `,
     fragmentShader: `
       varying vec4 vgPosition;
       varying vec3 vOriginalPosition;
+      varying vec4 vgDestination;
+
       void main() {
         vec4 positionColor = vgPosition;
+        vec4 destinationColor = vgDestination;
+        vec4 finalColor = positionColor;
 
         if(vOriginalPosition.z > 0.0) {
-          positionColor = vec4(1.0, 1.0, 1.0, 1.0);
+          finalColor = vec4(1.0, 1.0, 1.0, 1.0);
         }
-        gl_FragColor = positionColor;
+
+        if(distance(vgPosition, vgDestination) < .25) {
+          finalColor = vec4(.5, .5, .5, 1.0);
+        }
+
+        gl_FragColor = finalColor;
       }
     `,
     side: DoubleSide
@@ -114,12 +135,46 @@ const WalkingPeople = ({ width = 100, spread = 50.0 }) => {
     data.destination.texture
   ]);
 
+//  const trackingPlaneWidth = planeSize * 10;
+  const trackingShaderMaterial = useMemo(() => new ShaderMaterial({
+    uniforms: {
+      gPositionTrackingMap: { value: trackingData.positionTracking.texture}
+    },
+    vertexShader: `
+      varying vec2 vUv;
+
+      void main() {
+        vUv = uv;
+        gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+      }
+    `,
+    fragmentShader: `
+      uniform sampler2D gPositionTrackingMap;
+      varying vec2 vUv;
+
+      void main() {
+        vec4 gPositionTrackingData = texture2D(gPositionTrackingMap, vUv);
+        gl_FragColor = gPositionTrackingData;
+        // gl_FragColor = vec4(vUv.x, vUv.y, 0.0, 1.0);
+      }
+    `,
+    side: DoubleSide,
+    transparent: true
+  }), [
+    trackingData.positionTracking.texture
+  ]);
+
+
   useFrame(({
     clock
   }) => {
+    // computer renderers
+    gpgpuTrackingRenderer.compute();
     gpgpuRenderer.compute();
 
     shaderMaterial.uniforms.time.value = clock.elapsedTime;
+
+    // positions
 
     shaderMaterial.uniforms.gPositionMap.value = gpgpuRenderer
       .getCurrentRenderTarget(data.position.variables.positionVariable).texture;
@@ -132,6 +187,8 @@ const WalkingPeople = ({ width = 100, spread = 50.0 }) => {
     data.position.variables.positionVariable.material.uniforms.uInitialVelocity.value = gpgpuRenderer
     .getCurrentRenderTarget(data.velocity.variables.velocityVariable).texture;
 
+    // velocity
+
     shaderMaterial.uniforms.gVelocityMap.value = gpgpuRenderer
       .getCurrentRenderTarget(data.velocity.variables.velocityVariable).texture;
     data.velocity.variables.velocityVariable.material.uniforms.uTime.value = clock.elapsedTime;
@@ -140,38 +197,70 @@ const WalkingPeople = ({ width = 100, spread = 50.0 }) => {
     data.velocity.variables.velocityVariable.material.uniforms.uInitialPosition.value = gpgpuRenderer
     .getCurrentRenderTarget(data.position.variables.positionVariable).texture;
 
+    // destination
 
     shaderMaterial.uniforms.gDestinationMap.value = gpgpuRenderer
       .getCurrentRenderTarget(data.destination.variables.destinationVariable).texture;
     data.destination.variables.destinationVariable.material.uniforms.uTime.value = clock.elapsedTime;
     data.destination.variables.destinationVariable.material.uniforms.uDeltaTime.value = clock.getDelta();
 
+
+    // tracking material
+
+    trackingData.positionTracking.variables.positionTrackingVariable.material.uniforms.uTime.value = clock.elapsedTime;
+    trackingShaderMaterial.uniforms.gPositionTrackingMap.value = gpgpuTrackingRenderer
+     .getCurrentRenderTarget(trackingData.positionTracking.variables.positionTrackingVariable).texture;
+    // trackingData.positionTracking.variables.positionTrackingVariable.material.uniforms.uInitialPositionTracking.value = gpgpuRenderer
+    //  .getCurrentRenderTarget(trackingData.positionTracking.variables.positionTrackingVariable).texture;
+ 
+     //  uInitialPositionTracking
+    
+    // check materials
+
     if (positionCheckMaterialRef.current) {
-      positionCheckMaterialRef.current.map = gpgpuRenderer.getCurrentRenderTarget(data.position.variables.positionVariable).texture;
-      positionCheckMaterialRef.current.needsUpdate = true; // Ensure Three.js knows the texture has updated
+      positionCheckMaterialRef.current.map = gpgpuRenderer
+        .getCurrentRenderTarget(data.position.variables.positionVariable).texture;
+      positionCheckMaterialRef.current.needsUpdate = true;
     }
 
     if (velocityCheckMaterialRef.current) {
-      velocityCheckMaterialRef.current.map = gpgpuRenderer.getCurrentRenderTarget(data.velocity.variables.velocityVariable).texture;
-      velocityCheckMaterialRef.current.needsUpdate = true; // Ensure Three.js knows the texture has updated
+      velocityCheckMaterialRef.current.map = gpgpuRenderer
+        .getCurrentRenderTarget(data.velocity.variables.velocityVariable).texture;
+      velocityCheckMaterialRef.current.needsUpdate = true;
     }
 
     if (destinationCheckMaterialRef.current) {
-      destinationCheckMaterialRef.current.map = gpgpuRenderer.getCurrentRenderTarget(data.destination.variables.destinationVariable).texture;
-      destinationCheckMaterialRef.current.needsUpdate = true; // Ensure Three.js knows the texture has updated
+      destinationCheckMaterialRef.current.map = gpgpuRenderer
+        .getCurrentRenderTarget(data.destination.variables.destinationVariable).texture;
+      destinationCheckMaterialRef.current.needsUpdate = true;
     }
 
+    if (trackingCheckMaterialRef.current) {
+      trackingCheckMaterialRef.current.map = gpgpuRenderer
+        .getCurrentRenderTarget(trackingData.positionTracking.variables.positionTrackingVariable).texture;
+        trackingCheckMaterialRef.current.needsUpdate = true;
+    }
 
   });
 
   return (
     <>
-      <mesh position={[0.0, 0.0, 0.0]}>
+      <mesh 
+        position={[0.0, 0.0, 0.0]}
+        material={trackingShaderMaterial}
+      >
         <primitive object={rotatedPlaneGeometry} />
-        <meshBasicMaterial color={0x00ff00} side={DoubleSide}/>
+        {/* <meshBasicMaterial color={0xffffff} side={DoubleSide} map={trackingData.positionTracking.texture}/> */}
       </mesh>
-      <gridHelper args={[100, 100, 100, 100]} position={[0, 0.01, 0]}/>
-      <instancedMesh ref={instancedMeshRef} args={[null as any, null as any, numPeople]} material={shaderMaterial}>
+      <gridHelper 
+        args={[100, 100, 100, 100]} 
+        position={[0, 0.01, 0]}
+      />
+      <instancedMesh 
+        ref={instancedMeshRef} 
+        args={[null as any, null as any, numPeople]} 
+        material={shaderMaterial}
+      >
         <boxGeometry args={[1, 1, .1, 1, 1, 1]} />
       </instancedMesh>
 
@@ -199,16 +288,25 @@ const WalkingPeople = ({ width = 100, spread = 50.0 }) => {
           color={0xffffff}
         />
       </mesh>
+      <mesh position={[20, 10, -10]}>
+        <planeGeometry args={[10, 10, 1, 1]} />
+        <meshBasicMaterial 
+          ref={trackingCheckMaterialRef}
+          map={trackingData.positionTracking.texture} 
+          color={0xffffff}
+          transparent={true}
+        />
+      </mesh>
     </>
   );
 };
 
 const WalkingShaderCanvas = () => {
   return (
-    <Canvas camera={{position: [0, 50, 50]}}>
+    <Canvas camera={{position: [0, 25, 25]}}>
       <ambientLight intensity={0.5} />
       <pointLight position={[10, 10, 10]} />
-      <WalkingPeople width={100} spread={100}/>
+      <WalkingPeople width={50} spread={50}/>
       <OrbitControls/>
     </Canvas>
   );
