@@ -8,6 +8,7 @@ import {
   useFrame 
 } from '@react-three/fiber';
 import { 
+  useCallback,
   useEffect, 
   useRef, 
   useMemo 
@@ -35,13 +36,6 @@ const WalkingPeople = ({ width = 100, spread = 50.0}) => {
   const instancedMeshRef = useRef<InstancedMesh>();
   const numPeople = width * width;
   const { gpgpuRenderer, data } = useGPGPU(numPeople, spread);
-  // const { gpgpuRenderer: gpgpuTrackingRenderer, data: trackingData } = useGPGPUTracking(
-  //   planeSize, 
-  //   planeUnitResolution, 
-  //   width, 
-  //   gpgpuRenderer
-  //     .getCurrentRenderTarget(data.position.variables.positionVariable).texture
-  // );
   const velocityCheckMaterialRef = useRef<MeshBasicMaterial>();
   const destinationCheckMaterialRef = useRef<MeshBasicMaterial>();
   const positionCheckMaterialRef = useRef<MeshBasicMaterial>();
@@ -49,7 +43,6 @@ const WalkingPeople = ({ width = 100, spread = 50.0}) => {
   const goundMaterialRef = useRef<MeshBasicMaterial>();
 
   console.log(planeSize, gpgpuRenderer, data)
-  // console.log(planeSize, gpgpuTrackingRenderer, trackingData)
 
   const canvas = useMemo(() => {
     const offscreenCanvas = new OffscreenCanvas(trackingPlaneTextureResolution, trackingPlaneTextureResolution);
@@ -99,6 +92,7 @@ const WalkingPeople = ({ width = 100, spread = 50.0}) => {
       uniform sampler2D gPositionMap;
       uniform sampler2D gDestinationMap;
       uniform float time;
+
       varying vec4 vPosition;
       varying vec3 vOriginalPosition;
       varying vec4 vgPosition;
@@ -117,6 +111,7 @@ const WalkingPeople = ({ width = 100, spread = 50.0}) => {
         vgPosition = gPositionData;
         vgDestination = gDestinationData;
         vec4 mvPosition = vec4( position, 1.0 );
+
         #ifdef USE_INSTANCING
             mvPosition = instanceMatrix * mvPosition;
             vPosition = mvPosition;
@@ -131,9 +126,10 @@ const WalkingPeople = ({ width = 100, spread = 50.0}) => {
         );
 
         vPosition = rotationMatrix * vPosition;
-        vPosition.x = vPosition.x + gPositionData.x;// + (gVelocityData.x * (time));
-        vPosition.y = vPosition.y + gPositionData.y;// + (gVelocityData.y * (time));
-        vPosition.z = vPosition.z + gPositionData.z;// + (gVelocityData.z * (time));
+        vPosition.x = vPosition.x + gPositionData.x;
+        vPosition.y = vPosition.y + gPositionData.y;
+        vPosition.z = vPosition.z + gPositionData.z;
+
         gl_Position = projectionMatrix * modelViewMatrix * vPosition;
       }
     `,
@@ -166,43 +162,11 @@ const WalkingPeople = ({ width = 100, spread = 50.0}) => {
     data.destination.texture
   ]);
 
-  // const trackingShaderMaterial = useMemo(() => new ShaderMaterial({
-  //   uniforms: {
-  //     gPositionTrackingMap: { value: trackingData.positionTracking.texture}
-  //   },
-  //   vertexShader: `
-  //     varying vec2 vUv;
-
-  //     void main() {
-  //       vUv = uv;
-  //       gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-  //     }
-  //   `,
-  //   fragmentShader: `
-  //     uniform sampler2D gPositionTrackingMap;
-  //     varying vec2 vUv;
-
-  //     void main() {
-  //       vec4 gPositionTrackingData = texture2D(gPositionTrackingMap, vUv);
-  //       gl_FragColor = gPositionTrackingData;
-  //       // gl_FragColor = vec4(vUv.x, vUv.y, 0.0, 1.0);
-  //     }
-  //   `,
-  //   side: DoubleSide,
-  //   transparent: true
-  // }), [
-  //   trackingData.positionTracking.texture
-  // ]);
-
   const buffer = useMemo(() => {
     return new Float32Array(width * width * 4);
   }, [width])
 
-  useFrame(({
-    clock,
-    gl
-  }) => {
-
+  const renderTrackingPlane = useCallback((gl) => {
     gl.readRenderTargetPixels(
       gpgpuRenderer.getCurrentRenderTarget(data.position.variables.positionVariable),
       0, 0, width, width,
@@ -211,70 +175,58 @@ const WalkingPeople = ({ width = 100, spread = 50.0}) => {
 
     if(canvas.ctx && trackingCheckMaterialRef.current && goundMaterialRef.current) {
 
-      // // origin
-      // canvas.ctx.fillStyle = 'blue';
-      // canvas.ctx.fillRect(500, 500, 4, 4);
-
-      canvas.ctx.fillStyle = 'red';
+      const fillStyleArray = [
+        'red',
+        'green',
+        'blue'
+      ]
+      const oneThirdBufferArray = buffer.length / 3;
       for (let i = 0; i < buffer.length; i += 4) {
-            // const x = (i / 4) % width;
-            // const y = Math.floor((i / 4) / width);
-            canvas.ctx.fillRect(500 + buffer[i] * 10, 500 + buffer[i + 2] * -10, 2, 2);
-    }
-    canvas.texture.needsUpdate = true;
-    trackingCheckMaterialRef.current.needsUpdate = true;
-    goundMaterialRef.current.needsUpdate = true;
-  }
 
-    // computer renderers
-    // gpgpuTrackingRenderer.compute();
+        canvas.ctx.fillStyle = fillStyleArray[Math.floor(i / oneThirdBufferArray)];
+        canvas.ctx.fillRect(500 + buffer[i] * 10, 500 + buffer[i + 2] * -10, 2, 2);
+      }
+      canvas.texture.needsUpdate = true;
+      trackingCheckMaterialRef.current.needsUpdate = true;
+      goundMaterialRef.current.needsUpdate = true;
+    }
+
+  }, [buffer, canvas.ctx, canvas.texture, data.position.variables.positionVariable, gpgpuRenderer, width])
+
+  const renderDebugPlane = false;
+
+  useFrame(({
+    clock,
+    gl
+  }) => {
+    if(renderDebugPlane) {
+      renderTrackingPlane(gl)
+    }
+
+    // computer renderer
     gpgpuRenderer.compute();
 
     shaderMaterial.uniforms.time.value = clock.elapsedTime;
 
     // positions
-
     shaderMaterial.uniforms.gPositionMap.value = gpgpuRenderer
       .getCurrentRenderTarget(data.position.variables.positionVariable).texture;
     data.position.variables.positionVariable.material.uniforms.uTime.value = clock.elapsedTime;
     data.position.variables.positionVariable.material.uniforms.uDeltaTime.value = clock.getDelta();
-    // input position texture back into position fragment
-    data.position.variables.positionVariable.material.uniforms.uInitialPosition.value = gpgpuRenderer
-    .getCurrentRenderTarget(data.position.variables.positionVariable).texture;
-    // input velocity texture back into position fragment
-    data.position.variables.positionVariable.material.uniforms.uInitialVelocity.value = gpgpuRenderer
-    .getCurrentRenderTarget(data.velocity.variables.velocityVariable).texture;
 
     // velocity
-
     shaderMaterial.uniforms.gVelocityMap.value = gpgpuRenderer
       .getCurrentRenderTarget(data.velocity.variables.velocityVariable).texture;
     data.velocity.variables.velocityVariable.material.uniforms.uTime.value = clock.elapsedTime;
     data.velocity.variables.velocityVariable.material.uniforms.uDeltaTime.value = clock.getDelta();
-    // input position texture back into velocity fragment
-    data.velocity.variables.velocityVariable.material.uniforms.uInitialPosition.value = gpgpuRenderer
-    .getCurrentRenderTarget(data.position.variables.positionVariable).texture;
 
     // destination
-
     shaderMaterial.uniforms.gDestinationMap.value = gpgpuRenderer
       .getCurrentRenderTarget(data.destination.variables.destinationVariable).texture;
     data.destination.variables.destinationVariable.material.uniforms.uTime.value = clock.elapsedTime;
     data.destination.variables.destinationVariable.material.uniforms.uDeltaTime.value = clock.getDelta();
 
-
-    // // tracking material
-
-    // trackingData.positionTracking.variables.positionTrackingVariable.material.uniforms.uTime.value = clock.elapsedTime;
-    // trackingShaderMaterial.uniforms.gPositionTrackingMap.value = gpgpuTrackingRenderer
-    //  .getCurrentRenderTarget(trackingData.positionTracking.variables.positionTrackingVariable).texture;
-    // // trackingData.positionTracking.variables.positionTrackingVariable.material.uniforms.uInitialPositionTracking.value = gpgpuRenderer
-    // //  .getCurrentRenderTarget(trackingData.positionTracking.variables.positionTrackingVariable).texture; 
-    //  //  uInitialPositionTracking
-    
-
-     // check materials
-
+    // check materials
     if (positionCheckMaterialRef.current) {
       positionCheckMaterialRef.current.map = gpgpuRenderer
         .getCurrentRenderTarget(data.position.variables.positionVariable).texture;
@@ -293,12 +245,6 @@ const WalkingPeople = ({ width = 100, spread = 50.0}) => {
       destinationCheckMaterialRef.current.needsUpdate = true;
     }
 
-    // if (trackingCheckMaterialRef.current) {
-    //   trackingCheckMaterialRef.current.map = gpgpuRenderer
-    //     .getCurrentRenderTarget(trackingData.positionTracking.variables.positionTrackingVariable).texture;
-    //     trackingCheckMaterialRef.current.needsUpdate = true;
-    // }
-
   });
 
   return (
@@ -311,10 +257,10 @@ const WalkingPeople = ({ width = 100, spread = 50.0}) => {
         <meshBasicMaterial color={0xffffff} side={DoubleSide} map={canvas.texture} ref={goundMaterialRef}/>
         {/* <meshBasicMaterial color={0xffffff} side={DoubleSide} map={trackingData.positionTracking.texture}/> */}
       </mesh>
-      {/* <gridHelper 
-        args={[100, 100, 100, 100]} 
+      <gridHelper 
+        args={[100, 100, 0xaaaaaa, 0xaaaaaa]} 
         position={[0, 0.01, 0]}
-      /> */}
+      />
       <instancedMesh 
         ref={instancedMeshRef} 
         args={[null as any, null as any, numPeople]} 
@@ -365,7 +311,7 @@ const WalkingShaderCanvas = () => {
     <Canvas camera={{position: [0, 25, 25]}}>
       <ambientLight intensity={0.5} />
       <pointLight position={[10, 10, 10]} />
-      <WalkingPeople width={50} spread={50}/>
+      <WalkingPeople width={8} spread={20}/>
       <OrbitControls/>
     </Canvas>
   );
