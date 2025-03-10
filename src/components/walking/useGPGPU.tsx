@@ -15,6 +15,11 @@ const simulationPositionFragmentShader = `
         vec4 destinationData = texture(uDestination, uv);
 
         float atDestinationModifier = 1.0;
+        
+        positionData.w = 1.0;
+        velocityData.w = 1.0;
+        destinationData.w = 1.0;
+
         float distanceToDestination = distance(positionData, destinationData);
         if(distanceToDestination < 1.0) {
             atDestinationModifier = distanceToDestination;        
@@ -23,7 +28,7 @@ const simulationPositionFragmentShader = `
             atDestinationModifier = 0.0;
         };
 
-        float checkDistanceMin = 2.0;
+        float checkDistanceMin = 1.0;
         for(int i = 0; i < size; i++) {
             for(int j = 0; j < size; j++) {
                 vec2 checkUV = vec2(float(i), float(j)) / resolution.xy;
@@ -35,7 +40,7 @@ const simulationPositionFragmentShader = `
             }
         }
 
-        gl_FragColor = positionData + clamp(velocityData * .05 * atDestinationModifier, -.5, .5);
+        gl_FragColor = positionData + clamp(velocityData * .1 * atDestinationModifier, -.5, .5);
     }
 `
 const simulationVelocityFragmentShader = `
@@ -50,11 +55,11 @@ const simulationVelocityFragmentShader = `
         vec4 destinationData = texture(uDestination, uv);
         vec4 directionToDestination = normalize(destinationData - positionData);
         float interpolationFactor = clamp(uTime * .001, 0.0, 1.0);
-        vec4 mixVelocityDestination = normalize(mix(velocityData, directionToDestination, interpolationFactor));        
+        vec4 mixVelocityDestination = mix(velocityData, directionToDestination, interpolationFactor);        
         mixVelocityDestination.w = 1.0;
 
-        gl_FragColor = directionToDestination;
-//        gl_FragColor = mixVelocityDestination;
+        // gl_FragColor = directionToDestination;
+        gl_FragColor = mixVelocityDestination;
     }
 `
 
@@ -106,7 +111,7 @@ function useGPGPU(count: number, spread: number) {
         velocityVariable.material.uniforms.uDeltaTime = { value: 0 };
 
         // destinations
-        const destinationScale = 20;
+        const destinationScale = 50;
         for (let i = 0; i < count; i++) {
             const i4 = i * 4;
             (destinationTexture.image.data as any)[i4 + 0] = (Math.random() * 2.0 - 1.0) * destinationScale; // x

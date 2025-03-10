@@ -193,14 +193,37 @@ const WalkingPeople = ({ width = 100, spread = 50.0}) => {
 
   }, [buffer, canvas.ctx, canvas.texture, data.position.variables.positionVariable, gpgpuRenderer, width])
 
+  const debugBuffer = useMemo(() => {
+    return new Float32Array(width * width * 4);
+  }, [width])
+
+  const logDebugBuffer = useCallback((gl) => {
+    gl.readRenderTargetPixels(
+      gpgpuRenderer.getCurrentRenderTarget(data.position.variables.positionVariable),
+      0, 0, width, width,
+      debugBuffer
+    );
+
+    for(let l = 0; l < width * 4; l += 4) {
+      console.log(`bufferIndex: ${l / 4}`)
+      console.log(`${debugBuffer[l]}, ${debugBuffer[l + 1]}, ${debugBuffer[l + 2]}, ${debugBuffer[l + 3]}`);
+    }
+
+  }, [debugBuffer, data.position.variables.positionVariable, gpgpuRenderer, width])
+
   const renderDebugPlane = false;
+  const consoleLogDebugBuffer = false;
 
   useFrame(({
     clock,
     gl
   }) => {
     if(renderDebugPlane) {
-      renderTrackingPlane(gl)
+      renderTrackingPlane(gl);
+    }
+
+    if(consoleLogDebugBuffer) {
+      logDebugBuffer(gl);
     }
 
     // computer renderer
@@ -251,11 +274,9 @@ const WalkingPeople = ({ width = 100, spread = 50.0}) => {
     <>
       <mesh 
         position={[0.0, 0.0, 0.0]}
-        // material={trackingShaderMaterial}
       >
         <primitive object={rotatedPlaneGeometry} />
         <meshBasicMaterial color={0xffffff} side={DoubleSide} map={canvas.texture} ref={goundMaterialRef}/>
-        {/* <meshBasicMaterial color={0xffffff} side={DoubleSide} map={trackingData.positionTracking.texture}/> */}
       </mesh>
       <gridHelper 
         args={[100, 100, 0xaaaaaa, 0xaaaaaa]} 
@@ -311,7 +332,7 @@ const WalkingShaderCanvas = () => {
     <Canvas camera={{position: [0, 25, 25]}}>
       <ambientLight intensity={0.5} />
       <pointLight position={[10, 10, 10]} />
-      <WalkingPeople width={8} spread={20}/>
+      <WalkingPeople width={20} spread={50}/>
       <OrbitControls/>
     </Canvas>
   );
