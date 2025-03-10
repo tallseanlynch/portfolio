@@ -32,10 +32,10 @@ rotatedPlaneGeometry.rotateX(Math.PI / 2);
 const matrixPositionObject =  new Object3D;
 const instanceScale = .75;
 
-const WalkingPeople = ({ width = 100, spread = 50.0}) => {
+const WalkingPeople = ({ width = 100, spread = 50.0, destinationSpread = 50.0}) => {
   const instancedMeshRef = useRef<InstancedMesh>();
   const numPeople = width * width;
-  const { gpgpuRenderer, data } = useGPGPU(numPeople, spread);
+  const { gpgpuRenderer, data } = useGPGPU(numPeople, spread, destinationSpread);
   const velocityCheckMaterialRef = useRef<MeshBasicMaterial>();
   const destinationCheckMaterialRef = useRef<MeshBasicMaterial>();
   const positionCheckMaterialRef = useRef<MeshBasicMaterial>();
@@ -332,7 +332,7 @@ const WalkingShaderCanvas = () => {
     <Canvas camera={{position: [0, 25, 25]}}>
       <ambientLight intensity={0.5} />
       <pointLight position={[10, 10, 10]} />
-      <WalkingPeople width={20} spread={50}/>
+      <WalkingPeople width={64} spread={50} destinationSpread={50}/>
       <OrbitControls/>
     </Canvas>
   );

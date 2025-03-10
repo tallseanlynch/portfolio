@@ -44,6 +44,7 @@ const simulationPositionFragmentShader = `
     }
 `
 const simulationVelocityFragmentShader = `
+    uniform int size;
     uniform float uTime;
     uniform float uDeltaTime;
 
@@ -64,6 +65,7 @@ const simulationVelocityFragmentShader = `
 `
 
 const simulationDestinationFragmentShader = `
+    uniform int size;
     uniform float uTime;
     uniform float uDeltaTime;
 
@@ -74,7 +76,7 @@ const simulationDestinationFragmentShader = `
     }
 `
 
-function useGPGPU(count: number, spread: number) {
+function useGPGPU(count: number, spread: number, destinationSpread: number) {
     const size = Math.ceil(Math.sqrt(count));
     const gl = useThree((state) => state.gl);
 
@@ -107,11 +109,12 @@ function useGPGPU(count: number, spread: number) {
             (velocityTexture.image.data as any)[i4 + 3] = 1.0; // w
         }
         const velocityVariable = gpgpuRenderer.addVariable('uVelocity', simulationVelocityFragmentShader, velocityTexture);
+        positionVariable.material.uniforms.size = { value: size };        
         velocityVariable.material.uniforms.uTime = { value: 0 };
         velocityVariable.material.uniforms.uDeltaTime = { value: 0 };
 
         // destinations
-        const destinationScale = 50;
+        const destinationScale = destinationSpread;
         for (let i = 0; i < count; i++) {
             const i4 = i * 4;
             (destinationTexture.image.data as any)[i4 + 0] = (Math.random() * 2.0 - 1.0) * destinationScale; // x
@@ -124,6 +127,7 @@ function useGPGPU(count: number, spread: number) {
             // (destinationTexture.image.data as any)[i4 + 3] = 0.0; // w
         }
         const destinationVariable = gpgpuRenderer.addVariable('uDestination', simulationDestinationFragmentShader, destinationTexture);
+        positionVariable.material.uniforms.size = { value: size };        
         destinationVariable.material.uniforms.uTime = { value: 0 };
         destinationVariable.material.uniforms.uDeltaTime = { value: 0 };
 
