@@ -21,7 +21,8 @@ import {
   // MeshBasicMaterial,
   Object3D,
   PlaneGeometry,
-  ShaderMaterial
+  ShaderMaterial,
+  Vector3
 } from 'three';
 
 const planeSize = 100;
@@ -193,23 +194,82 @@ const WalkingPeople = ({ width = 100, spread = 50.0, destinationSpread = 50.0}) 
 
   }, [buffer, canvas.ctx, canvas.texture, data.position.variables.positionVariable, gpgpuRenderer, width])
 
-  const debugBuffer = useMemo(() => {
+  const collisionVector3 = useMemo(() => {
+    const vec3Array: Vector3[] = [];
+    for(let v3 = 0; v3 < width * width; v3++) {
+      vec3Array.push(new Vector3())
+    }
+    return vec3Array;    
+  }, [width])
+
+  const debugBufferPosition = useMemo(() => {
+    return new Float32Array(width * width * 4);
+  }, [width])
+  const debugBufferDirection = useMemo(() => {
+    return new Float32Array(width * width * 4);
+  }, [width])
+  const debugBufferDestination = useMemo(() => {
     return new Float32Array(width * width * 4);
   }, [width])
 
   const logDebugBuffer = useCallback((gl) => {
+    const checkVector3s = false;
+
+    gl.readRenderTargetPixels(
+      gpgpuRenderer.getCurrentRenderTarget(data.position.variables.positionVariable),
+      0, 0, width, width,
+      debugBufferPosition
+    );
+
     gl.readRenderTargetPixels(
       gpgpuRenderer.getCurrentRenderTarget(data.direction.variables.directionVariable),
       0, 0, width, width,
-      debugBuffer
+      debugBufferDirection
     );
 
-    for(let l = 0; l < width * 4; l += 4) {
+    gl.readRenderTargetPixels(
+      gpgpuRenderer.getCurrentRenderTarget(data.destination.variables.destinationVariable),
+      0, 0, width, width,
+      debugBufferDestination
+    );
+
+    for(let l = 0; l < width * width * 4; l += 4) {
+      if(checkVector3s === true) {
+        collisionVector3[l / 4].set(
+          debugBufferPosition[l],
+          debugBufferPosition[l + 1],
+          debugBufferPosition[l + 2]
+        );      
+      }
       console.log(`bufferIndex: ${l / 4}`)
-      console.log(`${debugBuffer[l]}, ${debugBuffer[l + 1]}, ${debugBuffer[l + 2]}, ${debugBuffer[l + 3]}`);
+      console.log(`Pos: ${debugBufferPosition[l]}, ${debugBufferPosition[l + 1]}, ${debugBufferPosition[l + 2]}, ${debugBufferPosition[l + 3]}`);
+      console.log(`Dir: ${debugBufferDirection[l]}, ${debugBufferDirection[l + 1]}, ${debugBufferDirection[l + 2]}, ${debugBufferDirection[l + 3]}`);
+      console.log(`Des: ${debugBufferDestination[l]}, ${debugBufferDestination[l + 1]}, ${debugBufferDestination[l + 2]}, ${debugBufferDestination[l + 3]}`);
     }
 
-  }, [debugBuffer, data.direction.variables.directionVariable, gpgpuRenderer, width])
+    if(checkVector3s === true) {
+      for(let checkVi = 0; checkVi < width; checkVi++) {
+        const vectorA = collisionVector3[checkVi];
+        for(let checkVj = 0; checkVj < width; checkVj++) {
+          const vectorB = collisionVector3[checkVj];
+          if(vectorA.distanceTo(vectorB) > .0001 && vectorA.distanceTo(vectorB) < 3.0) {
+            console.log('collision');
+          }
+        }
+      }  
+    }
+
+  }, [
+    debugBufferPosition, 
+    debugBufferDirection,
+    debugBufferDestination,
+    data.position.variables.positionVariable, 
+    data.direction.variables.directionVariable, 
+    data.destination.variables.destinationVariable, 
+    gpgpuRenderer, 
+    width,
+    collisionVector3
+  ])
 
   const renderDebugPlane = true;
   const consoleLogDebugBuffer = false;
@@ -222,7 +282,8 @@ const WalkingPeople = ({ width = 100, spread = 50.0, destinationSpread = 50.0}) 
       renderTrackingPlane(gl);
     }
 
-    if(consoleLogDebugBuffer) {
+    if(consoleLogDebugBuffer && clock.elapsedTime < 10) {
+      console.log(clock.elapsedTime)
       logDebugBuffer(gl);
     }
 
@@ -333,9 +394,9 @@ const WalkingShaderCanvas = () => {
       <ambientLight intensity={0.5} />
       <pointLight position={[10, 10, 10]} />
       <WalkingPeople 
-        width={20} 
-        spread={50} 
-        destinationSpread={50}
+        width={2} 
+        spread={5} 
+        destinationSpread={10}
       />
       <OrbitControls/>
     </Canvas>
