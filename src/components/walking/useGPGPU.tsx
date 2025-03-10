@@ -11,13 +11,13 @@ const simulationPositionFragmentShader = `
         float time = uTime;
         vec2 uv = floor(gl_FragCoord.xy) / resolution.xy;
         vec4 positionData = texture(uPosition, uv);
-        vec4 velocityData = texture(uVelocity, uv);
+        vec4 directionData = texture(uDirection, uv);
         vec4 destinationData = texture(uDestination, uv);
 
         float atDestinationModifier = 1.0;
         
         positionData.w = 1.0;
-        velocityData.w = 1.0;
+        directionData.w = 1.0;
         destinationData.w = 1.0;
 
         float distanceToDestination = distance(positionData, destinationData);
@@ -33,6 +33,7 @@ const simulationPositionFragmentShader = `
             for(int j = 0; j < size; j++) {
                 vec2 checkUV = vec2(float(i), float(j)) / resolution.xy;
                 vec4 checkPersonPosition = texture(uPosition, checkUV);
+                checkPersonPosition.w = 1.0;
                 float checkDistance = distance(positionData, checkPersonPosition);
                 if(checkDistance < checkDistanceMin && checkDistance > 0.001) {
                     atDestinationModifier = 0.0;
@@ -40,10 +41,10 @@ const simulationPositionFragmentShader = `
             }
         }
 
-        gl_FragColor = positionData + clamp(velocityData * .1 * atDestinationModifier, -.5, .5);
+        gl_FragColor = positionData + clamp(directionData * .1 * atDestinationModifier, -1.0, 1.0);
     }
 `
-const simulationVelocityFragmentShader = `
+const simulationDirectionFragmentShader = `
     uniform int size;
     uniform float uTime;
     uniform float uDeltaTime;
@@ -52,15 +53,15 @@ const simulationVelocityFragmentShader = `
         float time = uTime;
         vec2 uv = floor(gl_FragCoord.xy) / resolution.xy;
         vec4 positionData = texture(uPosition, uv);
-        vec4 velocityData = texture(uVelocity, uv);
+        vec4 directionData = texture(uDirection, uv);
         vec4 destinationData = texture(uDestination, uv);
         vec4 directionToDestination = normalize(destinationData - positionData);
-        float interpolationFactor = clamp(uTime * .001, 0.0, 1.0);
-        vec4 mixVelocityDestination = mix(velocityData, directionToDestination, interpolationFactor);        
-        mixVelocityDestination.w = 1.0;
+        float interpolationFactor = clamp(uTime * .01, 0.0, 1.0);
+        vec4 mixDirectionDestination = mix(directionData, directionToDestination, interpolationFactor);        
+        mixDirectionDestination.w = 1.0;
 
         // gl_FragColor = directionToDestination;
-        gl_FragColor = mixVelocityDestination;
+        gl_FragColor = mixDirectionDestination;
     }
 `
 
@@ -84,7 +85,7 @@ function useGPGPU(count: number, spread: number, destinationSpread: number) {
         const gpgpuRenderer = new GPUComputationRenderer(size, size, gl);
 
         const positionTexture = gpgpuRenderer.createTexture();
-        const velocityTexture = gpgpuRenderer.createTexture();
+        const directionTexture = gpgpuRenderer.createTexture();
         const destinationTexture = gpgpuRenderer.createTexture();
 
         // positions
@@ -103,15 +104,15 @@ function useGPGPU(count: number, spread: number, destinationSpread: number) {
         // velocities
         for (let i = 0; i < count; i++) {
             const i4 = i * 4;
-            (velocityTexture.image.data as any)[i4 + 0] = (Math.random() - 0.5); // x
-            (velocityTexture.image.data as any)[i4 + 1] = 0.0; // y
-            (velocityTexture.image.data as any)[i4 + 2] = (Math.random() - 0.5); // z
-            (velocityTexture.image.data as any)[i4 + 3] = 1.0; // w
+            (directionTexture.image.data as any)[i4 + 0] = (Math.random() - 0.5); // x
+            (directionTexture.image.data as any)[i4 + 1] = 0.0; // y
+            (directionTexture.image.data as any)[i4 + 2] = (Math.random() - 0.5); // z
+            (directionTexture.image.data as any)[i4 + 3] = 1.0; // w
         }
-        const velocityVariable = gpgpuRenderer.addVariable('uVelocity', simulationVelocityFragmentShader, velocityTexture);
+        const directionVariable = gpgpuRenderer.addVariable('uDirection', simulationDirectionFragmentShader, directionTexture);
         positionVariable.material.uniforms.size = { value: size };        
-        velocityVariable.material.uniforms.uTime = { value: 0 };
-        velocityVariable.material.uniforms.uDeltaTime = { value: 0 };
+        directionVariable.material.uniforms.uTime = { value: 0 };
+        directionVariable.material.uniforms.uDeltaTime = { value: 0 };
 
         // destinations
         const destinationScale = destinationSpread;
@@ -121,10 +122,6 @@ function useGPGPU(count: number, spread: number, destinationSpread: number) {
             (destinationTexture.image.data as any)[i4 + 1] = 0.0; // y
             (destinationTexture.image.data as any)[i4 + 2] = (Math.random() * 2.0 - 1.0) * destinationScale; // z
             (destinationTexture.image.data as any)[i4 + 3] = 1.0; // w
-            // (destinationTexture.image.data as any)[i4 + 0] = 0.0; // x
-            // (destinationTexture.image.data as any)[i4 + 1] = 0.0; // y
-            // (destinationTexture.image.data as any)[i4 + 2] = 0.0; // z
-            // (destinationTexture.image.data as any)[i4 + 3] = 0.0; // w
         }
         const destinationVariable = gpgpuRenderer.addVariable('uDestination', simulationDestinationFragmentShader, destinationTexture);
         positionVariable.material.uniforms.size = { value: size };        
@@ -132,9 +129,9 @@ function useGPGPU(count: number, spread: number, destinationSpread: number) {
         destinationVariable.material.uniforms.uDeltaTime = { value: 0 };
 
         // init
-        gpgpuRenderer.setVariableDependencies(positionVariable, [positionVariable, velocityVariable, destinationVariable]);
-        gpgpuRenderer.setVariableDependencies(velocityVariable, [positionVariable, velocityVariable, destinationVariable]);
-        gpgpuRenderer.setVariableDependencies(destinationVariable, [positionVariable, velocityVariable, destinationVariable]);
+        gpgpuRenderer.setVariableDependencies(positionVariable, [positionVariable, directionVariable, destinationVariable]);
+        gpgpuRenderer.setVariableDependencies(directionVariable, [positionVariable, directionVariable, destinationVariable]);
+        gpgpuRenderer.setVariableDependencies(destinationVariable, [positionVariable, directionVariable, destinationVariable]);
 
         gpgpuRenderer.init();
 
@@ -147,10 +144,10 @@ function useGPGPU(count: number, spread: number, destinationSpread: number) {
                         positionVariable,
                     },
                 },
-                velocity: {
-                    texture: velocityTexture,
+                direction: {
+                    texture: directionTexture,
                     variables: {
-                        velocityVariable,
+                        directionVariable,
                     },
                 },
                 destination: {

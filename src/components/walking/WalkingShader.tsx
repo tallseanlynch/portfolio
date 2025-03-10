@@ -36,7 +36,7 @@ const WalkingPeople = ({ width = 100, spread = 50.0, destinationSpread = 50.0}) 
   const instancedMeshRef = useRef<InstancedMesh>();
   const numPeople = width * width;
   const { gpgpuRenderer, data } = useGPGPU(numPeople, spread, destinationSpread);
-  const velocityCheckMaterialRef = useRef<MeshBasicMaterial>();
+  const directionCheckMaterialRef = useRef<MeshBasicMaterial>();
   const destinationCheckMaterialRef = useRef<MeshBasicMaterial>();
   const positionCheckMaterialRef = useRef<MeshBasicMaterial>();
   const trackingCheckMaterialRef = useRef<MeshBasicMaterial>();
@@ -83,12 +83,12 @@ const WalkingPeople = ({ width = 100, spread = 50.0, destinationSpread = 50.0}) 
   const shaderMaterial = useMemo(() => new ShaderMaterial({
     uniforms: {
       gPositionMap: { value: data.position.texture},
-      gVelocityMap: { value: data.velocity.texture},
+      gDirectionMap: { value: data.direction.texture},
       gDestinationMap: { value: data.destination.texture },
       time: { value: 0 }
     },
     vertexShader: `
-      uniform sampler2D gVelocityMap;
+      uniform sampler2D gDirectionMap;
       uniform sampler2D gPositionMap;
       uniform sampler2D gDestinationMap;
       uniform float time;
@@ -105,7 +105,7 @@ const WalkingPeople = ({ width = 100, spread = 50.0, destinationSpread = 50.0}) 
         float xCoor = mod(floatIndex, ${width}.0);
         float yCoor = mod(floatIndex / ${width}.0, ${width}.0);
         vec2 uv = vec2(xCoor / ${width}.0, yCoor / ${width}.0);
-        vec4 gVelocityData = texture2D(gVelocityMap, uv);        
+        vec4 gDirectionData = texture2D(gDirectionMap, uv);        
         vec4 gPositionData = texture2D(gPositionMap, uv);
         vec4 gDestinationData = texture2D(gDestinationMap, uv);
         vgPosition = gPositionData;
@@ -117,7 +117,7 @@ const WalkingPeople = ({ width = 100, spread = 50.0, destinationSpread = 50.0}) 
             vPosition = mvPosition;
         #endif
 
-        float angle = atan(gVelocityData.x, gVelocityData.z);
+        float angle = atan(gDirectionData.x, gDirectionData.z);
         mat4 rotationMatrix = mat4(
             cos(angle), 0.0, -sin(angle), 0.0,
             0.0, 1.0, 0.0, 0.0,
@@ -158,7 +158,7 @@ const WalkingPeople = ({ width = 100, spread = 50.0, destinationSpread = 50.0}) 
   }), [
     width, 
     data.position.texture,
-    data.velocity.texture,
+    data.direction.texture,
     data.destination.texture
   ]);
 
@@ -199,7 +199,7 @@ const WalkingPeople = ({ width = 100, spread = 50.0, destinationSpread = 50.0}) 
 
   const logDebugBuffer = useCallback((gl) => {
     gl.readRenderTargetPixels(
-      gpgpuRenderer.getCurrentRenderTarget(data.position.variables.positionVariable),
+      gpgpuRenderer.getCurrentRenderTarget(data.direction.variables.directionVariable),
       0, 0, width, width,
       debugBuffer
     );
@@ -209,9 +209,9 @@ const WalkingPeople = ({ width = 100, spread = 50.0, destinationSpread = 50.0}) 
       console.log(`${debugBuffer[l]}, ${debugBuffer[l + 1]}, ${debugBuffer[l + 2]}, ${debugBuffer[l + 3]}`);
     }
 
-  }, [debugBuffer, data.position.variables.positionVariable, gpgpuRenderer, width])
+  }, [debugBuffer, data.direction.variables.directionVariable, gpgpuRenderer, width])
 
-  const renderDebugPlane = false;
+  const renderDebugPlane = true;
   const consoleLogDebugBuffer = false;
 
   useFrame(({
@@ -237,11 +237,11 @@ const WalkingPeople = ({ width = 100, spread = 50.0, destinationSpread = 50.0}) 
     data.position.variables.positionVariable.material.uniforms.uTime.value = clock.elapsedTime;
     data.position.variables.positionVariable.material.uniforms.uDeltaTime.value = clock.getDelta();
 
-    // velocity
-    shaderMaterial.uniforms.gVelocityMap.value = gpgpuRenderer
-      .getCurrentRenderTarget(data.velocity.variables.velocityVariable).texture;
-    data.velocity.variables.velocityVariable.material.uniforms.uTime.value = clock.elapsedTime;
-    data.velocity.variables.velocityVariable.material.uniforms.uDeltaTime.value = clock.getDelta();
+    // direction
+    shaderMaterial.uniforms.gDirectionMap.value = gpgpuRenderer
+      .getCurrentRenderTarget(data.direction.variables.directionVariable).texture;
+    data.direction.variables.directionVariable.material.uniforms.uTime.value = clock.elapsedTime;
+    data.direction.variables.directionVariable.material.uniforms.uDeltaTime.value = clock.getDelta();
 
     // destination
     shaderMaterial.uniforms.gDestinationMap.value = gpgpuRenderer
@@ -256,10 +256,10 @@ const WalkingPeople = ({ width = 100, spread = 50.0, destinationSpread = 50.0}) 
       positionCheckMaterialRef.current.needsUpdate = true;
     }
 
-    if (velocityCheckMaterialRef.current) {
-      velocityCheckMaterialRef.current.map = gpgpuRenderer
-        .getCurrentRenderTarget(data.velocity.variables.velocityVariable).texture;
-      velocityCheckMaterialRef.current.needsUpdate = true;
+    if (directionCheckMaterialRef.current) {
+      directionCheckMaterialRef.current.map = gpgpuRenderer
+        .getCurrentRenderTarget(data.direction.variables.directionVariable).texture;
+      directionCheckMaterialRef.current.needsUpdate = true;
     }
 
     if (destinationCheckMaterialRef.current) {
@@ -301,8 +301,8 @@ const WalkingPeople = ({ width = 100, spread = 50.0, destinationSpread = 50.0}) 
       <mesh position={[0, 10, -10]}>
         <planeGeometry args={[10, 10, 1, 1]} />
         <meshBasicMaterial 
-          ref={velocityCheckMaterialRef}
-          map={data.velocity.texture} 
+          ref={directionCheckMaterialRef}
+          map={data.direction.texture} 
           color={0xffffff}
         />
       </mesh>
@@ -332,7 +332,11 @@ const WalkingShaderCanvas = () => {
     <Canvas camera={{position: [0, 25, 25]}}>
       <ambientLight intensity={0.5} />
       <pointLight position={[10, 10, 10]} />
-      <WalkingPeople width={64} spread={50} destinationSpread={50}/>
+      <WalkingPeople 
+        width={20} 
+        spread={50} 
+        destinationSpread={50}
+      />
       <OrbitControls/>
     </Canvas>
   );
