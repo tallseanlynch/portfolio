@@ -212,8 +212,8 @@ const WalkingPeople = ({ width = 100, spread = 50.0, destinationSpread = 50.0}) 
     return new Float32Array(width * width * 4);
   }, [width])
 
+  const checkVector3s = false;
   const logDebugBuffer = useCallback((gl) => {
-    const checkVector3s = false;
 
     gl.readRenderTargetPixels(
       gpgpuRenderer.getCurrentRenderTarget(data.position.variables.positionVariable),
@@ -268,7 +268,8 @@ const WalkingPeople = ({ width = 100, spread = 50.0, destinationSpread = 50.0}) 
     data.destination.variables.destinationVariable, 
     gpgpuRenderer, 
     width,
-    collisionVector3
+    collisionVector3,
+    checkVector3s
   ])
 
   const renderDebugPlane = true;
@@ -337,7 +338,12 @@ const WalkingPeople = ({ width = 100, spread = 50.0, destinationSpread = 50.0}) 
         position={[0.0, 0.0, 0.0]}
       >
         <primitive object={rotatedPlaneGeometry} />
-        <meshBasicMaterial color={0xffffff} side={DoubleSide} map={canvas.texture} ref={goundMaterialRef}/>
+        <meshBasicMaterial 
+          color={0xffffff} 
+          side={DoubleSide} 
+          map={canvas.texture} 
+          ref={goundMaterialRef}
+        />
       </mesh>
       <gridHelper 
         args={[100, 100, 0xaaaaaa, 0xaaaaaa]} 
@@ -394,9 +400,9 @@ const WalkingShaderCanvas = () => {
       <ambientLight intensity={0.5} />
       <pointLight position={[10, 10, 10]} />
       <WalkingPeople 
-        width={2} 
-        spread={5} 
-        destinationSpread={10}
+        width={20} 
+        spread={50} 
+        destinationSpread={50}
       />
       <OrbitControls/>
     </Canvas>
