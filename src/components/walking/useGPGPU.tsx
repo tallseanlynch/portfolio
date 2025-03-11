@@ -20,7 +20,7 @@ const simulationPositionFragmentShader = `
         positionDataCalc.y = 0.0;
 
         // gl_FragColor = positionData + vec4(clamp(directionDataCalc * .1 * atDestinationModifier, -1.0, 1.0), 1.0);
-        gl_FragColor = vec4(positionDataCalc, 1.0) + vec4(clamp(directionDataCalc * .1 * directionData.w, -1.0, 1.0), 0.0);
+        gl_FragColor = vec4(positionDataCalc, 1.0) + vec4(clamp(directionDataCalc * .075 * directionData.w, -1.0, 1.0), 0.0);
     }
 `
 const simulationDirectionFragmentShader = `
@@ -48,23 +48,37 @@ const simulationDirectionFragmentShader = `
         if(distanceToDestination < 1.0) {
             velocity.w = distanceToDestination;        
         }
-        if(distanceToDestination < .1) {
-            velocity.w = 0.0;
-        };
 
-        float checkDistanceMin = 1.0;
+        float checkDistanceMin = 3.0;
         for(int i = 0; i < size; i++) {
             for(int j = 0; j < size; j++) {
-//                velocity.w = 0.0;
                 vec2 checkUV = vec2(float(i), float(j)) / resolution.xy;
                 vec4 checkPersonPosition = texture(uPosition, checkUV);
                 vec3 checkPersonPositionCalc = vec3(checkPersonPosition.xyz);
                 float checkDistance = distance(positionDataCalc, checkPersonPositionCalc);
                 if(checkDistance < checkDistanceMin && checkDistance > 0.001) {
-                    velocity.w = 0.0;
+                    vec3 directionToCollision = normalize(checkPersonPositionCalc - positionDataCalc);
+
+                    float dotProductToCollision = dot(directionToCollision, mixDirectionDestination);
+                    vec3 colisionReflection = mixDirectionDestination - directionToCollision * 2.0 * dotProductToCollision;
+                    
+                    float lessThan1CheckDistanceModifier = 1.0;
+                    if(checkDistance < 1.0) {
+                        lessThan1CheckDistanceModifier += checkDistance;
+                    }
+
+                    vec3 collisionMixDirectionDestination = mix(mixDirectionDestination, colisionReflection, (1.0 - ((checkDistanceMin - checkDistance) / checkDistanceMin)) * .25 * lessThan1CheckDistanceModifier);
+                    velocity = vec4(collisionMixDirectionDestination, directionData.w);
                 }
+                // if(checkDistance < .1) {
+                //     velocity.w = 0.0;
+                // }
             }
         }
+
+        if(distanceToDestination < .1) {
+            velocity.w = 0.0;
+        };
 
         gl_FragColor = velocity;
     }

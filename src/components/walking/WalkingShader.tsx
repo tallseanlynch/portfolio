@@ -33,7 +33,14 @@ rotatedPlaneGeometry.rotateX(Math.PI / 2);
 const matrixPositionObject =  new Object3D;
 const instanceScale = .75;
 
-const WalkingPeople = ({ width = 100, spread = 50.0, destinationSpread = 50.0}) => {
+const WalkingPeople = ({ 
+  width = 100, 
+  spread = 50.0, 
+  destinationSpread = 50.0,
+  checkVector3s = false,
+  renderDebugPlane = false,
+  consoleLogDebugBuffer = false      
+}) => {
   const instancedMeshRef = useRef<InstancedMesh>();
   const numPeople = width * width;
   const { gpgpuRenderer, data } = useGPGPU(numPeople, spread, destinationSpread);
@@ -212,7 +219,6 @@ const WalkingPeople = ({ width = 100, spread = 50.0, destinationSpread = 50.0}) 
     return new Float32Array(width * width * 4);
   }, [width])
 
-  const checkVector3s = false;
   const logDebugBuffer = useCallback((gl) => {
 
     gl.readRenderTargetPixels(
@@ -271,9 +277,6 @@ const WalkingPeople = ({ width = 100, spread = 50.0, destinationSpread = 50.0}) 
     collisionVector3,
     checkVector3s
   ])
-
-  const renderDebugPlane = true;
-  const consoleLogDebugBuffer = false;
 
   useFrame(({
     clock,
@@ -403,6 +406,9 @@ const WalkingShaderCanvas = () => {
         width={20} 
         spread={50} 
         destinationSpread={50}
+        renderDebugPlane={false}
+        consoleLogDebugBuffer={false}      
+        checkVector3s={false}
       />
       <OrbitControls/>
     </Canvas>
