@@ -1,7 +1,6 @@
-import {
-  useGPGPU,
-  // useGPGPUTracking
-} from './useGPGPU';
+import { useGPGPU } from './useGPGPU';
+import { WalkingBuildings } from './WalkingBuildings';
+import { WalkingGround } from './WalkingGround';
 import { OrbitControls } from '@react-three/drei';
 import { 
   Canvas, 
@@ -50,27 +49,25 @@ const WalkingPeople = ({
   const trackingCheckMaterialRef = useRef<MeshBasicMaterial>();
   const goundMaterialRef = useRef<MeshBasicMaterial>();
 
-  console.log(planeSize, gpgpuRenderer, data)
+//  console.log(planeSize, gpgpuRenderer, data)
 
   const canvas = useMemo(() => {
     const offscreenCanvas = new OffscreenCanvas(trackingPlaneTextureResolution, trackingPlaneTextureResolution);
     const ctx = offscreenCanvas.getContext('2d');
 
-    // Initial drawing setup
     if(ctx) {
       ctx.fillStyle = 'white';
       ctx.fillRect(0, 0, trackingPlaneTextureResolution, trackingPlaneTextureResolution);  
     }
 
-    // Create a texture from the OffscreenCanvas
     const texture = new CanvasTexture(offscreenCanvas);
-    texture.needsUpdate = true; // Ensure texture is updated on creation
+    texture.needsUpdate = true;
 
     return {
       texture, 
       ctx
     };
-  }, []); // Empty dependency array means this runs only once
+  }, []);
 
   useEffect(() => {
     if(instancedMeshRef.current) {
@@ -105,6 +102,7 @@ const WalkingPeople = ({
       varying vec3 vOriginalPosition;
       varying vec4 vgPosition;
       varying vec4 vgDestination;
+      varying vec4 vgDirection;
 
       void main() {
         vOriginalPosition = position;
@@ -116,6 +114,7 @@ const WalkingPeople = ({
         vec4 gDirectionData = texture2D(gDirectionMap, uv);        
         vec4 gPositionData = texture2D(gPositionMap, uv);
         vec4 gDestinationData = texture2D(gDestinationMap, uv);
+        vgDirection = gDirectionData;
         vgPosition = gPositionData;
         vgDestination = gDestinationData;
         vec4 mvPosition = vec4( position, 1.0 );
@@ -145,6 +144,7 @@ const WalkingPeople = ({
       varying vec4 vgPosition;
       varying vec3 vOriginalPosition;
       varying vec4 vgDestination;
+      varying vec4 vgDirection;
 
       void main() {
         vec4 positionColor = vgPosition;
@@ -156,6 +156,10 @@ const WalkingPeople = ({
         }
 
         if(distance(vgPosition, vgDestination) < .25) {
+          finalColor = vec4(.5, .5, .5, 1.0);
+        }
+
+        if(distance(vgPosition, vgDestination) < 1.5 && vgDirection.w < .01) {
           finalColor = vec4(.5, .5, .5, 1.0);
         }
 
@@ -348,16 +352,16 @@ const WalkingPeople = ({
           ref={goundMaterialRef}
         />
       </mesh>
-      <gridHelper 
+      {/* <gridHelper 
         args={[100, 100, 0xaaaaaa, 0xaaaaaa]} 
         position={[0, 0.01, 0]}
-      />
+      /> */}
       <instancedMesh 
         ref={instancedMeshRef} 
         args={[null as any, null as any, numPeople]} 
         material={shaderMaterial}
       >
-        <boxGeometry args={[1, 1, .1, 1, 1, 1]} />
+        <boxGeometry args={[1, 1, .5, 1, 1, 1]} />
       </instancedMesh>
 
       <mesh position={[-10, 10, -10]}>
@@ -393,6 +397,8 @@ const WalkingPeople = ({
           transparent={true}
         />
       </mesh>
+      <WalkingGround />
+      <WalkingBuildings />
     </>
   );
 };
@@ -403,7 +409,7 @@ const WalkingShaderCanvas = () => {
       <ambientLight intensity={0.5} />
       <pointLight position={[10, 10, 10]} />
       <WalkingPeople 
-        width={20} 
+        width={50} 
         spread={50} 
         destinationSpread={50}
         renderDebugPlane={false}

@@ -1,3 +1,5 @@
+// "Grimlock - Dinobot (G1)  .::RAWscan::." (https://skfb.ly/6QWAG) by Andrea Spognetta (Spogna) is licensed under Creative Commons Attribution-NonCommercial (http://creativecommons.org/licenses/by-nc/4.0/).
+// "River *Buuurrpp !* Environment (updated)" (https://skfb.ly/6BwtK) by Johndoh is licensed under Creative Commons Attribution (http://creativecommons.org/licenses/by/4.0/).
 import { 
   MathUtils, 
   ShaderMaterial, 

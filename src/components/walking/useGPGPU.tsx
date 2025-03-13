@@ -1,6 +1,8 @@
+import { startingPositions } from './startingPositions';
 import { useThree } from '@react-three/fiber';
 import { useEffect, useMemo } from 'react';
 import { GPUComputationRenderer } from 'three/examples/jsm/misc/GPUComputationRenderer.js';
+import { Vector3 } from 'three';
 
 const simulationPositionFragmentShader = `
     uniform int size;
@@ -40,7 +42,7 @@ const simulationDirectionFragmentShader = `
         vec3 destinationDataCalc = vec3(destinationData.xyz);
 
         vec3 directionToDestination = normalize(destinationDataCalc - positionDataCalc);
-        float interpolationFactor = clamp(uTime * .01, 0.0, 1.0);
+        float interpolationFactor = .1;//clamp(uTime * .01, 0.0, 1.0);
         vec3 mixDirectionDestination = mix(directionDataCalc, directionToDestination, interpolationFactor);        
         vec4 velocity = vec4(mixDirectionDestination, directionData.w);
         
@@ -49,36 +51,64 @@ const simulationDirectionFragmentShader = `
             velocity.w = distanceToDestination;        
         }
 
-        float checkDistanceMin = 3.0;
+        float checkDistanceMin = 5.0;
+        float lowestCheckDistance = 1000.0;
+        vec3 collisionReflection = vec3(0.0, 0.0, 0.0);
+        vec3 upVector = vec3(0.0, 1.0, 0.0);
+        int numberOfPotentialCollisions = 0;
+        bool isFrontCollision = false;
+
         for(int i = 0; i < size; i++) {
             for(int j = 0; j < size; j++) {
                 vec2 checkUV = vec2(float(i), float(j)) / resolution.xy;
                 vec4 checkPersonPosition = texture(uPosition, checkUV);
                 vec3 checkPersonPositionCalc = vec3(checkPersonPosition.xyz);
                 float checkDistance = distance(positionDataCalc, checkPersonPositionCalc);
-                if(checkDistance < checkDistanceMin && checkDistance > 0.001) {
-                    vec3 directionToCollision = normalize(checkPersonPositionCalc - positionDataCalc);
+                // if(checkDistance < checkDistanceMin && checkDistance > 0.001) {
+                if(
+                    checkDistance < checkDistanceMin && 
+                    checkDistance > 0.001 && 
+                    checkDistance < lowestCheckDistance &&
+                    distanceToDestination > .1
+                ) {
+                    lowestCheckDistance = checkDistance;
+                    numberOfPotentialCollisions += 1;
 
-                    float dotProductToCollision = dot(directionToCollision, mixDirectionDestination);
-                    vec3 colisionReflection = mixDirectionDestination - directionToCollision * 2.0 * dotProductToCollision;
-                    
-                    float lessThan1CheckDistanceModifier = 1.0;
-                    if(checkDistance < 1.0) {
-                        lessThan1CheckDistanceModifier += checkDistance;
+                    vec3 frontCheckPosition = positionDataCalc + normalize(directionDataCalc);
+                    vec3 backCheckPosition = positionDataCalc + normalize(directionDataCalc) * -1.0;
+
+                    float frontDistance = distance(frontCheckPosition, checkPersonPositionCalc);
+                    float backDistance = distance(backCheckPosition, checkPersonPositionCalc);
+
+                    isFrontCollision = frontDistance < backDistance;
+
+                    float lessThanCheckDistanceModifier = 1.0;
+                    if(checkDistance < 3.0 && isFrontCollision) {
+                        lessThanCheckDistanceModifier += (3.0 - checkDistance);
+                        velocity.w = checkDistance  * .5;
                     }
 
-                    vec3 collisionMixDirectionDestination = mix(mixDirectionDestination, colisionReflection, (1.0 - ((checkDistanceMin - checkDistance) / checkDistanceMin)) * .25 * lessThan1CheckDistanceModifier);
-                    velocity = vec4(collisionMixDirectionDestination, directionData.w);
+                    vec3 directionToCollision = normalize(checkPersonPositionCalc - positionDataCalc);
+                    float dotProductToCollision = dot(directionToCollision, mixDirectionDestination);                    
+                    collisionReflection = mixDirectionDestination - directionToCollision * 2.0 * lessThanCheckDistanceModifier * dotProductToCollision;
+                    
+                    vec3 collisionMixDirectionDestination = mix(mixDirectionDestination, collisionReflection, (1.0 - ((checkDistanceMin - checkDistance) / checkDistanceMin)) * .125 * lessThanCheckDistanceModifier);
+                    velocity = vec4(collisionMixDirectionDestination, velocity.w);
                 }
-                // if(checkDistance < .1) {
-                //     velocity.w = 0.0;
-                // }
             }
+        }
+
+        if(numberOfPotentialCollisions < 1) {
+            velocity.w = .125;
         }
 
         if(distanceToDestination < .1) {
             velocity.w = 0.0;
         };
+
+        if(isFrontCollision == true && numberOfPotentialCollisions > 0 && distanceToDestination < 1.5) {
+            velocity.w = 0.0;
+        }
 
         gl_FragColor = velocity;
     }
@@ -96,6 +126,16 @@ const simulationDestinationFragmentShader = `
     }
 `
 
+const randomNeg1To1 = () => (Math.random() -.5) * 2;
+
+const startingPositionCalc = new Vector3();
+const getPersonPosition = (startingPosition) => {
+    startingPositionCalc.copy(startingPosition.center);
+    startingPositionCalc.x += randomNeg1To1() * (startingPosition.width / 2)
+    startingPositionCalc.z += randomNeg1To1() * (startingPosition.height / 2)
+    // console.log(startingPositionCalc);
+}
+
 function useGPGPU(count: number, spread: number, destinationSpread: number) {
     const size = Math.ceil(Math.sqrt(count));
     const gl = useThree((state) => state.gl);
@@ -109,11 +149,16 @@ function useGPGPU(count: number, spread: number, destinationSpread: number) {
 
         // positions
         for (let i = 0; i < count; i++) {
+            getPersonPosition(startingPositions[i % startingPositions.length]);            
             const i4 = i * 4;
-            (positionTexture.image.data as any)[i4 + 0] = (Math.random() * 2.0 - 1.0) * spread; // x
+            (positionTexture.image.data as any)[i4 + 0] = startingPositionCalc.x; // x
             (positionTexture.image.data as any)[i4 + 1] = 0.01; // y
-            (positionTexture.image.data as any)[i4 + 2] = (Math.random() * 2.0 - 1.0) * spread; // z
+            (positionTexture.image.data as any)[i4 + 2] = startingPositionCalc.z; // z
             (positionTexture.image.data as any)[i4 + 3] = 1.0; // w
+            // (positionTexture.image.data as any)[i4 + 0] = (Math.random() * 2.0 - 1.0) * spread; // x
+            // (positionTexture.image.data as any)[i4 + 1] = 0.01; // y
+            // (positionTexture.image.data as any)[i4 + 2] = (Math.random() * 2.0 - 1.0) * spread; // z
+            // (positionTexture.image.data as any)[i4 + 3] = 1.0; // w
         }
         const positionVariable = gpgpuRenderer.addVariable('uPosition', simulationPositionFragmentShader, positionTexture);
         positionVariable.material.uniforms.size = { value: size };        
