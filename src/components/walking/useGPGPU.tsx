@@ -99,7 +99,7 @@ const simulationDirectionFragmentShader = `
         }
 
         if(numberOfPotentialCollisions < 1) {
-            velocity.w = .125;
+            velocity.w = .5;
         }
 
         if(distanceToDestination < .1) {
@@ -226,7 +226,7 @@ function useGPGPU(count: number, spread: number, destinationSpread: number) {
                 },
             },
         ];
-    }, [count, gl, size, spread, destinationSpread]);
+    }, [count, gl, size, destinationSpread]);
 
     useEffect(() => {
         return () => {
