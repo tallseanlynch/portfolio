@@ -30,8 +30,6 @@ const Mix = () => {
     side: DoubleSide,
     transparent: true,
     vertexShader:`
-      // uniform float size;
-      // uniform float scale;
       uniform vec3 mouse;
       uniform float time;
       attribute vec4 color;
@@ -55,19 +53,12 @@ const Mix = () => {
         #include <morphinstance_vertex>
         #include <morphcolor_vertex>
         #include <begin_vertex>
-        transformed.y += 9.0;
-        transformed.z += 5.0;
-        // vec3 origin = vec3(5.0, 13.0, 10.0);
-        vec3 origin = vec3(5.0, 11.5, 11.0);
-        // vec3 origin = vec3(1.5567637198327782, 17.274336770448514, 9.661149978637699);
         vec3 mouseCalc = mouse;
         mouseCalc.z *= -1.0;
-        mouseCalc.y *= -1.0;
-        float distanceToMouse = distance(transformed, origin + mouseCalc);
-        // float checkMouseDistance = 8.0; // full distance
-        float checkMouseDistance = 3.0;
+        float distanceToMouse = distance(transformed, mouseCalc);
+        float checkMouseDistance = 2.0;
         if(distanceToMouse < checkMouseDistance) {
-          vec3 mouseDir = normalize(vec3(transformed - mouse)) * -1.0;
+          vec3 mouseDir = normalize(vec3(transformed - mouse));
           transformed += mouseDir * (checkMouseDistance - distanceToMouse) * .5;
         }
         #include <morphtarget_vertex>
@@ -84,8 +75,6 @@ const Mix = () => {
       }
     `,
     fragmentShader: `
-      // uniform vec3 diffuse;
-      // uniform float opacity;
       varying vec4 vColor;
       #include <common>
       #include <color_pars_fragment>
@@ -117,26 +106,27 @@ const Mix = () => {
     `
   }), [])
 
-  const nature = useLoader(GLTFLoader, '/mix/grass_autumn_update.glb');
+  const natureColor = useLoader(GLTFLoader, '/mix/grass_autumn_update.glb');
+  const nature = useLoader(GLTFLoader, '/mix/nature-centered-1.glb');
   (window as any).nature = nature;
+  (window as any).natureColor = natureColor;
 
   useEffect(() => {
+    (window as any).Vector3 = Vector3;
     console.log(nature.scene.children[0].localToWorld(new Vector3(0, 0, 0)));
     console.log(nature.materials['Scene_-_Root']);
     nature.materials['Scene_-_Root'] = pointsShaderMaterial;
-    console.log(nature.scene.children[0].rotation);
+    const trueIndexMap = [9, 10, 11, 12, 13, 14, 15, 16, 0, 1, 2, 3, 4, 5, 6, 7, 8, ]
     for(let i = 0; i < nature.scene.children[0].children[0].children.length; i++) {
       (nature.scene.children[0].children[0].children[i] as Mesh).material = pointsShaderMaterial;
-      // (nature.scene.children[0].children[0].children[i] as Mesh).material.needsUpdate = true;
+      (nature.scene.children[0].children[0].children[trueIndexMap[i]] as Mesh).geometry.attributes.color = (natureColor.scene.children[0].children[0].children[i] as Mesh).geometry.attributes.color;
       nature.scene.children[0].children[0].children[i].frustumCulled = false;
     }
     nature.scene.children[0].frustumCulled = false;
-  }, [nature, pointsShaderMaterial]);
+  }, [nature, pointsShaderMaterial, natureColor.scene.children]);
 
   const handleRaycastPlaneMouseMove = useCallback((event) => {
     pointsShaderMaterial.uniforms.mouse.value.copy(event.point);
-    // console.log(event.point)
-    // console.log(pointsShaderMaterial.uniforms.mouse.value);
     pointsShaderMaterial.needsUpdate = true;
   }, [pointsShaderMaterial])
 
@@ -150,13 +140,9 @@ const Mix = () => {
         args={[100, 100, 0xaaaaaa, 0xaaaaaa]} 
         position={[0, 0.01, 0]}
       /> */}
-      <primitive object={nature.scene} 
-        // position={[0, -1, 0]}
-        rotation={[0, 0, Math.PI * 1/32]}
-      />
+      <primitive object={nature.scene} />
       <mesh 
-        rotation={[-Math.PI / 2, Math.PI * 1/32, 0]}
-        // position={[0, .5, 0]}
+        rotation={[ Math.PI / 2, 0, 0 ]}
         onPointerMove={
           (event) => {
             handleRaycastPlaneMouseMove(event);
@@ -170,16 +156,15 @@ const Mix = () => {
           side={DoubleSide}
         />
       </mesh>
-
     </>
   );
 };
 
 const MixShaderCanvas = () => {
-  const cameraPos = isMobile ? 6.5 : 4.25;
+  const cameraPos = isMobile ? 4.0 : 4.25;
   return (
     <Canvas
-      camera={{position: [0, cameraPos, cameraPos]}}
+      camera={{position: [0, cameraPos + 5.0, cameraPos + 3.0]}}
       // scene={{background: new Color(0xffffff)}}
       scene={{background: new Color(0x000000)}}
     >
@@ -194,7 +179,8 @@ const MixShaderCanvas = () => {
         autoRotateSpeed={.5}
         zoomSpeed={.5}
         panSpeed={.5}
-        rotateSpeed={.25}      
+        rotateSpeed={.25}
+        enableRotate={isMobile ? false : true}  
       />
     </Canvas>
   );
