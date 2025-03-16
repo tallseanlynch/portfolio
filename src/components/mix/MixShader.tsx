@@ -2,26 +2,32 @@ import { isMobileDevice } from '../../assets/js/util';
 import { OrbitControls } from '@react-three/drei';
 import { 
   Canvas, 
-  useFrame,
-  useLoader
+  useFrame
 } from '@react-three/fiber';
 import {
   useCallback,
   useEffect,
-  useMemo 
+  useMemo,
+  useState
 } from 'react';
 import { 
+  BufferAttribute,
   Color,
   DoubleSide,
-  Mesh,
   ShaderMaterial,
   Vector3
 } from 'three';
-import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js'
 
 const isMobile = isMobileDevice();
 
-const Mix = () => {  
+const loadBuffer = async (moduleId) => {
+  return await import(/* @vite-ignore */`/mix/buffers/buffer${moduleId}.js`);
+};
+
+type BufferObjectType = {position: BufferAttribute, color: BufferAttribute};
+
+const Mix = () => {
+  const [buffers, setBuffers] = useState<BufferObjectType[]>([]);
   const pointsShaderMaterial = useMemo(() => new ShaderMaterial({
     uniforms: {
       time: { value: 0 },
@@ -54,7 +60,7 @@ const Mix = () => {
         #include <morphcolor_vertex>
         #include <begin_vertex>
         vec3 mouseCalc = mouse;
-        mouseCalc.z *= -1.0;
+        transformed.y *= -1.0;
         float distanceToMouse = distance(transformed, mouseCalc);
         float checkMouseDistance = 2.0;
         if(distanceToMouse < checkMouseDistance) {
@@ -104,26 +110,56 @@ const Mix = () => {
         #include <premultiplied_alpha_fragment>
       }
     `
-  }), [])
+  }), []);
 
-  const natureColor = useLoader(GLTFLoader, '/mix/grass_autumn_update.glb');
-  const nature = useLoader(GLTFLoader, '/mix/nature-centered-1.glb');
-  (window as any).nature = nature;
-  (window as any).natureColor = natureColor;
-
-  useEffect(() => {
+  useEffect(() => {  
+    // function download(data, filename, type) {
+    //   const file = new Blob([data], {type: type});
+    //   const a = document.createElement("a");
+    //   const url = URL.createObjectURL(file);
+    //   a.href = url;
+    //   a.download = filename;
+    //   document.body.appendChild(a);
+    //   a.click();
+    //   setTimeout(() => {
+    //       document.body.removeChild(a);
+    //       window.URL.revokeObjectURL(url);  
+    //   }, 0); 
+    // }
+    
+    // function downloadAttributeAsJS(mesh, attrName, exportName, colorBuffer) {
+    //   const geometry = mesh.geometry;
+    //   const bufferAttribute = geometry.attributes[attrName];
+    //   if (!bufferAttribute) {
+    //       console.error('Attribute not found:', attrName);
+    //       return;
+    //   }
+    //   const attributeArray = bufferAttribute.array;
+    //   const dataString = `const ${exportName}Position = new Float32Array([${attributeArray.join(", ")}]);\nconst ${exportName}Color = new Float32Array([${colorBuffer.join(", ")}]);\nexport { ${exportName}Position,  ${exportName}Color};`;
+  
+    //   // Download function as defined previously
+    //   download(dataString, `${exportName}.js`, "text/plain");
+    // }
+    
     (window as any).Vector3 = Vector3;
-    console.log(nature.scene.children[0].localToWorld(new Vector3(0, 0, 0)));
-    console.log(nature.materials['Scene_-_Root']);
-    nature.materials['Scene_-_Root'] = pointsShaderMaterial;
-    const trueIndexMap = [9, 10, 11, 12, 13, 14, 15, 16, 0, 1, 2, 3, 4, 5, 6, 7, 8, ]
-    for(let i = 0; i < nature.scene.children[0].children[0].children.length; i++) {
-      (nature.scene.children[0].children[0].children[i] as Mesh).material = pointsShaderMaterial;
-      (nature.scene.children[0].children[0].children[trueIndexMap[i]] as Mesh).geometry.attributes.color = (natureColor.scene.children[0].children[0].children[i] as Mesh).geometry.attributes.color;
-      nature.scene.children[0].children[0].children[i].frustumCulled = false;
+    for(let i = 0; i < 17; i++) {
+      
+      loadBuffer(i)
+      .then(loadedModule => {
+  
+        const bufferObject: BufferObjectType = {
+          position: new BufferAttribute(loadedModule[`buffer${i}Position`], 3), 
+          color: new BufferAttribute(loadedModule[`buffer${i}Color`], 4)
+        }
+
+        setBuffers(current => [...current, bufferObject]);
+        }
+      )
+      .catch(err => {
+        console.error(err);
+      });      
     }
-    nature.scene.children[0].frustumCulled = false;
-  }, [nature, pointsShaderMaterial, natureColor.scene.children]);
+  }, []);
 
   const handleRaycastPlaneMouseMove = useCallback((event) => {
     pointsShaderMaterial.uniforms.mouse.value.copy(event.point);
@@ -136,11 +172,28 @@ const Mix = () => {
 
   return (
     <>
-      {/* <gridHelper 
-        args={[100, 100, 0xaaaaaa, 0xaaaaaa]} 
-        position={[0, 0.01, 0]}
-      /> */}
-      <primitive object={nature.scene} />
+      {buffers !== undefined && buffers.map((buffer, index) => {
+        return (
+          <points key={index} material={pointsShaderMaterial}>
+            <bufferGeometry>
+              <bufferAttribute 
+                attach={"attributes-position"} 
+                {...buffer.position} 
+                args={[buffer.position.array, buffer.position.array.length]}
+              />
+              <bufferAttribute 
+                attach={"attributes-color"} 
+                {...buffer.color} 
+                args={[buffer.color.array, buffer.color.array.length]}              
+              />
+            </bufferGeometry>
+          </points>    
+        )
+      })}
+      <gridHelper 
+        args={[10, 10, 0xffaaaa, 0xaaaaaa]} 
+        position={[0, 0, 0]}
+      />
       <mesh 
         rotation={[ Math.PI / 2, 0, 0 ]}
         onPointerMove={
