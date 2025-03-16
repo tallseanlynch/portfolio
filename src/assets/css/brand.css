@@ -304,3 +304,25 @@ canvas {
     transform: rotate(360deg);
   }
 }
+
+.model-info {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  z-index: 1;
+  background: #ffffff;
+  padding: 16px;
+  margin: 16px;
+  border-radius: 16px;
+  opacity: .95;
+  transition: opacity 500ms;
+}
+
+.model-info:hover {
+  opacity: 1.0;
+}
+
+.model-info a {
+  text-decoration: none;
+  color: black;
+}

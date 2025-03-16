@@ -1,4 +1,10 @@
+// Huge thank you to Epic_Tree_Store for the model from Sketchfab
+// https://sketchfab.com/johngreenstone
+// Model converted to separate buffers 
+// Number of points reduced by half and vertex numbers fixed to 4 decimal points
+
 import { isMobileDevice } from '../../assets/js/util';
+import '../../assets/css/brand.css';
 import { OrbitControls } from '@react-three/drei';
 import { 
   Canvas, 
@@ -183,25 +189,30 @@ const Mix = () => {
 const MixShaderCanvas = () => {
   const cameraPos = isMobile ? 4.0 : 4.25;
   return (
-    <Canvas
-      camera={{position: [0, cameraPos - 2.0, cameraPos + 3.0]}}
-      scene={{background: new Color(0x000000)}}
-    >
-      <ambientLight intensity={1.5} />
-      <pointLight position={[5, 5, 5]} />
-      <Mix />
-      <OrbitControls
-        enableDamping={true}
-        dampingFactor={0.5}
-        screenSpacePanning={false}
-        autoRotate={true}
-        autoRotateSpeed={.5}
-        zoomSpeed={.5}
-        panSpeed={.5}
-        rotateSpeed={.25}
-        enableRotate={isMobile ? false : true}  
-      />
-    </Canvas>
+    <>
+      <Canvas
+        camera={{position: [0, cameraPos - 2.0, cameraPos + 3.0]}}
+        scene={{background: new Color(0x000000)}}
+      >
+        <ambientLight intensity={1.5} />
+        <pointLight position={[5, 5, 5]} />
+        <Mix />
+        <OrbitControls
+          enableDamping={true}
+          dampingFactor={0.5}
+          screenSpacePanning={false}
+          autoRotate={true}
+          autoRotateSpeed={.5}
+          zoomSpeed={.5}
+          panSpeed={.5}
+          rotateSpeed={.25}
+          enableRotate={isMobile ? false : true}  
+        />
+      </Canvas>
+      <div className="model-info">
+        <a href='https://sketchfab.com/johngreenstone'>Model</a>
+      </div>
+    </>
   );
 }
 
