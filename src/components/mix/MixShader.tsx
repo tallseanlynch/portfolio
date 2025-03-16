@@ -113,48 +113,15 @@ const Mix = () => {
   }), []);
 
   useEffect(() => {  
-    // function download(data, filename, type) {
-    //   const file = new Blob([data], {type: type});
-    //   const a = document.createElement("a");
-    //   const url = URL.createObjectURL(file);
-    //   a.href = url;
-    //   a.download = filename;
-    //   document.body.appendChild(a);
-    //   a.click();
-    //   setTimeout(() => {
-    //       document.body.removeChild(a);
-    //       window.URL.revokeObjectURL(url);  
-    //   }, 0); 
-    // }
-    
-    // function downloadAttributeAsJS(mesh, attrName, exportName, colorBuffer) {
-    //   const geometry = mesh.geometry;
-    //   const bufferAttribute = geometry.attributes[attrName];
-    //   if (!bufferAttribute) {
-    //       console.error('Attribute not found:', attrName);
-    //       return;
-    //   }
-    //   const attributeArray = bufferAttribute.array;
-    //   const dataString = `const ${exportName}Position = new Float32Array([${attributeArray.join(", ")}]);\nconst ${exportName}Color = new Float32Array([${colorBuffer.join(", ")}]);\nexport { ${exportName}Position,  ${exportName}Color};`;
-  
-    //   // Download function as defined previously
-    //   download(dataString, `${exportName}.js`, "text/plain");
-    // }
-    
-    (window as any).Vector3 = Vector3;
     for(let i = 0; i < 17; i++) {
-      
       loadBuffer(i)
       .then(loadedModule => {
-  
         const bufferObject: BufferObjectType = {
           position: new BufferAttribute(loadedModule[`buffer${i}Position`], 3), 
           color: new BufferAttribute(loadedModule[`buffer${i}Color`], 4)
         }
-
-        setBuffers(current => [...current, bufferObject]);
-        }
-      )
+        setBuffers(current => [...current, bufferObject]); 
+      })
       .catch(err => {
         console.error(err);
       });      
@@ -190,10 +157,10 @@ const Mix = () => {
           </points>    
         )
       })}
-      <gridHelper 
+      {/* <gridHelper 
         args={[10, 10, 0xffaaaa, 0xaaaaaa]} 
         position={[0, 0, 0]}
-      />
+      /> */}
       <mesh 
         rotation={[ Math.PI / 2, 0, 0 ]}
         onPointerMove={
@@ -218,7 +185,6 @@ const MixShaderCanvas = () => {
   return (
     <Canvas
       camera={{position: [0, cameraPos - 2.0, cameraPos + 3.0]}}
-      // scene={{background: new Color(0xffffff)}}
       scene={{background: new Color(0x000000)}}
     >
       <ambientLight intensity={1.5} />
