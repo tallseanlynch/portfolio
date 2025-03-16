@@ -164,7 +164,7 @@ const MixShaderCanvas = () => {
   const cameraPos = isMobile ? 4.0 : 4.25;
   return (
     <Canvas
-      camera={{position: [0, cameraPos + 5.0, cameraPos + 3.0]}}
+      camera={{position: [0, cameraPos - 2.0, cameraPos + 3.0]}}
       // scene={{background: new Color(0xffffff)}}
       scene={{background: new Color(0x000000)}}
     >
