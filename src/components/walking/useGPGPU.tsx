@@ -136,7 +136,7 @@ const getPersonPosition = (startingPosition) => {
     // console.log(startingPositionCalc);
 }
 
-function useGPGPU(count: number, spread: number, destinationSpread: number) {
+function useGPGPU(count: number, destinationSpread: number) {
     const size = Math.ceil(Math.sqrt(count));
     const gl = useThree((state) => state.gl);
 

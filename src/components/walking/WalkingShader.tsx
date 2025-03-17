@@ -1,5 +1,6 @@
 import { useGPGPU } from './useGPGPU';
 import { WalkingBuildings } from './WalkingBuildings';
+import { WalkingCars } from './WalkingCars';
 import { WalkingGround } from './WalkingGround';
 import { OrbitControls } from '@react-three/drei';
 import { 
@@ -29,12 +30,12 @@ const planeUnitResolution = 10;
 const trackingPlaneTextureResolution = planeSize * planeUnitResolution;
 const rotatedPlaneGeometry = new PlaneGeometry(planeSize, planeSize, 1, 1);
 rotatedPlaneGeometry.rotateX(Math.PI / 2);
+
 const matrixPositionObject =  new Object3D;
 const instanceScale = .75;
 
 const WalkingPeople = ({ 
   width = 100, 
-  spread = 50.0, 
   destinationSpread = 50.0,
   checkVector3s = false,
   renderDebugPlane = false,
@@ -42,7 +43,7 @@ const WalkingPeople = ({
 }) => {
   const instancedMeshRef = useRef<InstancedMesh>();
   const numPeople = width * width;
-  const { gpgpuRenderer, data } = useGPGPU(numPeople, spread, destinationSpread);
+  const { gpgpuRenderer, data } = useGPGPU(numPeople, destinationSpread);
   const directionCheckMaterialRef = useRef<MeshBasicMaterial>();
   const destinationCheckMaterialRef = useRef<MeshBasicMaterial>();
   const positionCheckMaterialRef = useRef<MeshBasicMaterial>();
@@ -340,7 +341,26 @@ const WalkingPeople = ({
   });
 
   return (
-    <>
+    <>      
+      {/* <gridHelper 
+        args={[100, 100, 0xaaaaaa, 0xaaaaaa]} 
+        position={[0, 0.01, 0]}
+      /> */}
+      
+      <instancedMesh 
+        ref={instancedMeshRef} 
+        args={[null as any, null as any, numPeople]} 
+        material={shaderMaterial}
+      >
+        <boxGeometry args={[1, 1, .5, 1, 1, 1]} />
+      </instancedMesh>
+
+      <WalkingBuildings />
+      <WalkingCars />
+      <WalkingGround />
+
+      {/* 
+      
       <mesh 
         position={[0.0, 0.0, 0.0]}
       >
@@ -352,18 +372,7 @@ const WalkingPeople = ({
           ref={goundMaterialRef}
         />
       </mesh>
-      {/* <gridHelper 
-        args={[100, 100, 0xaaaaaa, 0xaaaaaa]} 
-        position={[0, 0.01, 0]}
-      /> */}
-      <instancedMesh 
-        ref={instancedMeshRef} 
-        args={[null as any, null as any, numPeople]} 
-        material={shaderMaterial}
-      >
-        <boxGeometry args={[1, 1, .5, 1, 1, 1]} />
-      </instancedMesh>
-
+      
       <mesh position={[-10, 10, -10]}>
         <planeGeometry args={[10, 10, 1, 1]} />
         <meshBasicMaterial 
@@ -396,21 +405,18 @@ const WalkingPeople = ({
           color={0xffffff}
           transparent={true}
         />
-      </mesh>
-      <WalkingGround />
-      <WalkingBuildings />
+      </mesh> */}
     </>
   );
 };
 
 const WalkingShaderCanvas = () => {
   return (
-    <Canvas camera={{position: [0, 25, 25]}}>
+    <Canvas camera={{position: [0, 50, 75]}}>
       <ambientLight intensity={0.5} />
       <pointLight position={[10, 10, 10]} />
       <WalkingPeople 
         width={50} 
-        spread={50} 
         destinationSpread={50}
         renderDebugPlane={false}
         consoleLogDebugBuffer={false}      
