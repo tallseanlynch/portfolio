@@ -16,13 +16,13 @@ const startingPositions = [
     },
     {
         name: 'NorthEast-NorthStreet',
-        center: new Vector3(30, 0, -65),
+        center: new Vector3(30, 0, -90),
         width: 10,
-        height: 60
+        height: 100
     },
     {
         name: 'NorthEast-NorthStreet-CornerEnd',
-        center: new Vector3(30, 0, -100),
+        center: new Vector3(30, 0, -145),
         width: 10,
         height: 10,
         connections: [
@@ -34,13 +34,13 @@ const startingPositions = [
     },
     {
         name: 'NorthEast-EastStreet',
-        center: new Vector3(65, 0, -30),
-        width: 60,
+        center: new Vector3(90, 0, -30),
+        width: 100,
         height: 10
     },
     {
         name: 'NorthEast-EastStreet-CornerEnd',
-        center: new Vector3(100, 0, -30),
+        center: new Vector3(145, 0, -30),
         width: 10,
         height: 10,
         connections: [
@@ -66,13 +66,13 @@ const startingPositions = [
     },
     {
         name: 'SouthEast-SouthStreet',
-        center: new Vector3(30, 0, 65),
+        center: new Vector3(30, 0, 90),
         width: 10,
-        height: 60
+        height: 100
     },
     {
         name: 'SouthEast-SouthStreet-CornerEnd',
-        center: new Vector3(30, 0, 100),
+        center: new Vector3(30, 0, 145),
         width: 10,
         height: 10,
         connections: [
@@ -84,13 +84,13 @@ const startingPositions = [
     },
     {
         name: 'SouthEast-EastStreet',
-        center: new Vector3(65, 0, 30),
-        width: 60,
+        center: new Vector3(90, 0, 30),
+        width: 100,
         height: 10
     },
     {
         name: 'SouthEast-EastStreet-CornerEnd',
-        center: new Vector3(100, 0, 30),
+        center: new Vector3(145, 0, 30),
         width: 10,
         height: 10,
         connections: [
@@ -116,13 +116,13 @@ const startingPositions = [
     },
     {
         name: 'NorthWest-NorthStreet',
-        center: new Vector3(-30, 0, -65),
+        center: new Vector3(-30, 0, -90),
         width: 10,
-        height: 60
+        height: 100
     },
     {
         name: 'NorthWest-NorthStreet-CornerEnd',
-        center: new Vector3(-30, 0, -100),
+        center: new Vector3(-30, 0, -145),
         width: 10,
         height: 10,
         connections: [
@@ -134,13 +134,13 @@ const startingPositions = [
     },
     {
         name: 'NorthWest-WestStreet',
-        center: new Vector3(-65, 0, -30),
-        width: 60,
+        center: new Vector3(-90, 0, -30),
+        width: 100,
         height: 10
     },
     {
         name: 'NorthWest-WestStreet-CornerEnd',
-        center: new Vector3(-100, 0, -30),
+        center: new Vector3(-145, 0, -30),
         width: 10,
         height: 10,
         connections: [
@@ -166,13 +166,13 @@ const startingPositions = [
     },
     {
         name: 'SouthWest-SouthStreet',
-        center: new Vector3(-30, 0, 65),
+        center: new Vector3(-30, 0, 90),
         width: 10,
-        height: 60
+        height: 100
     },
     {
         name: 'SouthWest-SouthStreet-CornerEnd',
-        center: new Vector3(-30, 0, 100),
+        center: new Vector3(-30, 0, 145),
         width: 10,
         height: 10,
         connections: [
@@ -184,13 +184,13 @@ const startingPositions = [
     },
     {
         name: 'SouthWest-WestStreet',
-        center: new Vector3(-65, 0, 30),
-        width: 60,
+        center: new Vector3(-90, 0, 30),
+        width: 100,
         height: 10
     },
     {
         name: 'SouthWest-WestStreet-CornerEnd',
-        center: new Vector3(-100, 0, 30),
+        center: new Vector3(-145, 0, 30),
         width: 10,
         height: 10,
         connections: [

@@ -2,6 +2,7 @@ import { useGPGPU } from './useGPGPU';
 import { WalkingBuildings } from './WalkingBuildings';
 import { WalkingCars } from './WalkingCars';
 import { WalkingGround } from './WalkingGround';
+import { WalkingLights } from './WalkingLights';
 import { OrbitControls } from '@react-three/drei';
 import { 
   Canvas, 
@@ -18,7 +19,7 @@ import {
   DoubleSide,
   InstancedMesh,
   MeshBasicMaterial,
-  // MeshBasicMaterial,
+  NoToneMapping,
   Object3D,
   PlaneGeometry,
   ShaderMaterial,
@@ -358,7 +359,7 @@ const WalkingPeople = ({
       <WalkingBuildings />
       <WalkingCars />
       <WalkingGround />
-
+      <WalkingLights />
       {/* 
       
       <mesh 
@@ -412,7 +413,14 @@ const WalkingPeople = ({
 
 const WalkingShaderCanvas = () => {
   return (
-    <Canvas camera={{position: [0, 50, 75]}}>
+    <Canvas
+      gl={{ 
+        antialias: true, 
+        toneMapping: NoToneMapping 
+      }}
+      linear
+      camera={{position: [0, 50, 75]}}
+    >
       <ambientLight intensity={0.5} />
       <pointLight position={[10, 10, 10]} />
       <WalkingPeople 

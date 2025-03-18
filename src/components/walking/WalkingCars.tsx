@@ -8,7 +8,7 @@ const ProtoCar = ({pos, color = carColor0}) => {
     return (
         <mesh position={pos}>
             <boxGeometry args={[2.5, carSize, 5.0]} />
-            <meshStandardMaterial color={color} />
+            <meshBasicMaterial color={color} />
         </mesh>
     )
 }

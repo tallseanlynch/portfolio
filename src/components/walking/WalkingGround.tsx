@@ -1,4 +1,5 @@
 import { 
+    Color,
     DoubleSide, 
     Euler,
     PlaneGeometry,
@@ -6,7 +7,7 @@ import {
 } from 'three';
 
 const crossWalkWidth = 10;
-const crossWalkDepth = 50;
+const crossWalkDepth = 47;
 
 const rotatedPlaneGeometry = new PlaneGeometry(crossWalkWidth, crossWalkDepth, 1, 1);
 rotatedPlaneGeometry.rotateX(-Math.PI / 2);
@@ -45,6 +46,11 @@ const crossWalkShader = {
 }    
 
 const dashedLineShader = {
+    uniforms: {
+        dashOffset: {
+            value: 0
+        }
+    },
     vertexShader: `
         varying vec2 vUv;
 
@@ -54,6 +60,7 @@ const dashedLineShader = {
         }
     `,
     fragmentShader: `
+        uniform float dashOffset;
         varying vec2 vUv;
 
         void main() {
@@ -61,7 +68,7 @@ const dashedLineShader = {
             vec4 transparentColor = vec4(0.0, 0.0, 0.0, 0.0);
             vec4 finalColor = crossWalkColor;
 
-            if(mod(vUv.y * 100.0, 2.0) > .75) {
+            if(mod(vUv.y * 100.0 + dashOffset, 2.0) > .75 - dashOffset * .2) {
                 finalColor = transparentColor;
             }
 
@@ -73,7 +80,8 @@ const dashedLineShader = {
 const DashedLine = ({
     pos = new Vector3(0, .025, 92.5), 
     scale = new Vector3(.5, 1, 110), 
-    rotation = new Euler(0, 0, 0)
+    rotation = new Euler(0, 0, 0),
+    dashOffset = 0
 }) => {
     return (
         <mesh position={pos} scale={scale} rotation={rotation}>
@@ -83,38 +91,62 @@ const DashedLine = ({
                 vertexShader={dashedLineShader.vertexShader}
                 side={DoubleSide}
                 transparent={true}
+                uniforms={{
+                    dashOffset: {
+                        value: dashOffset
+                    }
+                }}
             />
         </mesh>
     )
 }
 
-const WalkingGround = () => {
-
+const SolidWhiteLine = ({
+    pos = new Vector3(0, .025, 92.5), 
+    scale = new Vector3(.5, 1, 110), 
+    rotation = new Euler(0, 0, 0)
+}) => {
     return (
-        <group>
+        <mesh position={pos} scale={scale} rotation={rotation}>
+            <primitive object={rotatedUnitPlaneGeometry.clone()} />
+            <meshBasicMaterial color={0xffffff} />
+        </mesh>
+    )
+}
 
-            <group>
-                <mesh position={[0, .025, 92.5]} scale={[1, 1, 110]}>
-                    <primitive object={rotatedUnitPlaneGeometry} />
-                    <meshBasicMaterial color={0xffff00} />
-                </mesh>
-
-                <DashedLine pos={new Vector3(-5, .025, 92.5)} />
-                <DashedLine pos={new Vector3(-10, .025, 92.5)} />
-                <DashedLine pos={new Vector3(-15, .025, 92.5)} />
-                <DashedLine pos={new Vector3(-20, .025, 92.5)} />
-
-                <DashedLine pos={new Vector3(5, .025, 92.5)} />
-                <DashedLine pos={new Vector3(10, .025, 92.5)} />
-                <DashedLine pos={new Vector3(15, .025, 92.5)} />
-                <DashedLine pos={new Vector3(20, .025, 92.5)} />
-            </group>
-
-            <mesh position={[0, 0, 0]}>
-                <primitive object={rotatedGroundPlaneGeometry} />
-                <meshBasicMaterial color={0xaaaaaa} />
+const StreetLines = ({position = new Vector3(), rotation = new Euler()}) => {
+    return (
+        <group position={position} rotation={rotation}>
+            <mesh position={[0, .025, 92.5]} scale={[1, 1, 110]}>
+                <primitive object={rotatedUnitPlaneGeometry.clone()} />
+                <meshBasicMaterial color={0xffff00} />
             </mesh>
 
+            <DashedLine pos={new Vector3(-5, .025, 92.5)} dashOffset={Math.random()}/>
+            <DashedLine pos={new Vector3(-10, .025, 92.5)} dashOffset={Math.random()}/>
+            <DashedLine pos={new Vector3(-15, .025, 92.5)} dashOffset={Math.random()}/>
+            <SolidWhiteLine pos={new Vector3(-20, .025, 92.5)} />
+
+            <DashedLine pos={new Vector3(5, .025, 92.5)} dashOffset={Math.random()}/>
+            <DashedLine pos={new Vector3(10, .025, 92.5)} dashOffset={Math.random()}/>
+            <DashedLine pos={new Vector3(15, .025, 92.5)} dashOffset={Math.random()}/>
+            <SolidWhiteLine pos={new Vector3(20, .025, 92.5)}/>
+        </group>
+    )
+}
+
+const LargeGroundPlane = () => {
+    return (
+        <mesh position={[0, 0, 0]}>
+            <primitive object={rotatedGroundPlaneGeometry} />
+            <meshBasicMaterial color={roadColor} />
+        </mesh>
+    )
+}
+
+const CrossWalks = () => {
+    return (
+        <>
             <mesh position={[-30, .02, 0]}>
                 <primitive object={rotatedPlaneGeometry} />
                 <shaderMaterial 
@@ -160,8 +192,52 @@ const WalkingGround = () => {
                     transparent={true}
                 />
             </mesh>
+        </>
+    )
+}
 
+const rotatedSideWalkGeometry = new PlaneGeometry(125, 125, 1, 1);
+rotatedSideWalkGeometry.rotateX(-Math.PI / 2);
+const sideWalkColor = new Color(0xcccccc);
+const roadColor = new Color(0x999999);
+
+const SideWalks = () => {
+    return (
+        <group>
+            <mesh position={[87.5, .2, 87.5]}>
+                <primitive object={rotatedSideWalkGeometry.clone()} />
+                <meshBasicMaterial color={sideWalkColor} />
+            </mesh>
+            <mesh position={[87.5, .2, -87.5]}>
+                <primitive object={rotatedSideWalkGeometry.clone()} />
+                <meshBasicMaterial color={sideWalkColor} />
+            </mesh>
+            <mesh position={[-87.5, .2, -87.5]}>
+                <primitive object={rotatedSideWalkGeometry.clone()} />
+                <meshBasicMaterial color={sideWalkColor} />
+            </mesh>
+            <mesh position={[-87.5, .2, 87.5]}>
+                <primitive object={rotatedSideWalkGeometry.clone()} />
+                <meshBasicMaterial color={sideWalkColor} />
+            </mesh>
+        </group>
+    )
+}
+
+const WalkingGround = () => {
+
+    return (
+        <group>
+
+            <SideWalks />
+
+            <StreetLines />
+            <StreetLines position={new Vector3(0, 0, 0)} rotation={new Euler(0, Math.PI, 0)}/>
+            <StreetLines position={new Vector3(0, 0, 0)} rotation={new Euler(0, -Math.PI / 2, 0)}/>
             
+            <LargeGroundPlane />
+            
+            <CrossWalks />
         </group>
     )
 };
