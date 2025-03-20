@@ -64,8 +64,7 @@ const Lights = ({
     rightTurn, 
     onlyTurns,
     lightsTime,
-    trafficLightsConfig,
-    lightPostName
+    trafficLightsConfig
 }) => {
     const bothTurns = leftTurn === true && rightTurn === true;
     const bothTurnsAdj = bothTurns ? .5 : 0;
@@ -260,7 +259,6 @@ const LightPost = ({
     lightsTime,
     trafficLightsConfig,
     walkSignalConfig,
-    lightPostName,
     diagonalWalkSignal = false
 }) => {
 
@@ -304,7 +302,6 @@ const LightPost = ({
                         onlyTurns={onlyTurns}
                         lightsTime={lightsTime}
                         trafficLightsConfig={trafficLightsConfig}
-                        lightPostName={lightPostName}                
                     />
                 </>
             ) : (
@@ -346,7 +343,6 @@ const WalkingLights = () => {
                 lightsTime={lightsTime}
                 trafficLightsConfig={trafficLightsConfig.northWest}
                 walkSignalConfig={walkSignalConfig.northWest}
-                lightPostName='northWest'
                 diagonalWalkSignal={true}
             />
             
@@ -358,7 +354,6 @@ const WalkingLights = () => {
                 lightsTime={lightsTime}
                 trafficLightsConfig={trafficLightsConfig.southEast}
                 walkSignalConfig={walkSignalConfig.southEast}
-                lightPostName='southEast'
                 diagonalWalkSignal={true}
             />        
             
@@ -372,7 +367,6 @@ const WalkingLights = () => {
                 lightsTime={lightsTime}
                 trafficLightsConfig={trafficLightsConfig.northEast}
                 walkSignalConfig={walkSignalConfig.northEast}
-                lightPostName='northEast'
             />        
 
             {/* SouthWest */}
@@ -383,7 +377,6 @@ const WalkingLights = () => {
                 lightsTime={lightsTime}
                 trafficLightsConfig={trafficLightsConfig.southWest}
                 walkSignalConfig={walkSignalConfig.southWest}
-                lightPostName='southWest'
             />        
         </>
     )

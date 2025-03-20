@@ -1,12 +1,13 @@
+import { graphArrays } from './positionsGraph';
 import { positionsGraph } from './positionsGraph';
-import { useLightsTime } from './useLightsTime';
+// import { useLightsTime } from './useLightsTime';
 import { useThree } from '@react-three/fiber';
 import { useEffect, useMemo } from 'react';
 import { GPUComputationRenderer } from 'three/examples/jsm/misc/GPUComputationRenderer.js';
 import { Vector3 } from 'three';
 
 const simulationPositionFragmentShader = `
-    uniform int size;
+    uniform int uSize;
     uniform float uTime;
     uniform float uDeltaTime;
 
@@ -27,7 +28,7 @@ const simulationPositionFragmentShader = `
     }
 `
 const simulationDirectionFragmentShader = `
-    uniform int size;
+    uniform int uSize;
     uniform float uTime;
     uniform float uDeltaTime;
 
@@ -59,8 +60,8 @@ const simulationDirectionFragmentShader = `
         int numberOfPotentialCollisions = 0;
         bool isFrontCollision = false;
 
-        for(int i = 0; i < size; i++) {
-            for(int j = 0; j < size; j++) {
+        for(int i = 0; i < uSize; i++) {
+            for(int j = 0; j < uSize; j++) {
                 vec2 checkUV = vec2(float(i), float(j)) / resolution.xy;
                 vec4 checkPersonPosition = texture(uPosition, checkUV);
                 vec3 checkPersonPositionCalc = vec3(checkPersonPosition.xyz);
@@ -116,7 +117,7 @@ const simulationDirectionFragmentShader = `
 `
 
 const simulationDestinationFragmentShader = `
-    uniform int size;
+    uniform int uSize;
     uniform float uTime;
     uniform float uDeltaTime;
 
@@ -136,11 +137,10 @@ const getPersonPosition = (graphPosition, destination = false) => {
     calcVector3.copy(graphPosition.center);
     calcVector3.x += randomNeg1To1() * (graphPosition.width / 2)
     calcVector3.z += randomNeg1To1() * (graphPosition.height / 2)
-    // console.log(startingPositionCalc);
 }
 
 function useGPGPU(count: number, destinationSpread: number) {
-    const lightsTime = useLightsTime();
+    // const lightsTime = useLightsTime();
     const size = Math.ceil(Math.sqrt(count));
     const gl = useThree((state) => state.gl);
 
@@ -150,7 +150,6 @@ function useGPGPU(count: number, destinationSpread: number) {
         const positionTexture = gpgpuRenderer.createTexture();
         const directionTexture = gpgpuRenderer.createTexture();
         const destinationTexture = gpgpuRenderer.createTexture();
-        const destinationScale = destinationSpread;
 
         for (let i = 0; i < count; i++) {
             const i4 = i * 4;
@@ -185,19 +184,25 @@ function useGPGPU(count: number, destinationSpread: number) {
 
         // gpugpu variables initialization
         const positionVariable = gpgpuRenderer.addVariable('uPosition', simulationPositionFragmentShader, positionTexture);
-        positionVariable.material.uniforms.size = { value: size };        
+        positionVariable.material.uniforms.uSize = { value: size };        
         positionVariable.material.uniforms.uTime = { value: 0 };
         positionVariable.material.uniforms.uDeltaTime = { value: 0 };
+        positionVariable.material.uniforms.uGraphPositions = { value: graphArrays.graphPositions };
+        positionVariable.material.uniforms.uGraphConnections = { value: graphArrays.graphConnections };
+        positionVariable.material.uniforms.uGraphTerminations = { value: graphArrays.graphTerminations };
 
         const directionVariable = gpgpuRenderer.addVariable('uDirection', simulationDirectionFragmentShader, directionTexture);
-        directionVariable.material.uniforms.size = { value: size };        
+        directionVariable.material.uniforms.uSize = { value: size };        
         directionVariable.material.uniforms.uTime = { value: 0 };
         directionVariable.material.uniforms.uDeltaTime = { value: 0 };
 
         const destinationVariable = gpgpuRenderer.addVariable('uDestination', simulationDestinationFragmentShader, destinationTexture);
-        positionVariable.material.uniforms.size = { value: size };        
+        destinationVariable.material.uniforms.uSize = { value: size };        
         destinationVariable.material.uniforms.uTime = { value: 0 };
         destinationVariable.material.uniforms.uDeltaTime = { value: 0 };
+        destinationVariable.material.uniforms.uGraphPositions = { value: graphArrays.graphPositions };
+        destinationVariable.material.uniforms.uGraphConnections = { value: graphArrays.graphConnections };
+        destinationVariable.material.uniforms.uGraphTerminations = { value: graphArrays.graphTerminations };
 
         // init
         gpgpuRenderer.setVariableDependencies(positionVariable, [positionVariable, directionVariable, destinationVariable]);

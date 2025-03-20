@@ -1,6 +1,17 @@
 import { Vector3 } from 'three';
 
-const positionsGraph = [
+type GraphNode = {
+    name: string;
+    number: number;
+    center: Vector3;
+    width: number;
+    height: number;
+    startingConnections?: boolean;
+    connections: string[];
+    termination?: string[];
+}
+
+const positionsGraph: GraphNode[] = [
     // NorthEast
     {
         name: 'NorthEast-Corner',
@@ -27,9 +38,6 @@ const positionsGraph = [
             'NorthEast-NorthStreet-CornerEnd'
         ]
     },
-    // graphPositions: [number, centerx, centery, widthx, heightz]
-    // graphPositionConnections: [graphPositionNumber, ...]
-    // graphPositionTerminations: [graphPositionNumber, ...]     
     {
         name: 'NorthEast-NorthStreet-CornerEnd',
         number: 2,
@@ -265,4 +273,55 @@ const positionsGraph = [
     }
 ];
 
-export { positionsGraph };
+// create shader friendly arrays
+const createGraphArrays = (graphs: GraphNode[]) => {
+    const graphPositions = Array(graphs.length).fill([]);
+    const graphConnections = Array(graphs.length).fill([]);
+    const graphTerminations = Array(graphs.length).fill([]);
+
+    graphs.forEach((graph: GraphNode) => {
+        graphPositions[graph.number] = [
+            graph.center.x,
+            graph.center.y,
+            graph.center.z,
+            graph.width,
+            graph.height
+        ];
+
+        const graphConnectionNumbers: number[] = [];
+        graph.connections.forEach((connection: string) => {
+            graphs.forEach((checkGraph: GraphNode) => {
+                if(checkGraph.name === connection) {
+                    graphConnectionNumbers.push(checkGraph.number);
+                }
+            })
+        })
+        graphConnections[graph.number] = graphConnectionNumbers;
+
+        const graphTerminationNumbers: number[] = [];
+        if(graph.termination !== undefined) {
+            graph.termination.forEach((termination: string) => {
+                graphs.forEach((checkGraph: GraphNode) => {
+                    if(checkGraph.name === termination) {
+                        graphTerminationNumbers.push(checkGraph.number);
+                    }
+                })
+            })
+            graphTerminations[graph.number] = graphTerminationNumbers;    
+        } else {
+            graphTerminations[graph.number] = [-1];
+        }
+
+    });
+
+    return {
+        graphPositions,
+        graphConnections,
+        graphTerminations
+    }
+}
+
+const graphArrays = createGraphArrays(positionsGraph)
+console.log(graphArrays);
+
+export { positionsGraph, graphArrays };
