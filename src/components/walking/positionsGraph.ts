@@ -1,4 +1,4 @@
-import { Vector3 } from 'three';
+import { DataTexture, FloatType, RGBAFormat, Vector3 } from 'three';
 
 type GraphNode = {
     name: string;
@@ -273,11 +273,14 @@ const positionsGraph: GraphNode[] = [
     }
 ];
 
-// create shader friendly arrays
+// create shader friendly arrays and dataTextyres
 const createGraphArrays = (graphs: GraphNode[]) => {
-    const graphPositions = Array(graphs.length).fill([]);
-    const graphConnections = Array(graphs.length).fill([]);
-    const graphTerminations = Array(graphs.length).fill([]);
+    const graphPositions: number[][] = Array(graphs.length).fill([]);
+    const graphConnections: number[][] = Array(graphs.length).fill([]);
+    const graphTerminations: number[][] = Array(graphs.length).fill([]);
+
+    const graphConnectionsLengths: number[] = Array(graphs.length).fill(0);
+    const graphTerminationsLengths: number[] = Array(graphs.length).fill(0);
 
     graphs.forEach((graph: GraphNode) => {
         graphPositions[graph.number] = [
@@ -309,15 +312,68 @@ const createGraphArrays = (graphs: GraphNode[]) => {
             })
             graphTerminations[graph.number] = graphTerminationNumbers;    
         } else {
-            graphTerminations[graph.number] = [-1];
+            graphTerminations[graph.number] = [];
         }
 
+        graphConnectionsLengths[graph.number] = graphConnections[graph.number].length;
+        graphTerminationsLengths[graph.number] = graphTerminations[graph.number].length;
+
     });
+
+    // create the DataTextures
+    const dataWidth = 10;
+    const dataHeight = graphPositions.length;
+    const dataSize = dataWidth * dataHeight * 4;
+    const dataPositions = new Float32Array(dataSize);
+    const dataConnections = new Float32Array(dataSize);
+    const dataTerminations = new Float32Array(dataSize);
+
+    const dataArrays = [
+        dataPositions,
+        dataConnections,
+        dataTerminations
+    ];
+
+    dataArrays.forEach(dataArray => {
+        for(let dataIndex = 0; dataIndex < dataSize; dataIndex ++) {
+            dataArray[dataIndex] = 0.0;
+        }
+    });
+
+    for(let dataRow = 0; dataRow < dataHeight; dataRow ++) {
+        dataPositions[dataRow * 10] = graphPositions[dataRow][0]; // centerx
+        dataPositions[dataRow * 10 + 1] = graphPositions[dataRow][1]; // centery
+        dataPositions[dataRow * 10 + 2] = graphPositions[dataRow][2]; // centerz
+        dataPositions[dataRow * 10 + 3] = graphPositions[dataRow][3]; // width
+        dataPositions[dataRow * 10 + 4] = graphPositions[dataRow][4]; // height
+
+        for(let graphConnectionIndex = 0; graphConnectionIndex < graphConnectionsLengths[dataRow]; graphConnectionIndex++) {
+            dataConnections[dataRow * 10 + graphConnectionIndex] = graphConnections[dataRow][graphConnectionIndex];
+        }
+
+        for(let graphTerminationIndex = 0; graphTerminationIndex < graphTerminationsLengths[dataRow]; graphTerminationIndex++) {
+            dataTerminations[dataRow * 10 + graphTerminationIndex] = graphTerminations[dataRow][graphTerminationIndex];
+        }
+    }
+
+    const dataPositionsTexture = new DataTexture(dataPositions, 10, dataHeight, RGBAFormat, FloatType);
+    dataPositionsTexture.needsUpdate = true;
+    
+    const dataConnectionsTexture = new DataTexture(dataConnections, 10, dataHeight, RGBAFormat, FloatType);
+    dataConnectionsTexture.needsUpdate = true;
+
+    const dataTerminationsTexture = new DataTexture(dataTerminations, 10, dataHeight, RGBAFormat, FloatType);
+    dataTerminationsTexture.needsUpdate = true;
 
     return {
         graphPositions,
         graphConnections,
-        graphTerminations
+        graphTerminations,
+        graphConnectionsLengths,
+        graphTerminationsLengths,
+        dataPositionsTexture,
+        dataConnectionsTexture,
+        dataTerminationsTexture
     }
 }
 

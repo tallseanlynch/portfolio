@@ -37,14 +37,13 @@ const instanceScale = .75;
 
 const WalkingPeople = ({ 
   width = 100, 
-  destinationSpread = 50.0,
   checkVector3s = false,
   renderDebugPlane = false,
   consoleLogDebugBuffer = false      
 }) => {
   const instancedMeshRef = useRef<InstancedMesh>();
   const numPeople = width * width;
-  const { gpgpuRenderer, data } = useGPGPU(numPeople, destinationSpread);
+  const { gpgpuRenderer, data } = useGPGPU(numPeople);
   const directionCheckMaterialRef = useRef<MeshBasicMaterial>();
   const destinationCheckMaterialRef = useRef<MeshBasicMaterial>();
   const positionCheckMaterialRef = useRef<MeshBasicMaterial>();
@@ -428,7 +427,6 @@ const WalkingShaderCanvas = () => {
       <pointLight position={[10, 10, 10]} />
       <WalkingPeople 
         width={50} 
-        destinationSpread={50}
         renderDebugPlane={false}
         consoleLogDebugBuffer={false}      
         checkVector3s={false}

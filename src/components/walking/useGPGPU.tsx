@@ -108,6 +108,12 @@ const simulationDirectionFragmentShader = `
             velocity.w = 0.0;
         };
 
+        // still testing
+        // implemented to prevent double stragglers
+        if(lowestCheckDistance < .5 && numberOfPotentialCollisions > 0) {
+            velocity.w = 1.0;
+        };
+
         if(isFrontCollision == true && numberOfPotentialCollisions > 0 && distanceToDestination < 1.5) {
             velocity.w = 0.0;
         }
@@ -121,10 +127,38 @@ const simulationDestinationFragmentShader = `
     uniform float uTime;
     uniform float uDeltaTime;
 
+    float random(float n) {
+        return fract(sin(n + uTime) * 43758.5453123);
+    }
+
     void main() {
         vec2 uv = gl_FragCoord.xy / resolution.xy;
         vec4 destinationData = texture(uDestination, uv);
-        gl_FragColor = destinationData;
+        vec4 positionData = texture(uDestination, uv);
+
+        vec3 destinationDataCalc = vec3(positionData.xyz);
+        vec3 positionDataCalc = vec3(positionData.xyz);
+
+        vec4 finalDestination = destinationData;
+        float distanceFromDestination = distance(destinationDataCalc, positionDataCalc);
+        if(distanceFromDestination <= 1.3) {
+            float currentDestinationNumber = destinationData.w;
+            int graphConnectionArrayNumber = int(currentDestinationNumber);
+        }
+
+        gl_FragColor = finalDestination;
+    }
+`
+
+const simulationStateFragmentShader = `
+    uniform int uSize;
+    uniform float uTime;
+    uniform float uDeltaTime;
+
+    void main() {
+        vec2 uv = gl_FragCoord.xy / resolution.xy;
+        vec4 stateData = texture(uState, uv);
+        gl_FragColor = stateData;
     }
 `
 
@@ -139,7 +173,7 @@ const getPersonPosition = (graphPosition, destination = false) => {
     calcVector3.z += randomNeg1To1() * (graphPosition.height / 2)
 }
 
-function useGPGPU(count: number, destinationSpread: number) {
+function useGPGPU(count: number) {
     // const lightsTime = useLightsTime();
     const size = Math.ceil(Math.sqrt(count));
     const gl = useThree((state) => state.gl);
@@ -150,6 +184,7 @@ function useGPGPU(count: number, destinationSpread: number) {
         const positionTexture = gpgpuRenderer.createTexture();
         const directionTexture = gpgpuRenderer.createTexture();
         const destinationTexture = gpgpuRenderer.createTexture();
+        const stateTexture = gpgpuRenderer.createTexture();
 
         for (let i = 0; i < count; i++) {
             const i4 = i * 4;
@@ -180,6 +215,12 @@ function useGPGPU(count: number, destinationSpread: number) {
             (destinationTexture.image.data as any)[i4 + 1] = 0.0; // y
             (destinationTexture.image.data as any)[i4 + 2] = destinationPositionCalc.z; // z
             (destinationTexture.image.data as any)[i4 + 3] = randomConnectionDestinationGraphPosition.number; // w - destinationPosition number
+
+            // states
+            (stateTexture.image.data as any)[i4 + 0] = 0.0; // x
+            (stateTexture.image.data as any)[i4 + 1] = 0.0; // y
+            (stateTexture.image.data as any)[i4 + 2] = 0.0; // z
+            (stateTexture.image.data as any)[i4 + 3] = 0.0; // w - destinationPosition number
         }
 
         // gpugpu variables initialization
@@ -187,9 +228,13 @@ function useGPGPU(count: number, destinationSpread: number) {
         positionVariable.material.uniforms.uSize = { value: size };        
         positionVariable.material.uniforms.uTime = { value: 0 };
         positionVariable.material.uniforms.uDeltaTime = { value: 0 };
-        positionVariable.material.uniforms.uGraphPositions = { value: graphArrays.graphPositions };
-        positionVariable.material.uniforms.uGraphConnections = { value: graphArrays.graphConnections };
-        positionVariable.material.uniforms.uGraphTerminations = { value: graphArrays.graphTerminations };
+        positionVariable.material.uniforms.uGraphRows = { value: graphArrays.graphPositions.length };
+        positionVariable.material.uniforms.uGraphCols = { value: 10 };
+        positionVariable.material.uniforms.uDataPositionsTexture = { value: graphArrays.dataPositionsTexture };
+        positionVariable.material.uniforms.uDataConnectionsTexture = { value: graphArrays.dataConnectionsTexture };
+        positionVariable.material.uniforms.uDataTerminationsTexture = { value: graphArrays.dataTerminationsTexture };
+        positionVariable.material.uniforms.uGraphConnectionsLengths = { value: graphArrays.graphConnectionsLengths };
+        positionVariable.material.uniforms.uGraphTerminationsLengths = { value: graphArrays.graphTerminationsLengths };
 
         const directionVariable = gpgpuRenderer.addVariable('uDirection', simulationDirectionFragmentShader, directionTexture);
         directionVariable.material.uniforms.uSize = { value: size };        
@@ -200,14 +245,31 @@ function useGPGPU(count: number, destinationSpread: number) {
         destinationVariable.material.uniforms.uSize = { value: size };        
         destinationVariable.material.uniforms.uTime = { value: 0 };
         destinationVariable.material.uniforms.uDeltaTime = { value: 0 };
-        destinationVariable.material.uniforms.uGraphPositions = { value: graphArrays.graphPositions };
-        destinationVariable.material.uniforms.uGraphConnections = { value: graphArrays.graphConnections };
-        destinationVariable.material.uniforms.uGraphTerminations = { value: graphArrays.graphTerminations };
+        destinationVariable.material.uniforms.uGraphRows = { value: graphArrays.graphPositions.length };
+        destinationVariable.material.uniforms.uGraphCols = { value: 10 };
+        destinationVariable.material.uniforms.uDataPositionsTexture = { value: graphArrays.dataPositionsTexture };
+        destinationVariable.material.uniforms.uDataConnectionsTexture = { value: graphArrays.dataConnectionsTexture };
+        destinationVariable.material.uniforms.uDataTerminationsTexture = { value: graphArrays.dataTerminationsTexture };
+        destinationVariable.material.uniforms.uGraphConnectionsLengths = { value: graphArrays.graphConnectionsLengths };
+        destinationVariable.material.uniforms.uGraphTerminationsLengths = { value: graphArrays.graphTerminationsLengths };
+
+        const stateVariable = gpgpuRenderer.addVariable('uState', simulationStateFragmentShader, stateTexture);
+        stateVariable.material.uniforms.uSize = { value: size };        
+        stateVariable.material.uniforms.uTime = { value: 0 };
+        stateVariable.material.uniforms.uDeltaTime = { value: 0 };
+        stateVariable.material.uniforms.uGraphRows = { value: graphArrays.graphPositions.length };
+        stateVariable.material.uniforms.uGraphCols = { value: 10 };
+        stateVariable.material.uniforms.uDataPositionsTexture = { value: graphArrays.dataPositionsTexture };
+        stateVariable.material.uniforms.uDataConnectionsTexture = { value: graphArrays.dataConnectionsTexture };
+        stateVariable.material.uniforms.uDataTerminationsTexture = { value: graphArrays.dataTerminationsTexture };
+        stateVariable.material.uniforms.uGraphConnectionsLengths = { value: graphArrays.graphConnectionsLengths };
+        stateVariable.material.uniforms.uGraphTerminationsLengths = { value: graphArrays.graphTerminationsLengths };
 
         // init
-        gpgpuRenderer.setVariableDependencies(positionVariable, [positionVariable, directionVariable, destinationVariable]);
-        gpgpuRenderer.setVariableDependencies(directionVariable, [positionVariable, directionVariable, destinationVariable]);
-        gpgpuRenderer.setVariableDependencies(destinationVariable, [positionVariable, directionVariable, destinationVariable]);
+        gpgpuRenderer.setVariableDependencies(positionVariable, [positionVariable, directionVariable, destinationVariable, stateVariable]);
+        gpgpuRenderer.setVariableDependencies(directionVariable, [positionVariable, directionVariable, destinationVariable, stateVariable]);
+        gpgpuRenderer.setVariableDependencies(destinationVariable, [positionVariable, directionVariable, destinationVariable, stateVariable]);
+        gpgpuRenderer.setVariableDependencies(stateVariable, [positionVariable, directionVariable, destinationVariable, stateVariable]);
 
         gpgpuRenderer.init();
 
@@ -232,9 +294,15 @@ function useGPGPU(count: number, destinationSpread: number) {
                         destinationVariable,
                     },
                 },
+                state: {
+                    texture: stateTexture,
+                    variables: {
+                        stateVariable,
+                    },
+                },
             },
         ];
-    }, [count, gl, size, destinationSpread]);
+    }, [count, gl, size]);
 
     useEffect(() => {
         return () => {
