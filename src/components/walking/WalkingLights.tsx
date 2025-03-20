@@ -165,8 +165,8 @@ const Lights = ({
     )
 }
 
-const walkSignalColorDebug2 = new Color(0x00ffff);
-const walkSignalColorDebug3 = new Color(0xffffff);
+// const walkSignalColorDebug2 = new Color(0x00ffff);
+// const walkSignalColorDebug3 = new Color(0xffffff);
 
 const WalkingSignal = ({
     walkSignalConfig,
@@ -225,7 +225,7 @@ const WalkingSignal = ({
             <group position={[1, -2, 0]} rotation={[0, Math.PI / 2, 0]}>
                 <mesh>
                     <primitive object={three.walkingSignalGeometry1} />
-                    <meshBasicMaterial color={walkSignalColorDebug2} />
+                    <meshBasicMaterial color={walkSignalColor} />
                 </mesh>
                 <mesh position={[0, 0, .1]}>
                     <primitive object={three.walkingSignalLightGeometry1} />
@@ -237,7 +237,7 @@ const WalkingSignal = ({
                 <group position={[1, .5, 1]} rotation={[0, Math.PI / 4, 0]}>
                     <mesh>
                         <primitive object={three.walkingSignalGeometry2} />
-                        <meshBasicMaterial color={walkSignalColorDebug3} />
+                        <meshBasicMaterial color={walkSignalColor} />
                     </mesh>
                     <mesh position={[0, 0, .1]}>
                         <primitive object={three.walkingSignalLightGeometry2} />
