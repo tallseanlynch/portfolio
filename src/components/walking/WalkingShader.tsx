@@ -12,7 +12,7 @@ import {
   useCallback,
   useEffect, 
   useRef, 
-  useMemo 
+  useMemo
 } from 'react';
 import { 
   CanvasTexture,
@@ -50,7 +50,6 @@ const WalkingPeople = ({
   const positionCheckMaterialRef = useRef<MeshBasicMaterial>();
   const trackingCheckMaterialRef = useRef<MeshBasicMaterial>();
   const goundMaterialRef = useRef<MeshBasicMaterial>();
-
 //  console.log(planeSize, gpgpuRenderer, data)
 
   const canvas = useMemo(() => {
@@ -359,6 +358,7 @@ const WalkingPeople = ({
       <WalkingBuildings />
       <WalkingCars />
       <WalkingGround />
+      {/* <WalkingLights lightsTime={lightsTime}/> */}
       <WalkingLights />
       {/* 
       
