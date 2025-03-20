@@ -151,16 +151,19 @@ const WalkingPeople = ({
         vec4 positionColor = vgPosition;
         vec4 destinationColor = vgDestination;
         vec4 finalColor = positionColor;
+        vec3 positionCalc = vec3(vgPosition.xyz);
+        vec3 destinationCalc = vec3(vgDestination.xyz);
+        vec3 directionCalc = vec3(vgDirection.xyz);
 
         if(vOriginalPosition.z > 0.0) {
           finalColor = vec4(1.0, 1.0, 1.0, 1.0);
         }
 
-        if(distance(vgPosition, vgDestination) < .25) {
+        if(distance(positionCalc, destinationCalc) < .25) {
           finalColor = vec4(.5, .5, .5, 1.0);
         }
 
-        if(distance(vgPosition, vgDestination) < 1.5 && vgDirection.w < .01) {
+        if(distance(positionCalc, destinationCalc) < 1.5 && vgDirection.w < .01) {
           finalColor = vec4(.5, .5, .5, 1.0);
         }
 

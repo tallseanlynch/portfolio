@@ -1,4 +1,5 @@
-import { startingPositions } from './startingPositions';
+import { positionsGraph } from './positionsGraph';
+import { useLightsTime } from './useLightsTime';
 import { useThree } from '@react-three/fiber';
 import { useEffect, useMemo } from 'react';
 import { GPUComputationRenderer } from 'three/examples/jsm/misc/GPUComputationRenderer.js';
@@ -42,7 +43,7 @@ const simulationDirectionFragmentShader = `
         vec3 destinationDataCalc = vec3(destinationData.xyz);
 
         vec3 directionToDestination = normalize(destinationDataCalc - positionDataCalc);
-        float interpolationFactor = .1;//clamp(uTime * .01, 0.0, 1.0);
+        float interpolationFactor = .25;//clamp(uTime * .01, 0.0, 1.0);
         vec3 mixDirectionDestination = mix(directionDataCalc, directionToDestination, interpolationFactor);        
         vec4 velocity = vec4(mixDirectionDestination, directionData.w);
         
@@ -129,14 +130,17 @@ const simulationDestinationFragmentShader = `
 const randomNeg1To1 = () => (Math.random() -.5) * 2;
 
 const startingPositionCalc = new Vector3();
-const getPersonPosition = (startingPosition) => {
-    startingPositionCalc.copy(startingPosition.center);
-    startingPositionCalc.x += randomNeg1To1() * (startingPosition.width / 2)
-    startingPositionCalc.z += randomNeg1To1() * (startingPosition.height / 2)
+const destinationPositionCalc = new Vector3();
+const getPersonPosition = (graphPosition, destination = false) => {
+    const calcVector3 = destination === false ? startingPositionCalc : destinationPositionCalc;
+    calcVector3.copy(graphPosition.center);
+    calcVector3.x += randomNeg1To1() * (graphPosition.width / 2)
+    calcVector3.z += randomNeg1To1() * (graphPosition.height / 2)
     // console.log(startingPositionCalc);
 }
 
 function useGPGPU(count: number, destinationSpread: number) {
+    const lightsTime = useLightsTime();
     const size = Math.ceil(Math.sqrt(count));
     const gl = useThree((state) => state.gl);
 
@@ -146,51 +150,50 @@ function useGPGPU(count: number, destinationSpread: number) {
         const positionTexture = gpgpuRenderer.createTexture();
         const directionTexture = gpgpuRenderer.createTexture();
         const destinationTexture = gpgpuRenderer.createTexture();
+        const destinationScale = destinationSpread;
 
-        // positions
         for (let i = 0; i < count; i++) {
-            getPersonPosition(startingPositions[i % startingPositions.length]);            
             const i4 = i * 4;
+
+            const graphPosition = positionsGraph[i % positionsGraph.length];
+            getPersonPosition(graphPosition);
+            const connectionDestinations = graphPosition.connections;
+            const randomConnectionDestination = connectionDestinations[Math.floor(Math.random() * graphPosition.connections.length)];
+            const randomConnectionDestinationGraphPosition = positionsGraph.filter(graphPosition => {
+                return graphPosition.name === randomConnectionDestination
+            })[0];
+            getPersonPosition(randomConnectionDestinationGraphPosition, true);
+
+            // positions
             (positionTexture.image.data as any)[i4 + 0] = startingPositionCalc.x; // x
             (positionTexture.image.data as any)[i4 + 1] = 0.01; // y
             (positionTexture.image.data as any)[i4 + 2] = startingPositionCalc.z; // z
-            (positionTexture.image.data as any)[i4 + 3] = 1.0; // w
-            // (positionTexture.image.data as any)[i4 + 0] = (Math.random() * 2.0 - 1.0) * spread; // x
-            // (positionTexture.image.data as any)[i4 + 1] = 0.01; // y
-            // (positionTexture.image.data as any)[i4 + 2] = (Math.random() * 2.0 - 1.0) * spread; // z
-            // (positionTexture.image.data as any)[i4 + 3] = 1.0; // w
+            (positionTexture.image.data as any)[i4 + 3] = graphPosition.number; // w - graphPosition number
+
+            // velocities
+            (directionTexture.image.data as any)[i4 + 0] = (Math.random() - 0.5); // x
+            (directionTexture.image.data as any)[i4 + 1] = 0.0; // y
+            (directionTexture.image.data as any)[i4 + 2] = (Math.random() - 0.5); // z
+            (directionTexture.image.data as any)[i4 + 3] = 1.0; // w
+    
+            // destinations
+            (destinationTexture.image.data as any)[i4 + 0] = destinationPositionCalc.x; // x
+            (destinationTexture.image.data as any)[i4 + 1] = 0.0; // y
+            (destinationTexture.image.data as any)[i4 + 2] = destinationPositionCalc.z; // z
+            (destinationTexture.image.data as any)[i4 + 3] = randomConnectionDestinationGraphPosition.number; // w - destinationPosition number
         }
+
+        // gpugpu variables initialization
         const positionVariable = gpgpuRenderer.addVariable('uPosition', simulationPositionFragmentShader, positionTexture);
         positionVariable.material.uniforms.size = { value: size };        
         positionVariable.material.uniforms.uTime = { value: 0 };
         positionVariable.material.uniforms.uDeltaTime = { value: 0 };
 
-        // velocities
-        for (let i = 0; i < count; i++) {
-            const i4 = i * 4;
-            (directionTexture.image.data as any)[i4 + 0] = (Math.random() - 0.5); // x
-            (directionTexture.image.data as any)[i4 + 1] = 0.0; // y
-            (directionTexture.image.data as any)[i4 + 2] = (Math.random() - 0.5); // z
-            (directionTexture.image.data as any)[i4 + 3] = 1.0; // w
-        }
         const directionVariable = gpgpuRenderer.addVariable('uDirection', simulationDirectionFragmentShader, directionTexture);
         directionVariable.material.uniforms.size = { value: size };        
         directionVariable.material.uniforms.uTime = { value: 0 };
         directionVariable.material.uniforms.uDeltaTime = { value: 0 };
 
-        // destinations
-        const destinationScale = destinationSpread;
-        for (let i = 0; i < count; i++) {
-            const i4 = i * 4;
-            (destinationTexture.image.data as any)[i4 + 0] = (Math.random() * 2.0 - 1.0) * destinationScale; // x
-            (destinationTexture.image.data as any)[i4 + 1] = 0.0; // y
-            (destinationTexture.image.data as any)[i4 + 2] = (Math.random() * 2.0 - 1.0) * destinationScale; // z
-            (destinationTexture.image.data as any)[i4 + 3] = 1.0; // w
-            // (destinationTexture.image.data as any)[i4 + 0] = 0.0;//(Math.random() * 2.0 - 1.0) * destinationScale; // x
-            // (destinationTexture.image.data as any)[i4 + 1] = 0.0; // y
-            // (destinationTexture.image.data as any)[i4 + 2] = 0.0;//(Math.random() * 2.0 - 1.0) * destinationScale; // z
-            // (destinationTexture.image.data as any)[i4 + 3] = 1.0; // w
-        }
         const destinationVariable = gpgpuRenderer.addVariable('uDestination', simulationDestinationFragmentShader, destinationTexture);
         positionVariable.material.uniforms.size = { value: size };        
         destinationVariable.material.uniforms.uTime = { value: 0 };
