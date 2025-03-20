@@ -166,23 +166,51 @@ const Lights = ({
 }
 
 const walkSignalColorDebug2 = new Color(0x00ffff);
+const walkSignalColorDebug3 = new Color(0xffffff);
 
-const WalkingSignal = ({walkSignalConfig}) => {
+const WalkingSignal = ({
+    walkSignalConfig,
+    lightsTime,
+    diagonalWalkSignal
+}) => {
     const three = useMemo(() => {
         return {
             walkingSignalGeometry0: walkingSignalGeometry.clone(),
             walkingSignalLightGeometry0: walkingSignalLightGeometry.clone(),
             walkingSignalGeometry1: walkingSignalGeometry.clone(),
-            walkingSignalLightGeometry1: walkingSignalLightGeometry.clone()
+            walkingSignalLightGeometry1: walkingSignalLightGeometry.clone(),
+            walkingSignalGeometry2: walkingSignalGeometry.clone(),
+            walkingSignalLightGeometry2: walkingSignalLightGeometry.clone()
         }
     }, [])
     
+    const lightOptions = useMemo(() => {
+        const walkSignalTrafficDirection = walkSignalConfig[lightsTime.activeLight.name];
+        const isActiveA = walkSignalTrafficDirection[walkSignalConfig.directionAB.a];
+        const isActiveB = walkSignalTrafficDirection[walkSignalConfig.directionAB.b];
+        const isActiveC = walkSignalConfig.directionAB.c && walkSignalTrafficDirection[walkSignalConfig.directionAB.c];
+
+        const colorA = isActiveA ? lightBulbGreenColor : lightBulbRedColor;
+        const colorB = isActiveB ? lightBulbGreenColor : lightBulbRedColor;
+        const colorC = isActiveC ? lightBulbGreenColor : lightBulbRedColor;
+
+        return {
+            aColorOption: colorA,
+            bColorOption: colorB,
+            cColorOption: colorC    
+        }
+    }, [
+        lightsTime,
+        walkSignalConfig
+    ])
+
     // useEffect(() => {
     //     console.log(walkSignalConfig);
     // }, [walkSignalConfig])
 
     return (
         <group>
+            {/* A */}
             <group position={[0, -2, 1]}>
                 <mesh>
                     <primitive object={three.walkingSignalGeometry0} />
@@ -190,9 +218,10 @@ const WalkingSignal = ({walkSignalConfig}) => {
                 </mesh>
                 <mesh position={[0, 0, .1]}>
                     <primitive object={three.walkingSignalLightGeometry0} />
-                    <meshBasicMaterial color={lightBulbGreenColor} />
+                    <meshBasicMaterial color={lightOptions.aColorOption} />
                 </mesh>
             </group>
+            {/* B */}
             <group position={[1, -2, 0]} rotation={[0, Math.PI / 2, 0]}>
                 <mesh>
                     <primitive object={three.walkingSignalGeometry1} />
@@ -200,9 +229,22 @@ const WalkingSignal = ({walkSignalConfig}) => {
                 </mesh>
                 <mesh position={[0, 0, .1]}>
                     <primitive object={three.walkingSignalLightGeometry1} />
-                    <meshBasicMaterial color={lightBulbRedColor} />
+                    <meshBasicMaterial color={lightOptions.bColorOption} />
                 </mesh>
             </group>
+            {/* C */}
+            {diagonalWalkSignal === true && (
+                <group position={[1, .5, 1]} rotation={[0, Math.PI / 4, 0]}>
+                    <mesh>
+                        <primitive object={three.walkingSignalGeometry2} />
+                        <meshBasicMaterial color={walkSignalColorDebug3} />
+                    </mesh>
+                    <mesh position={[0, 0, .1]}>
+                        <primitive object={three.walkingSignalLightGeometry2} />
+                        <meshBasicMaterial color={lightOptions.bColorOption} />
+                    </mesh>
+                </group>
+            )}
         </group>
     )
 }
@@ -217,7 +259,8 @@ const LightPost = ({
     lightsTime,
     trafficLightsConfig,
     walkSignalConfig,
-    lightPostName
+    lightPostName,
+    diagonalWalkSignal = false
 }) => {
 
     // useEffect(() => {
@@ -269,7 +312,11 @@ const LightPost = ({
                     <meshBasicMaterial color={lightPostColor} />
                 </mesh>
             )}
-            <WalkingSignal walkSignalConfig={walkSignalConfig} />
+            <WalkingSignal 
+                walkSignalConfig={walkSignalConfig} 
+                lightsTime={lightsTime}
+                diagonalWalkSignal={diagonalWalkSignal}
+            />
         </group>
     )
 }
@@ -371,6 +418,7 @@ const WalkingLights = () => {
                 trafficLightsConfig={trafficLightsConfig.northWest}
                 walkSignalConfig={walkSignalConfig.northWest}
                 lightPostName='northWest'
+                diagonalWalkSignal={true}
             />
             
             {/* SouthEast */}
@@ -382,6 +430,7 @@ const WalkingLights = () => {
                 trafficLightsConfig={trafficLightsConfig.southEast}
                 walkSignalConfig={walkSignalConfig.southEast}
                 lightPostName='southEast'
+                diagonalWalkSignal={true}
             />        
             
             {/* NorthEast */}

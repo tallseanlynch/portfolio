@@ -19,45 +19,67 @@ const trafficLightsConfig = {
 const walkSignalConfig = {
     // light post
     northWest: {
+        directionAB: {
+            a: 'south',
+            b: 'east',
+            c: 'diagonal'
+        },
         // traffic direction
         northSouth: {
             // walk signal direction
             // true = green
             south: true,
-            east: false
+            east: false,
+            diagonal: false
         },
         northSouthTurning: {
             south: false,
-            east: false
+            east: false,
+            diagonal: false
         },
         westTurning: {
             south: false,
-            east: false
+            east: false,
+            diagonal: false
         },
         noTraffic: {
             south: true,
-            east: true
+            east: true,
+            diagonal: true
         }
     },
     northEast: {
+        directionAB: {
+            a: 'west',
+            b: 'south',
+            c: 'diagonal'
+        },
         northSouth: {
             south: true,
-            west: false
+            west: false,
+            diagonal: false
         },
         northSouthTurning: {
             south: true,
-            west: false
+            west: false,
+            diagonal: false
         },
         westTurning: {
             south: true,
-            west: false
+            west: false,
+            diagonal: false
         },
         noTraffic: {
             south: true,
-            west: true
+            west: true,
+            diagonal: true
         }
     },
     southEast: {
+        directionAB: {
+            a: 'north',
+            b: 'west'
+        },
         northSouth: {
             north: true,
             west: false
@@ -67,15 +89,19 @@ const walkSignalConfig = {
             west: false
         },
         westTurning: {
-            south: true,
+            north: true,
             west: false
         },
         noTraffic: {
-            south: true,
+            north: true,
             west: true
         }
     },
     southWest: {
+        directionAB: {
+            a: 'east',
+            b: 'north'
+        },
         northSouth: {
             north: true,
             east: false
@@ -85,12 +111,12 @@ const walkSignalConfig = {
             east: false
         },
         westTurning: {
-            south: false,
-            west: false
+            north: false,
+            east: false
         },
         noTraffic: {
-            south: true,
-            west: true
+            north: true,
+            east: true
         }        
     }
 };
