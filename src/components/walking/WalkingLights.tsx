@@ -234,7 +234,7 @@ const WalkingSignal = ({
             </group>
             {/* C */}
             {diagonalWalkSignal === true && (
-                <group position={[1, .5, 1]} rotation={[0, Math.PI / 4, 0]}>
+                <group position={[.5, -.25, .5]} rotation={[0, Math.PI / 4, 0]}>
                     <mesh>
                         <primitive object={three.walkingSignalGeometry2} />
                         <meshBasicMaterial color={walkSignalColor} />
