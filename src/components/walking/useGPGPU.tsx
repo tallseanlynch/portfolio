@@ -1,5 +1,4 @@
-import { graphArrays } from './positionsGraph';
-import { positionsGraph } from './positionsGraph';
+import { graphArrays, positionsGraph } from './positionsGraph';
 // import { useLightsTime } from './useLightsTime';
 import { useThree } from '@react-three/fiber';
 import { useEffect, useMemo } from 'react';
@@ -101,7 +100,7 @@ const simulationDirectionFragmentShader = `
         }
 
         if(numberOfPotentialCollisions < 1) {
-            velocity.w = .5;
+            velocity.w = 1.0;
         }
 
         if(distanceToDestination < .1) {
@@ -126,6 +125,12 @@ const simulationDestinationFragmentShader = `
     uniform int uSize;
     uniform float uTime;
     uniform float uDeltaTime;
+    uniform int graphRows;
+    uniform int uGraphConnectionsLengths[${graphArrays.graphPositions.length}];
+    uniform int uGraphTerminationsLengths[${graphArrays.graphPositions.length}];
+    uniform float uPositionsData[${graphArrays.dataPositions.length}];
+    uniform float uConnectionsData[${graphArrays.dataConnections.length}];
+    uniform float uTerminationsData[${graphArrays.dataTerminations.length}];
 
     float random(float n) {
         return fract(sin(n + uTime) * 43758.5453123);
@@ -134,16 +139,40 @@ const simulationDestinationFragmentShader = `
     void main() {
         vec2 uv = gl_FragCoord.xy / resolution.xy;
         vec4 destinationData = texture(uDestination, uv);
-        vec4 positionData = texture(uDestination, uv);
+        vec4 positionData = texture(uPosition, uv);
 
-        vec3 destinationDataCalc = vec3(positionData.xyz);
+        vec3 destinationDataCalc = vec3(destinationData.xyz);
         vec3 positionDataCalc = vec3(positionData.xyz);
 
         vec4 finalDestination = destinationData;
+
         float distanceFromDestination = distance(destinationDataCalc, positionDataCalc);
-        if(distanceFromDestination <= 1.3) {
-            float currentDestinationNumber = destinationData.w;
-            int graphConnectionArrayNumber = int(currentDestinationNumber);
+        if(distanceFromDestination <= 1.5) {
+            float currentDestination = destinationData.w;
+            int currentDestinationInt = int(currentDestination);
+
+            int connectionsLengthInt = uGraphConnectionsLengths[currentDestinationInt];
+            float connectionLength = float(connectionsLengthInt);
+            float randomConnectionLength = random(1.0) * connectionLength;
+            int randomConnectionLengthInt = int(randomConnectionLength);
+
+            float newDestinationNumber = uConnectionsData[(currentDestinationInt * 6) + randomConnectionLengthInt];
+            int newDestinationNumberInt = int(newDestinationNumber);
+
+            finalDestination = vec4(
+                uPositionsData[(5 * newDestinationNumberInt) + 0], 
+                uPositionsData[(5 * newDestinationNumberInt) + 1], 
+                uPositionsData[(5 * newDestinationNumberInt) + 2], 
+                newDestinationNumber
+            );
+
+            // finalDestination = vec4(
+            //     uPositionsData[(5 * 0) + 0], 
+            //     uPositionsData[(5 * 0) + 1], 
+            //     uPositionsData[(5 * 0) + 2], 
+            //     1.0
+            // );
+
         }
 
         gl_FragColor = finalDestination;
@@ -230,11 +259,6 @@ function useGPGPU(count: number) {
         positionVariable.material.uniforms.uDeltaTime = { value: 0 };
         positionVariable.material.uniforms.uGraphRows = { value: graphArrays.graphPositions.length };
         positionVariable.material.uniforms.uGraphCols = { value: 10 };
-        positionVariable.material.uniforms.uDataPositionsTexture = { value: graphArrays.dataPositionsTexture };
-        positionVariable.material.uniforms.uDataConnectionsTexture = { value: graphArrays.dataConnectionsTexture };
-        positionVariable.material.uniforms.uDataTerminationsTexture = { value: graphArrays.dataTerminationsTexture };
-        positionVariable.material.uniforms.uGraphConnectionsLengths = { value: graphArrays.graphConnectionsLengths };
-        positionVariable.material.uniforms.uGraphTerminationsLengths = { value: graphArrays.graphTerminationsLengths };
 
         const directionVariable = gpgpuRenderer.addVariable('uDirection', simulationDirectionFragmentShader, directionTexture);
         directionVariable.material.uniforms.uSize = { value: size };        
@@ -247,9 +271,9 @@ function useGPGPU(count: number) {
         destinationVariable.material.uniforms.uDeltaTime = { value: 0 };
         destinationVariable.material.uniforms.uGraphRows = { value: graphArrays.graphPositions.length };
         destinationVariable.material.uniforms.uGraphCols = { value: 10 };
-        destinationVariable.material.uniforms.uDataPositionsTexture = { value: graphArrays.dataPositionsTexture };
-        destinationVariable.material.uniforms.uDataConnectionsTexture = { value: graphArrays.dataConnectionsTexture };
-        destinationVariable.material.uniforms.uDataTerminationsTexture = { value: graphArrays.dataTerminationsTexture };
+        destinationVariable.material.uniforms.uPositionsData = { value: graphArrays.dataPositions };
+        destinationVariable.material.uniforms.uConnectionsData = { value: graphArrays.dataConnections };
+        destinationVariable.material.uniforms.uTerminationsData = { value: graphArrays.dataTerminations };
         destinationVariable.material.uniforms.uGraphConnectionsLengths = { value: graphArrays.graphConnectionsLengths };
         destinationVariable.material.uniforms.uGraphTerminationsLengths = { value: graphArrays.graphTerminationsLengths };
 
@@ -259,11 +283,6 @@ function useGPGPU(count: number) {
         stateVariable.material.uniforms.uDeltaTime = { value: 0 };
         stateVariable.material.uniforms.uGraphRows = { value: graphArrays.graphPositions.length };
         stateVariable.material.uniforms.uGraphCols = { value: 10 };
-        stateVariable.material.uniforms.uDataPositionsTexture = { value: graphArrays.dataPositionsTexture };
-        stateVariable.material.uniforms.uDataConnectionsTexture = { value: graphArrays.dataConnectionsTexture };
-        stateVariable.material.uniforms.uDataTerminationsTexture = { value: graphArrays.dataTerminationsTexture };
-        stateVariable.material.uniforms.uGraphConnectionsLengths = { value: graphArrays.graphConnectionsLengths };
-        stateVariable.material.uniforms.uGraphTerminationsLengths = { value: graphArrays.graphTerminationsLengths };
 
         // init
         gpgpuRenderer.setVariableDependencies(positionVariable, [positionVariable, directionVariable, destinationVariable, stateVariable]);

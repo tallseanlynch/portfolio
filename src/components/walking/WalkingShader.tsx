@@ -1,3 +1,7 @@
+// import { 
+//   graphArrays, 
+//   // positionsGraph 
+// } from './positionsGraph';
 import { useGPGPU } from './useGPGPU';
 import { WalkingBuildings } from './WalkingBuildings';
 import { WalkingCars } from './WalkingCars';
@@ -84,6 +88,23 @@ const WalkingPeople = ({
 
   }, [])
 
+  // const testUVShaderMaterial = useMemo(() => new ShaderMaterial({
+  //   vertexShader: `
+  //   varying vec2 vUv;
+
+  //   void main() {
+  //     vUv = uv;
+  //     gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+  //   }
+  // `,
+  // fragmentShader: `
+  //   varying vec2 vUv;
+
+  //   void main() {
+  //     gl_FragColor = vec4(vUv.x, vUv.y, 0.0, 1.0);
+  //   }
+  // `
+  // }), [])
 
   const shaderMaterial = useMemo(() => new ShaderMaterial({
     uniforms: {
@@ -255,8 +276,8 @@ const WalkingPeople = ({
         );      
       }
       console.log(`bufferIndex: ${l / 4}`)
-      console.log(`Pos: ${debugBufferPosition[l]}, ${debugBufferPosition[l + 1]}, ${debugBufferPosition[l + 2]}, ${debugBufferPosition[l + 3]}`);
-      console.log(`Dir: ${debugBufferDirection[l]}, ${debugBufferDirection[l + 1]}, ${debugBufferDirection[l + 2]}, ${debugBufferDirection[l + 3]}`);
+      // console.log(`Pos: ${debugBufferPosition[l]}, ${debugBufferPosition[l + 1]}, ${debugBufferPosition[l + 2]}, ${debugBufferPosition[l + 3]}`);
+      // console.log(`Dir: ${debugBufferDirection[l]}, ${debugBufferDirection[l + 1]}, ${debugBufferDirection[l + 2]}, ${debugBufferDirection[l + 3]}`);
       console.log(`Des: ${debugBufferDestination[l]}, ${debugBufferDestination[l + 1]}, ${debugBufferDestination[l + 2]}, ${debugBufferDestination[l + 3]}`);
     }
 
@@ -293,7 +314,7 @@ const WalkingPeople = ({
       renderTrackingPlane(gl);
     }
 
-    if(consoleLogDebugBuffer && clock.elapsedTime < 10) {
+    if(consoleLogDebugBuffer && clock.elapsedTime < 200) {
       console.log(clock.elapsedTime)
       logDebugBuffer(gl);
     }
@@ -345,7 +366,7 @@ const WalkingPeople = ({
   return (
     <>      
       {/* <gridHelper 
-        args={[100, 100, 0xaaaaaa, 0xaaaaaa]} 
+        args={[300, 300, 0xaaaaaa, 0xaaaaaa]} 
         position={[0, 0.01, 0]}
       /> */}
       
@@ -362,6 +383,10 @@ const WalkingPeople = ({
       <WalkingGround />
       {/* <WalkingLights lightsTime={lightsTime}/> */}
       <WalkingLights />
+
+      {/* <primitive object={testUVShaderMaterial} /> */}
+
+
       {/* 
       
       <mesh 
@@ -428,7 +453,7 @@ const WalkingShaderCanvas = () => {
       <WalkingPeople 
         width={50} 
         renderDebugPlane={false}
-        consoleLogDebugBuffer={false}      
+        consoleLogDebugBuffer={false}
         checkVector3s={false}
       />
       <OrbitControls/>
