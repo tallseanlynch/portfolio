@@ -1,4 +1,3 @@
-// import { DataTexture, FloatType, RGBAFormat, Vector3 } from 'three';
 import { Vector3 } from 'three';
 
 type GraphNode = {
@@ -10,7 +9,7 @@ type GraphNode = {
     startingConnections?: boolean;
     connections: string[];
     termination?: string[];
-    walkConditions?: {
+    walkConditions: {
         [key: string]: {
             northSouth: boolean,
             northSouthTurning: boolean,
@@ -71,7 +70,21 @@ const positionsGraph: GraphNode[] = [
         connections: [
             'NorthEast-Corner',
             'NorthEast-NorthStreet-CornerEnd'
-        ]
+        ],
+        walkConditions: {
+            'NorthEast-Corner': {
+                northSouth: true,
+                northSouthTurning: true,
+                westTurning: true,
+                noTraffic: true
+            },
+            'NorthEast-NorthStreet-CornerEnd': {
+                northSouth: true,
+                northSouthTurning: true,
+                westTurning: true,
+                noTraffic: true
+            }
+        }
     },
     {
         name: 'NorthEast-NorthStreet-CornerEnd',
@@ -84,7 +97,15 @@ const positionsGraph: GraphNode[] = [
         ],
         termination: [
             'SouthEast-SouthStreet-CornerEnd'
-        ]
+        ],
+        walkConditions: {
+            'NorthEast-Corner': {
+                northSouth: true,
+                northSouthTurning: true,
+                westTurning: true,
+                noTraffic: true
+            }
+        }
     },
     {
         name: 'NorthEast-EastStreet',
@@ -96,7 +117,21 @@ const positionsGraph: GraphNode[] = [
         connections: [
             'NorthEast-Corner',
             'NorthEast-EastStreet-CornerEnd'
-        ]
+        ],
+        walkConditions: {
+            'NorthEast-Corner': {
+                northSouth: true,
+                northSouthTurning: true,
+                westTurning: true,
+                noTraffic: true
+            },
+            'NorthEast-EastStreet-CornerEnd': {
+                northSouth: true,
+                northSouthTurning: true,
+                westTurning: true,
+                noTraffic: true
+            }
+        }
     },
     {
         name: 'NorthEast-EastStreet-CornerEnd',
@@ -109,7 +144,15 @@ const positionsGraph: GraphNode[] = [
         ],
         termination: [
             'NorthWest-WestStreet-CornerEnd'
-        ]
+        ],
+        walkConditions: {
+            'NorthEast-Corner': {
+                northSouth: true,
+                northSouthTurning: true,
+                westTurning: true,
+                noTraffic: true
+            }
+        }
     },
     
     // SouthEast
@@ -125,7 +168,39 @@ const positionsGraph: GraphNode[] = [
             'SouthEast-SouthStreet-CornerEnd',
             'SouthEast-EastStreet-CornerEnd',
             'NorthWest-Corner'
-        ]
+        ],
+        walkConditions: {
+            'NorthEast-Corner': {
+                northSouth: true,
+                northSouthTurning: true,
+                westTurning: true,
+                noTraffic: true
+            },
+            'SouthWest-Corner': {
+                northSouth: false,
+                northSouthTurning: false,
+                westTurning: false,
+                noTraffic: true
+            },
+            'SouthEast-SouthStreet-CornerEnd': {
+                northSouth: true,
+                northSouthTurning: true,
+                westTurning: true,
+                noTraffic: true
+            },
+            'SouthEast-EastStreet-CornerEnd': {
+                northSouth: true,
+                northSouthTurning: true,
+                westTurning: true,
+                noTraffic: true
+            },
+            'NorthWest-Corner': {
+                northSouth: false,
+                northSouthTurning: false,
+                westTurning: false,
+                noTraffic: true
+            }
+        }
     },
     {
         name: 'SouthEast-SouthStreet',
@@ -137,7 +212,21 @@ const positionsGraph: GraphNode[] = [
         connections: [
             'SouthEast-Corner',
             'SouthEast-SouthStreet-CornerEnd'
-        ]
+        ],
+        walkConditions: {
+            'SouthEast-Corner': {
+                northSouth: true,
+                northSouthTurning: true,
+                westTurning: true,
+                noTraffic: true
+            },
+            'SouthEast-SouthStreet-CornerEnd': {
+                northSouth: true,
+                northSouthTurning: true,
+                westTurning: true,
+                noTraffic: true
+            }
+        }
     },
     {
         name: 'SouthEast-SouthStreet-CornerEnd',
@@ -150,7 +239,15 @@ const positionsGraph: GraphNode[] = [
         ],
         termination: [
             'NorthEast-NorthStreet-CornerEnd'
-        ]
+        ],
+        walkConditions: {
+            'SouthEast-Corner': {
+                northSouth: true,
+                northSouthTurning: true,
+                westTurning: true,
+                noTraffic: true
+            }
+        }
     },
     {
         name: 'SouthEast-EastStreet',
@@ -162,7 +259,21 @@ const positionsGraph: GraphNode[] = [
         connections: [
             'SouthEast-Corner',
             'SouthEast-EastStreet-CornerEnd'
-        ]
+        ],
+        walkConditions: {
+            'SouthEast-Corner': {
+                northSouth: true,
+                northSouthTurning: true,
+                westTurning: true,
+                noTraffic: true
+            },
+            'SouthEast-EastStreet-CornerEnd': {
+                northSouth: true,
+                northSouthTurning: true,
+                westTurning: true,
+                noTraffic: true
+            }
+        }
     },
     {
         name: 'SouthEast-EastStreet-CornerEnd',
@@ -175,7 +286,15 @@ const positionsGraph: GraphNode[] = [
         ],
         termination: [
             'SouthWest-WestStreet-CornerEnd'
-        ]
+        ],
+        walkConditions: {
+            'SouthEast-Corner': {
+                northSouth: true,
+                northSouthTurning: true,
+                westTurning: true,
+                noTraffic: true
+            }
+        }
     },
 
     // NorthWest
@@ -191,7 +310,39 @@ const positionsGraph: GraphNode[] = [
             'NorthWest-NorthStreet-CornerEnd',
             'NorthWest-WestStreet-CornerEnd',
             'SouthEast-Corner'
-        ]
+        ],
+        walkConditions: {
+            'SouthWest-Corner': {
+                northSouth: true,
+                northSouthTurning: false,
+                westTurning: false,
+                noTraffic: true
+            },
+            'NorthEast-Corner': {
+                northSouth: false,
+                northSouthTurning: false,
+                westTurning: false,
+                noTraffic: true
+            },
+            'NorthWest-NorthStreet-CornerEnd': {
+                northSouth: true,
+                northSouthTurning: true,
+                westTurning: true,
+                noTraffic: true
+            },
+            'NorthWest-WestStreet-CornerEnd': {
+                northSouth: true,
+                northSouthTurning: true,
+                westTurning: true,
+                noTraffic: true
+            },
+            'SouthEast-Corner': {
+                northSouth: false,
+                northSouthTurning: false,
+                westTurning: false,
+                noTraffic: true
+            }
+        }
     },
     {
         name: 'NorthWest-NorthStreet',
@@ -203,7 +354,21 @@ const positionsGraph: GraphNode[] = [
         connections: [
             'NorthWest-Corner',
             'NorthWest-NorthStreet-CornerEnd'
-        ]
+        ],
+        walkConditions: {
+            'NorthWest-Corner': {
+                northSouth: true,
+                northSouthTurning: true,
+                westTurning: true,
+                noTraffic: true
+            },
+            'NorthWest-NorthStreet-CornerEnd': {
+                northSouth: true,
+                northSouthTurning: true,
+                westTurning: true,
+                noTraffic: true
+            }
+        }
     },
     {
         name: 'NorthWest-NorthStreet-CornerEnd',
@@ -216,7 +381,15 @@ const positionsGraph: GraphNode[] = [
         ],
         termination: [
             'SouthWest-SouthStreet-CornerEnd'
-        ]
+        ],
+        walkConditions: {
+            'NorthWest-Corner': {
+                northSouth: true,
+                northSouthTurning: true,
+                westTurning: true,
+                noTraffic: true
+            }
+        }
     },
     {
         name: 'NorthWest-WestStreet',
@@ -228,7 +401,21 @@ const positionsGraph: GraphNode[] = [
         connections: [
             'NorthWest-Corner',
             'NorthWest-WestStreet-CornerEnd'
-        ]
+        ],
+        walkConditions: {
+            'NorthWest-Corner': {
+                northSouth: true,
+                northSouthTurning: true,
+                westTurning: true,
+                noTraffic: true
+            },
+            'NorthWest-WestStreet-CornerEnd': {
+                northSouth: true,
+                northSouthTurning: true,
+                westTurning: true,
+                noTraffic: true
+            }
+        }
     },
     {
         name: 'NorthWest-WestStreet-CornerEnd',
@@ -241,7 +428,15 @@ const positionsGraph: GraphNode[] = [
         ],
         termination: [
             'NorthEast-EastStreet-CornerEnd'
-        ]
+        ],
+        walkConditions: {
+            'NorthWest-Corner': {
+                northSouth: true,
+                northSouthTurning: true,
+                westTurning: true,
+                noTraffic: true
+            }
+        }
     },
 
     // SouthWest
@@ -256,7 +451,33 @@ const positionsGraph: GraphNode[] = [
             'SouthEast-Corner',
             'SouthWest-SouthStreet-CornerEnd',
             'SouthWest-WestStreet-CornerEnd'
-        ]
+        ],
+        walkConditions: {
+            'NorthWest-Corner': {
+                northSouth: true,
+                northSouthTurning: false,
+                westTurning: false,
+                noTraffic: true
+            },
+            'SouthEast-Corner': {
+                northSouth: false,
+                northSouthTurning: false,
+                westTurning: false,
+                noTraffic: true
+            },
+            'SouthWest-SouthStreet-CornerEnd': {
+                northSouth: true,
+                northSouthTurning: true,
+                westTurning: true,
+                noTraffic: true
+            },
+            'SouthWest-WestStreet-CornerEnd': {
+                northSouth: true,
+                northSouthTurning: true,
+                westTurning: true,
+                noTraffic: true
+            }
+        }
     },
     {
         name: 'SouthWest-SouthStreet',
@@ -268,7 +489,21 @@ const positionsGraph: GraphNode[] = [
         connections: [
             'SouthWest-Corner',
             'SouthWest-SouthStreet-CornerEnd'
-        ]
+        ],
+        walkConditions: {
+            'SouthWest-Corner': {
+                northSouth: true,
+                northSouthTurning: true,
+                westTurning: true,
+                noTraffic: true
+            },
+            'SouthWest-SouthStreet-CornerEnd': {
+                northSouth: true,
+                northSouthTurning: true,
+                westTurning: true,
+                noTraffic: true
+            }
+        }
     },
     {
         name: 'SouthWest-SouthStreet-CornerEnd',
@@ -281,7 +516,15 @@ const positionsGraph: GraphNode[] = [
         ],
         termination: [
             'NorthWest-NorthStreet-CornerEnd'
-        ]
+        ],
+        walkConditions: {
+            'SouthWest-Corner': {
+                northSouth: true,
+                northSouthTurning: true,
+                westTurning: true,
+                noTraffic: true
+            }
+        }
     },
     {
         name: 'SouthWest-WestStreet',
@@ -293,7 +536,21 @@ const positionsGraph: GraphNode[] = [
         connections: [
             'SouthWest-Corner',
             'SouthWest-WestStreet-CornerEnd'
-        ]
+        ],
+        walkConditions: {
+            'SouthWest-Corner': {
+                northSouth: true,
+                northSouthTurning: true,
+                westTurning: true,
+                noTraffic: true
+            },
+            'SouthWest-WestStreet-CornerEnd': {
+                northSouth: true,
+                northSouthTurning: true,
+                westTurning: true,
+                noTraffic: true
+            }
+        }
     },
     {
         name: 'SouthWest-WestStreet-CornerEnd',
@@ -306,7 +563,15 @@ const positionsGraph: GraphNode[] = [
         ],
         termination: [
             'SouthEast-EastStreet-CornerEnd'
-        ]
+        ],
+        walkConditions: {
+            'SouthWest-Corner': {
+                northSouth: true,
+                northSouthTurning: true,
+                westTurning: true,
+                noTraffic: true
+            }
+        }
     }
 ];
 
@@ -314,6 +579,8 @@ const positionsGraph: GraphNode[] = [
 const createGraphArrays = (graphs: GraphNode[]) => {
     const graphPositions: number[][] = Array(graphs.length).fill([]);
     const graphConnections: number[][] = Array(graphs.length).fill([]);
+    const graphConnectionsWalkConditions: boolean[][][] = Array(graphs.length).fill([]);
+    const graphConnectionsWalkConditionsFlatInt: number[][] = Array(graphs.length).fill(0);
     const graphTerminations: number[][] = Array(graphs.length).fill([]);
 
     const graphConnectionsLengths: number[] = Array(graphs.length).fill(0);
@@ -337,6 +604,19 @@ const createGraphArrays = (graphs: GraphNode[]) => {
             })
         })
         graphConnections[graph.number] = graphConnectionNumbers;
+
+        const graphConnectionBooleans: boolean[][] = [];
+        const graphConnectionIntFlat: number[] = [];
+        const walkConditionsKeys = Object.keys(graph.walkConditions);
+        walkConditionsKeys.forEach(wc => {
+            const walkConditionValues = Object.values(graph.walkConditions[wc]);
+            const walkConditionValuesInt = walkConditionValues.map(v => v === true ? 1 : 0);
+            graphConnectionBooleans.push(walkConditionValues);
+            graphConnectionIntFlat.push(...walkConditionValuesInt);
+        });
+        graphConnectionsWalkConditions[graph.number] = graphConnectionBooleans;
+        graphConnectionsWalkConditionsFlatInt[graph.number] = graphConnectionIntFlat;
+
 
         const graphTerminationNumbers: number[] = [];
         if(graph.termination !== undefined) {
@@ -366,6 +646,9 @@ const createGraphArrays = (graphs: GraphNode[]) => {
     const connectionsDataSize = 6 * dataHeight;
     const dataConnections = new Float32Array(connectionsDataSize);
 
+    const connectionsWalkConditionsDataSize = 20 * dataHeight;
+    const dataConnectionsWalkConditions = new Float32Array(connectionsWalkConditionsDataSize);
+
     const terminationsDataSize = 2 * dataHeight;
     const dataTerminations = new Float32Array(terminationsDataSize);
 
@@ -377,7 +660,7 @@ const createGraphArrays = (graphs: GraphNode[]) => {
 
     dataArrays.forEach(dataArray => {
         for(let dataIndex = 0; dataIndex < dataArray.length; dataIndex ++) {
-            dataArray[dataIndex] = 0.0;
+            dataArray[dataIndex] = -1.0;
         }
     });
 
@@ -392,6 +675,10 @@ const createGraphArrays = (graphs: GraphNode[]) => {
             dataConnections[dataRow * 6 + graphConnectionIndex] = graphConnections[dataRow][graphConnectionIndex];
         }
 
+        for(let graphConnectionWalkConditionIndex = 0; graphConnectionWalkConditionIndex < graphConnectionsWalkConditionsFlatInt[dataRow].length; graphConnectionWalkConditionIndex++) {
+            dataConnectionsWalkConditions[dataRow * 20 + graphConnectionWalkConditionIndex] = graphConnectionsWalkConditionsFlatInt[dataRow][graphConnectionWalkConditionIndex];
+        }
+
         for(let graphTerminationIndex = 0; graphTerminationIndex < graphTerminationsLengths[dataRow]; graphTerminationIndex++) {
             dataTerminations[dataRow * 2 + graphTerminationIndex] = graphTerminations[dataRow][graphTerminationIndex];
         }
@@ -400,11 +687,14 @@ const createGraphArrays = (graphs: GraphNode[]) => {
     return {
         graphPositions,
         graphConnections,
+        graphConnectionsWalkConditions,
+        graphConnectionsWalkConditionsFlatInt,
         graphTerminations,
         graphConnectionsLengths,
         graphTerminationsLengths,
         dataPositions,
         dataConnections,
+        dataConnectionsWalkConditions,
         dataTerminations
     }
 }

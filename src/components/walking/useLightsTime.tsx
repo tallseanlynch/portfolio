@@ -7,7 +7,9 @@ const useLightsTime = () => {
           name: 'northSouth',
           number: 0,
           length: 45 * 1000
-      }
+        },
+        activeLightNumber: 0,
+        activeLightTimeLeft: 0
     });
   
     useEffect(() => {
@@ -62,11 +64,16 @@ const useLightsTime = () => {
         }
   
         const lightsInterval = setInterval(() => {
-            setLightsTime(current => ({
-                ...current, 
-                currentTime: current.currentTime + lightsIntervalLength,
-                activeLight: determineActiveLight(current.currentTime + lightsIntervalLength)
-            }));
+            setLightsTime(current => {
+                const currentActiveLight = determineActiveLight(current.currentTime + lightsIntervalLength)
+                return {
+                    ...current, 
+                    currentTime: current.currentTime + lightsIntervalLength,
+                    activeLight: currentActiveLight,
+                    activeLightNumber: currentActiveLight.number,
+                    activeLightTimeLeft: currentActiveLight.timeLeft
+                }
+            });
         }, lightsIntervalLength)
   
         return () => clearInterval(lightsInterval);

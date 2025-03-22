@@ -1,5 +1,4 @@
 import { graphArrays, positionsGraph } from './positionsGraph';
-// import { useLightsTime } from './useLightsTime';
 import { useThree } from '@react-three/fiber';
 import { useEffect, useMemo } from 'react';
 import { GPUComputationRenderer } from 'three/examples/jsm/misc/GPUComputationRenderer.js';
@@ -15,14 +14,11 @@ const simulationPositionFragmentShader = `
         vec2 uv = gl_FragCoord.xy / resolution.xy;
         vec4 positionData = texture(uPosition, uv);
         vec4 directionData = texture(uDirection, uv);
-        vec4 destinationData = texture(uDestination, uv);
 
         vec3 positionDataCalc = vec3(positionData.xyz);
         vec3 directionDataCalc = vec3(directionData.xyz);
-        vec3 destinationDataCalc = vec3(destinationData.xyz);
         positionDataCalc.y = 0.0;
 
-        // gl_FragColor = positionData + vec4(clamp(directionDataCalc * .1 * atDestinationModifier, -1.0, 1.0), 1.0);
         gl_FragColor = vec4(positionDataCalc, 1.0) + vec4(clamp(directionDataCalc * .075 * directionData.w, -1.0, 1.0), 0.0);
     }
 `
@@ -30,6 +26,10 @@ const simulationDirectionFragmentShader = `
     uniform int uSize;
     uniform float uTime;
     uniform float uDeltaTime;
+    uniform int uActiveLightNumber;
+    uniform int uActiveLightTimeLeft;
+    uniform int uConnectionsWalkConditionsData[${graphArrays.dataConnectionsWalkConditions.length}];
+    uniform float uConnectionsData[${graphArrays.dataConnections.length}];
 
     void main() {
         float time = uTime;
@@ -40,7 +40,7 @@ const simulationDirectionFragmentShader = `
 
         vec3 positionDataCalc = vec3(positionData.xyz);
         vec3 directionDataCalc = vec3(directionData.xyz);
-        vec3 destinationDataCalc = vec3(destinationData.xyz);
+        vec3 destinationDataCalc = vec3(destinationData.x, 0.0, destinationData.z);
 
         vec3 directionToDestination = normalize(destinationDataCalc - positionDataCalc);
         float interpolationFactor = .25;//clamp(uTime * .01, 0.0, 1.0);
@@ -117,6 +117,33 @@ const simulationDirectionFragmentShader = `
             velocity.w = 0.0;
         }
 
+        // uniform int uActiveLightNumber;
+        // uniform int uActiveLightTimeLeft;
+        // uniform int uConnectionsWalkConditionsData[${graphArrays.dataConnectionsWalkConditions.length}];
+        // uniform float uConnectionsData[${graphArrays.dataConnections.length}];
+
+        int currentLocation = int(destinationData.y); // current position graph.number
+        int currentDestination = int(destinationData.w); // current position graph.number
+        int northEastCornerIndexInt = 0;
+        int southWestCornerIndexInt = 15;
+        int currentLocationConnectionIndex = 0;//int(uConnectionsData[0]);
+
+        for(int i = 0; i < 6; i++) {
+            if(int(uConnectionsData[(currentLocation * 6) + i]) == currentDestination) {
+                currentLocationConnectionIndex = i;
+            }
+        }
+
+        // if(currentLocation == 5 && currentLocationConnectionIndex == 1) {
+        //     velocity.w = 0.0;
+        // }
+
+        int canMoveToDestination = uConnectionsWalkConditionsData[
+            (currentLocation * 20) + (currentLocationConnectionIndex * 4) + uActiveLightNumber
+        ];
+        float canMoveToDestinationModifier = float(canMoveToDestination);
+        velocity.w *= canMoveToDestinationModifier;
+
         gl_FragColor = velocity;
     }
 `
@@ -141,7 +168,7 @@ const simulationDestinationFragmentShader = `
         vec4 destinationData = texture(uDestination, uv);
         vec4 positionData = texture(uPosition, uv);
 
-        vec3 destinationDataCalc = vec3(destinationData.xyz);
+        vec3 destinationDataCalc = vec3(destinationData.x, 0.0, destinationData.z);
         vec3 positionDataCalc = vec3(positionData.xyz);
 
         vec4 finalDestination = destinationData;
@@ -161,18 +188,11 @@ const simulationDestinationFragmentShader = `
 
             finalDestination = vec4(
                 uPositionsData[(5 * newDestinationNumberInt) + 0], 
-                uPositionsData[(5 * newDestinationNumberInt) + 1], 
+                // uPositionsData[(5 * newDestinationNumberInt) + 1],
+                currentDestination, 
                 uPositionsData[(5 * newDestinationNumberInt) + 2], 
                 newDestinationNumber
             );
-
-            // finalDestination = vec4(
-            //     uPositionsData[(5 * 0) + 0], 
-            //     uPositionsData[(5 * 0) + 1], 
-            //     uPositionsData[(5 * 0) + 2], 
-            //     1.0
-            // );
-
         }
 
         gl_FragColor = finalDestination;
@@ -241,7 +261,7 @@ function useGPGPU(count: number) {
     
             // destinations
             (destinationTexture.image.data as any)[i4 + 0] = destinationPositionCalc.x; // x
-            (destinationTexture.image.data as any)[i4 + 1] = 0.0; // y
+            (destinationTexture.image.data as any)[i4 + 1] = graphPosition.number; // y - current graphPosition number
             (destinationTexture.image.data as any)[i4 + 2] = destinationPositionCalc.z; // z
             (destinationTexture.image.data as any)[i4 + 3] = randomConnectionDestinationGraphPosition.number; // w - destinationPosition number
 
@@ -264,7 +284,11 @@ function useGPGPU(count: number) {
         directionVariable.material.uniforms.uSize = { value: size };        
         directionVariable.material.uniforms.uTime = { value: 0 };
         directionVariable.material.uniforms.uDeltaTime = { value: 0 };
-
+        directionVariable.material.uniforms.uActiveLightNumber = { value: 0 };
+        directionVariable.material.uniforms.uActiveLightTimeLeft = { value: 0 };
+        directionVariable.material.uniforms.uConnectionsData = { value: graphArrays.dataConnections };
+        directionVariable.material.uniforms.uConnectionsWalkConditionsData = { value: graphArrays.dataConnectionsWalkConditions };
+    
         const destinationVariable = gpgpuRenderer.addVariable('uDestination', simulationDestinationFragmentShader, destinationTexture);
         destinationVariable.material.uniforms.uSize = { value: size };        
         destinationVariable.material.uniforms.uTime = { value: 0 };
@@ -273,10 +297,11 @@ function useGPGPU(count: number) {
         destinationVariable.material.uniforms.uGraphCols = { value: 10 };
         destinationVariable.material.uniforms.uPositionsData = { value: graphArrays.dataPositions };
         destinationVariable.material.uniforms.uConnectionsData = { value: graphArrays.dataConnections };
+        // destinationVariable.material.uniforms.uConnectionsWalkConditionsData = { value: graphArrays.dataConnectionsWalkConditions };
         destinationVariable.material.uniforms.uTerminationsData = { value: graphArrays.dataTerminations };
         destinationVariable.material.uniforms.uGraphConnectionsLengths = { value: graphArrays.graphConnectionsLengths };
         destinationVariable.material.uniforms.uGraphTerminationsLengths = { value: graphArrays.graphTerminationsLengths };
-
+        
         const stateVariable = gpgpuRenderer.addVariable('uState', simulationStateFragmentShader, stateTexture);
         stateVariable.material.uniforms.uSize = { value: size };        
         stateVariable.material.uniforms.uTime = { value: 0 };

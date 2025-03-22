@@ -1,7 +1,4 @@
-// import { 
-//   graphArrays, 
-//   // positionsGraph 
-// } from './positionsGraph';
+import { useLightsTime } from './useLightsTime';
 import { useGPGPU } from './useGPGPU';
 import { WalkingBuildings } from './WalkingBuildings';
 import { WalkingCars } from './WalkingCars';
@@ -53,6 +50,7 @@ const WalkingPeople = ({
   const positionCheckMaterialRef = useRef<MeshBasicMaterial>();
   const trackingCheckMaterialRef = useRef<MeshBasicMaterial>();
   const goundMaterialRef = useRef<MeshBasicMaterial>();
+  const lightsTime = useLightsTime();
 //  console.log(planeSize, gpgpuRenderer, data)
 
   const canvas = useMemo(() => {
@@ -335,6 +333,8 @@ const WalkingPeople = ({
       .getCurrentRenderTarget(data.direction.variables.directionVariable).texture;
     data.direction.variables.directionVariable.material.uniforms.uTime.value = clock.elapsedTime;
     data.direction.variables.directionVariable.material.uniforms.uDeltaTime.value = clock.getDelta();
+    data.direction.variables.directionVariable.material.uniforms.uActiveLightNumber.value = lightsTime.activeLightNumber;
+    data.direction.variables.directionVariable.material.uniforms.uActiveLightTimeLeft.value = lightsTime.activeLightTimeLeft;
 
     // destination
     shaderMaterial.uniforms.gDestinationMap.value = gpgpuRenderer
