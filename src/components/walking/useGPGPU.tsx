@@ -117,11 +117,6 @@ const simulationDirectionFragmentShader = `
             velocity.w = 0.0;
         }
 
-        // uniform int uActiveLightNumber;
-        // uniform int uActiveLightTimeLeft;
-        // uniform int uConnectionsWalkConditionsData[${graphArrays.dataConnectionsWalkConditions.length}];
-        // uniform float uConnectionsData[${graphArrays.dataConnections.length}];
-
         int currentLocation = int(destinationData.y); // current position graph.number
         int currentDestination = int(destinationData.w); // current position graph.number
         int northEastCornerIndexInt = 0;
@@ -134,13 +129,10 @@ const simulationDirectionFragmentShader = `
             }
         }
 
-        // if(currentLocation == 5 && currentLocationConnectionIndex == 1) {
-        //     velocity.w = 0.0;
-        // }
-
         int canMoveToDestination = uConnectionsWalkConditionsData[
             (currentLocation * 20) + (currentLocationConnectionIndex * 4) + uActiveLightNumber
         ];
+
         float canMoveToDestinationModifier = float(canMoveToDestination);
         velocity.w *= canMoveToDestinationModifier;
 
