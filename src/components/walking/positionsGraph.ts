@@ -10,6 +10,14 @@ type GraphNode = {
     startingConnections?: boolean;
     connections: string[];
     termination?: string[];
+    walkConditions?: {
+        [key: string]: {
+            northSouth: boolean,
+            northSouthTurning: boolean,
+            westTurning: boolean,
+            noTraffic: boolean
+        }
+    }
 }
 
 const positionsGraph: GraphNode[] = [
@@ -25,7 +33,33 @@ const positionsGraph: GraphNode[] = [
             'NorthWest-Corner',
             'NorthEast-NorthStreet-CornerEnd',
             'NorthEast-EastStreet-CornerEnd'
-        ]
+        ],
+        walkConditions: {
+            'SouthEast-Corner': {
+                northSouth: true,
+                northSouthTurning: true,
+                westTurning: true,
+                noTraffic: true
+            },
+            'NorthWest-Corner': {
+                northSouth: false,
+                northSouthTurning: false,
+                westTurning: false,
+                noTraffic: true
+            },
+            'NorthEast-NorthStreet-CornerEnd': {
+                northSouth: true,
+                northSouthTurning: true,
+                westTurning: true,
+                noTraffic: true
+            },
+            'NorthEast-EastStreet-CornerEnd': {
+                northSouth: true,
+                northSouthTurning: true,
+                westTurning: true,
+                noTraffic: true
+            }
+        }
     },
     {
         name: 'NorthEast-NorthStreet',
