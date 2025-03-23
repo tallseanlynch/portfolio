@@ -1,5 +1,37 @@
 import { useEffect, useState } from 'react';
 
+const lightsIntervalLength = 200;  
+const lightsSequence = [
+    {
+        name: 'northSouth',
+        number: 0,
+        length: 45 * 1000,
+        timeLeft: 0
+    }, 
+    {
+        name: 'northSouthTurning',
+        number: 1,
+        length: 15 * 1000,
+        timeLeft: 0
+    }, 
+    {
+        name: 'westTurning',
+        number: 2,
+        length: 45 * 1000,
+        timeLeft: 0
+    }, 
+    {
+        name: 'noTraffic',
+        number: 3,
+        length: 60 * 1000,
+        timeLeft: 0
+    }
+];
+
+const totalLengthOfTime = lightsSequence.reduce((total, currentValue) => {
+    return total + currentValue.length
+}, 0) 
+
 const useLightsTime = () => {
     const [lightsTime, setLightsTime] = useState({
         currentTime: 0,
@@ -13,37 +45,6 @@ const useLightsTime = () => {
     });
   
     useEffect(() => {
-        const lightsIntervalLength = 200;  
-        const lightsSequence = [
-            {
-                name: 'northSouth',
-                number: 0,
-                length: 45 * 1000,
-                timeLeft: 0
-            }, 
-            {
-                name: 'northSouthTurning',
-                number: 1,
-                length: 15 * 1000,
-                timeLeft: 0
-            }, 
-            {
-                name: 'westTurning',
-                number: 2,
-                length: 45 * 1000,
-                timeLeft: 0
-            }, 
-            {
-                name: 'noTraffic',
-                number: 3,
-                length: 60 * 1000,
-                timeLeft: 0
-            }
-        ];
-  
-        const totalLengthOfTime = lightsSequence.reduce((total, currentValue) => {
-            return total + currentValue.length
-        }, 0) 
   
         const determineActiveLight = (time) => {
             let activeLight = lightsSequence[0];
@@ -54,7 +55,6 @@ const useLightsTime = () => {
                 if(cycleTime >= total && cycleTime <= lightsSequenceTotalPlusCurrent) {
                   activeLight = currentValue;
                   activeLight.timeLeft = activeLight.length - (cycleTime - total);
-                //   console.log(activeLight.name, activeLight.timeLeft)
                 }
   
                 return lightsSequenceTotalPlusCurrent
@@ -82,4 +82,12 @@ const useLightsTime = () => {
     return lightsTime;
 };
 
-export { useLightsTime };
+const lightsUniformArray = lightsSequence.map(ls => ls.length / 1000);
+const lightsTotalLengthOfTimeUniformInt = totalLengthOfTime / 1000;
+
+const uniformData = {
+    lightsUniformArray,
+    lightsTotalLengthOfTimeUniformInt
+}
+console.log(uniformData);
+export { useLightsTime, uniformData };

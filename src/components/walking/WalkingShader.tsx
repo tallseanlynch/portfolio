@@ -1,4 +1,3 @@
-import { useLightsTime } from './useLightsTime';
 import { useGPGPU } from './useGPGPU';
 import { WalkingBuildings } from './WalkingBuildings';
 import { WalkingCars } from './WalkingCars';
@@ -45,30 +44,34 @@ const WalkingPeople = ({
   const instancedMeshRef = useRef<InstancedMesh>();
   const numPeople = width * width;
   const { gpgpuRenderer, data } = useGPGPU(numPeople);
-  const directionCheckMaterialRef = useRef<MeshBasicMaterial>();
-  const destinationCheckMaterialRef = useRef<MeshBasicMaterial>();
-  const positionCheckMaterialRef = useRef<MeshBasicMaterial>();
+  // const directionCheckMaterialRef = useRef<MeshBasicMaterial>();
+  // const destinationCheckMaterialRef = useRef<MeshBasicMaterial>();
+  // const positionCheckMaterialRef = useRef<MeshBasicMaterial>();
   const trackingCheckMaterialRef = useRef<MeshBasicMaterial>();
   const goundMaterialRef = useRef<MeshBasicMaterial>();
-  const lightsTime = useLightsTime();
+  // const lightsTime = useLightsTime();
 //  console.log(planeSize, gpgpuRenderer, data)
 
   const canvas = useMemo(() => {
-    const offscreenCanvas = new OffscreenCanvas(trackingPlaneTextureResolution, trackingPlaneTextureResolution);
-    const ctx = offscreenCanvas.getContext('2d');
-
-    if(ctx) {
-      ctx.fillStyle = 'white';
-      ctx.fillRect(0, 0, trackingPlaneTextureResolution, trackingPlaneTextureResolution);  
+    if(renderDebugPlane === true) {
+      const offscreenCanvas = new OffscreenCanvas(trackingPlaneTextureResolution, trackingPlaneTextureResolution);
+      const ctx = offscreenCanvas.getContext('2d');
+  
+      if(ctx) {
+        ctx.fillStyle = 'white';
+        ctx.fillRect(0, 0, trackingPlaneTextureResolution, trackingPlaneTextureResolution);  
+      }
+  
+      const texture = new CanvasTexture(offscreenCanvas);
+      texture.needsUpdate = true;
+  
+      return {
+        texture, 
+        ctx
+      };  
+    } else {
+      return {}
     }
-
-    const texture = new CanvasTexture(offscreenCanvas);
-    texture.needsUpdate = true;
-
-    return {
-      texture, 
-      ctx
-    };
   }, []);
 
   useEffect(() => {
@@ -331,10 +334,11 @@ const WalkingPeople = ({
     // direction
     shaderMaterial.uniforms.gDirectionMap.value = gpgpuRenderer
       .getCurrentRenderTarget(data.direction.variables.directionVariable).texture;
-    data.direction.variables.directionVariable.material.uniforms.uTime.value = clock.elapsedTime;
+    data.direction.variables.directionVariable.material.uniforms.uTime.value = clock.elapsedTime; // seconds as float -- not miliseconds
     data.direction.variables.directionVariable.material.uniforms.uDeltaTime.value = clock.getDelta();
-    data.direction.variables.directionVariable.material.uniforms.uActiveLightNumber.value = lightsTime.activeLightNumber;
-    data.direction.variables.directionVariable.material.uniforms.uActiveLightTimeLeft.value = lightsTime.activeLightTimeLeft;
+    // console.log(clock.elapsedTime)
+    // data.direction.variables.directionVariable.material.uniforms.uActiveLightNumber.value = lightsTime.activeLightNumber;
+    // data.direction.variables.directionVariable.material.uniforms.uActiveLightTimeLeft.value = lightsTime.activeLightTimeLeft;
 
     // destination
     shaderMaterial.uniforms.gDestinationMap.value = gpgpuRenderer
@@ -342,24 +346,24 @@ const WalkingPeople = ({
     data.destination.variables.destinationVariable.material.uniforms.uTime.value = clock.elapsedTime;
     data.destination.variables.destinationVariable.material.uniforms.uDeltaTime.value = clock.getDelta();
 
-    // check materials
-    if (positionCheckMaterialRef.current) {
-      positionCheckMaterialRef.current.map = gpgpuRenderer
-        .getCurrentRenderTarget(data.position.variables.positionVariable).texture;
-      positionCheckMaterialRef.current.needsUpdate = true;
-    }
+    // // check materials
+    // if (positionCheckMaterialRef.current) {
+    //   positionCheckMaterialRef.current.map = gpgpuRenderer
+    //     .getCurrentRenderTarget(data.position.variables.positionVariable).texture;
+    //   positionCheckMaterialRef.current.needsUpdate = true;
+    // }
 
-    if (directionCheckMaterialRef.current) {
-      directionCheckMaterialRef.current.map = gpgpuRenderer
-        .getCurrentRenderTarget(data.direction.variables.directionVariable).texture;
-      directionCheckMaterialRef.current.needsUpdate = true;
-    }
+    // if (directionCheckMaterialRef.current) {
+    //   directionCheckMaterialRef.current.map = gpgpuRenderer
+    //     .getCurrentRenderTarget(data.direction.variables.directionVariable).texture;
+    //   directionCheckMaterialRef.current.needsUpdate = true;
+    // }
 
-    if (destinationCheckMaterialRef.current) {
-      destinationCheckMaterialRef.current.map = gpgpuRenderer
-        .getCurrentRenderTarget(data.destination.variables.destinationVariable).texture;
-      destinationCheckMaterialRef.current.needsUpdate = true;
-    }
+    // if (destinationCheckMaterialRef.current) {
+    //   destinationCheckMaterialRef.current.map = gpgpuRenderer
+    //     .getCurrentRenderTarget(data.destination.variables.destinationVariable).texture;
+    //   destinationCheckMaterialRef.current.needsUpdate = true;
+    // }
 
   });
 
@@ -381,7 +385,6 @@ const WalkingPeople = ({
       <WalkingBuildings />
       <WalkingCars />
       <WalkingGround />
-      {/* <WalkingLights lightsTime={lightsTime}/> */}
       <WalkingLights />
 
       {/* <primitive object={testUVShaderMaterial} /> */}

@@ -1,3 +1,4 @@
+import { uniformData } from './useLightsTime';
 import { graphArrays, positionsGraph } from './positionsGraph';
 import { useThree } from '@react-three/fiber';
 import { useEffect, useMemo } from 'react';
@@ -24,16 +25,33 @@ const simulationPositionFragmentShader = `
 `
 const simulationDirectionFragmentShader = `
     uniform int uSize;
-    uniform float uTime;
+    uniform float uTime; // seconds as float
     uniform float uDeltaTime;
-    uniform int uActiveLightNumber;
-    uniform int uActiveLightTimeLeft;
     uniform int uConnectionsWalkConditionsData[${graphArrays.dataConnectionsWalkConditions.length}];
     uniform float uConnectionsData[${graphArrays.dataConnections.length}];
     uniform float uPositionsData[${graphArrays.dataPositions.length}];
+    uniform int uLightTimes[${uniformData.lightsUniformArray.length}];
+    uniform int uLightTimesTotalLength;
 
     void main() {
         float time = uTime;
+
+        int activeLightNumber = 0;
+        int activeLightTimeLeft = 0;
+
+        float totalCycleTime = float(uLightTimesTotalLength);
+        float cycleTime = mod(time, totalCycleTime);
+        float cycleTimeCheckValue = 0.0;
+
+        for(int lightIndex = 0; lightIndex < ${uniformData.lightsUniformArray.length}; lightIndex++) {
+            float lightTimeCheck = float(uLightTimes[lightIndex]);
+            if(cycleTime > cycleTimeCheckValue) {
+                activeLightNumber = lightIndex;
+                cycleTimeCheckValue += lightTimeCheck;
+                activeLightTimeLeft = int(cycleTimeCheckValue - cycleTime);
+            }
+        }
+
         vec2 uv = gl_FragCoord.xy / resolution.xy;
         vec4 positionData = texture(uPosition, uv);
         vec4 directionData = texture(uDirection, uv);
@@ -131,7 +149,7 @@ const simulationDirectionFragmentShader = `
         }
 
         int canMoveToDestination = uConnectionsWalkConditionsData[
-            (currentLocation * 20) + (currentLocationConnectionIndex * 4) + uActiveLightNumber
+            (currentLocation * 20) + (currentLocationConnectionIndex * 4) + activeLightNumber
         ];
 
         float canMoveToDestinationModifier = float(canMoveToDestination);
@@ -142,7 +160,7 @@ const simulationDirectionFragmentShader = `
             uPositionsData[(5 * currentLocation) + 2] 
         );
 
-        int loopActiveLightNumber = 1 + uActiveLightNumber;
+        int loopActiveLightNumber = 1 + activeLightNumber;
         if(loopActiveLightNumber > 3) {
             loopActiveLightNumber = 0;
         }
@@ -152,13 +170,20 @@ const simulationDirectionFragmentShader = `
 
         float checkDistanceFromStart = distance(positionDataCalc, currentLocationCenter);
         float checkDistanceToDestination = distanceToDestination;
-        if(uActiveLightTimeLeft < 25000 && checkDistanceFromStart < 8.0 && nextCanMoveToDestination == 0) {
+        if(activeLightTimeLeft < 25 && checkDistanceFromStart < 8.0 && nextCanMoveToDestination == 0) {
             canMoveToDestinationModifier = 0.0;
         }
 
         if(distanceToDestination < checkDistanceFromStart && canMoveToDestinationModifier == 0.0) {
             canMoveToDestinationModifier = 1.5;
         }
+
+        // if(totalCycleTime == 165.0) {
+        // if(activeLightNumber == 1) {
+        // if(uLightTimes[3] == 60) {
+        // if(cycleTime < 45.0) {
+        //     canMoveToDestinationModifier = 0.0;
+        // }
 
         velocity.w *= canMoveToDestinationModifier;
 
@@ -241,7 +266,6 @@ const getPersonPosition = (graphPosition, destination = false) => {
 }
 
 function useGPGPU(count: number) {
-    // const lightsTime = useLightsTime();
     const size = Math.ceil(Math.sqrt(count));
     const gl = useThree((state) => state.gl);
 
@@ -302,11 +326,11 @@ function useGPGPU(count: number) {
         directionVariable.material.uniforms.uSize = { value: size };        
         directionVariable.material.uniforms.uTime = { value: 0 };
         directionVariable.material.uniforms.uDeltaTime = { value: 0 };
-        directionVariable.material.uniforms.uActiveLightNumber = { value: 0 };
-        directionVariable.material.uniforms.uActiveLightTimeLeft = { value: 0 };
         directionVariable.material.uniforms.uConnectionsData = { value: graphArrays.dataConnections };
         directionVariable.material.uniforms.uConnectionsWalkConditionsData = { value: graphArrays.dataConnectionsWalkConditions };
         directionVariable.material.uniforms.uPositionsData = { value: graphArrays.dataPositions };
+        directionVariable.material.uniforms.uLightTimes = { value: uniformData.lightsUniformArray };
+        directionVariable.material.uniforms.uLightTimesTotalLength = { value: uniformData.lightsTotalLengthOfTimeUniformInt };
     
         const destinationVariable = gpgpuRenderer.addVariable('uDestination', simulationDestinationFragmentShader, destinationTexture);
         destinationVariable.material.uniforms.uSize = { value: size };        
@@ -316,7 +340,6 @@ function useGPGPU(count: number) {
         destinationVariable.material.uniforms.uGraphCols = { value: 10 };
         destinationVariable.material.uniforms.uPositionsData = { value: graphArrays.dataPositions };
         destinationVariable.material.uniforms.uConnectionsData = { value: graphArrays.dataConnections };
-        // destinationVariable.material.uniforms.uConnectionsWalkConditionsData = { value: graphArrays.dataConnectionsWalkConditions };
         destinationVariable.material.uniforms.uTerminationsData = { value: graphArrays.dataTerminations };
         destinationVariable.material.uniforms.uGraphConnectionsLengths = { value: graphArrays.graphConnectionsLengths };
         destinationVariable.material.uniforms.uGraphTerminationsLengths = { value: graphArrays.graphTerminationsLengths };
@@ -370,8 +393,12 @@ function useGPGPU(count: number) {
     useEffect(() => {
         return () => {
             gpgpuRenderer.dispose();
+            data.destination.texture.dispose();
+            data.direction.texture.dispose();
+            data.position.texture.dispose();
+            data.state.texture.dispose();
         };
-    }, [gpgpuRenderer]);
+    }, [gpgpuRenderer, data]);
 
     return { gpgpuRenderer, data };
 }
