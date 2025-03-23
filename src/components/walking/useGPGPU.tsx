@@ -170,11 +170,12 @@ const simulationDirectionFragmentShader = `
 
         float checkDistanceFromStart = distance(positionDataCalc, currentLocationCenter);
         float checkDistanceToDestination = distanceToDestination;
-        if(activeLightTimeLeft < 25 && checkDistanceFromStart < 8.0 && nextCanMoveToDestination == 0) {
+        if(activeLightTimeLeft < 25 && checkDistanceFromStart < 9.0 && nextCanMoveToDestination == 0) {
             canMoveToDestinationModifier = 0.0;
         }
 
-        if(distanceToDestination < checkDistanceFromStart && canMoveToDestinationModifier == 0.0) {
+        if(distanceToDestination < checkDistanceFromStart * 1.5 && canMoveToDestinationModifier == 0.0) {
+        // if(distanceToDestination < checkDistanceFromStart && canMoveToDestinationModifier == 0.0) {
             canMoveToDestinationModifier = 1.5;
         }
 
@@ -217,7 +218,7 @@ const simulationDestinationFragmentShader = `
         vec4 finalDestination = destinationData;
 
         float distanceFromDestination = distance(destinationDataCalc, positionDataCalc);
-        if(distanceFromDestination <= 1.5) {
+        if(distanceFromDestination <= 1.0) {
             float currentDestination = destinationData.w;
             int currentDestinationInt = int(currentDestination);
 
@@ -230,10 +231,10 @@ const simulationDestinationFragmentShader = `
             int newDestinationNumberInt = int(newDestinationNumber);
 
             finalDestination = vec4(
-                uPositionsData[(5 * newDestinationNumberInt) + 0], 
+                uPositionsData[(5 * newDestinationNumberInt) + 0] + (((random(1.0) * 2.0) - 1.0) * uPositionsData[(5 * newDestinationNumberInt) + 3]) * .25, 
                 // uPositionsData[(5 * newDestinationNumberInt) + 1],
                 currentDestination, 
-                uPositionsData[(5 * newDestinationNumberInt) + 2], 
+                uPositionsData[(5 * newDestinationNumberInt) + 2] + (((random(1.0) * 2.0) - 1.0) * uPositionsData[(5 * newDestinationNumberInt) + 4]) * .25, 
                 newDestinationNumber
             );
         }

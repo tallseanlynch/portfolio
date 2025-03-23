@@ -454,7 +454,7 @@ const WalkingShaderCanvas = () => {
       <ambientLight intensity={0.5} />
       <pointLight position={[10, 10, 10]} />
       <WalkingPeople 
-        width={50} 
+        width={100} 
         renderDebugPlane={false}
         consoleLogDebugBuffer={false}
         checkVector3s={false}
