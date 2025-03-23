@@ -30,6 +30,7 @@ const simulationDirectionFragmentShader = `
     uniform int uActiveLightTimeLeft;
     uniform int uConnectionsWalkConditionsData[${graphArrays.dataConnectionsWalkConditions.length}];
     uniform float uConnectionsData[${graphArrays.dataConnections.length}];
+    uniform float uPositionsData[${graphArrays.dataPositions.length}];
 
     void main() {
         float time = uTime;
@@ -134,6 +135,31 @@ const simulationDirectionFragmentShader = `
         ];
 
         float canMoveToDestinationModifier = float(canMoveToDestination);
+
+        vec3 currentLocationCenter = vec3(
+            uPositionsData[(5 * currentLocation) + 0], 
+            uPositionsData[(5 * currentLocation) + 1],
+            uPositionsData[(5 * currentLocation) + 2] 
+        );
+
+        int loopActiveLightNumber = 1 + uActiveLightNumber;
+        if(loopActiveLightNumber > 3) {
+            loopActiveLightNumber = 0;
+        }
+        int nextCanMoveToDestination = uConnectionsWalkConditionsData[
+            (currentLocation * 20) + (currentLocationConnectionIndex * 4) + loopActiveLightNumber
+        ];
+
+        float checkDistanceFromStart = distance(positionDataCalc, currentLocationCenter);
+        float checkDistanceToDestination = distanceToDestination;
+        if(uActiveLightTimeLeft < 25000 && checkDistanceFromStart < 8.0 && nextCanMoveToDestination == 0) {
+            canMoveToDestinationModifier = 0.0;
+        }
+
+        if(distanceToDestination < checkDistanceFromStart && canMoveToDestinationModifier == 0.0) {
+            canMoveToDestinationModifier = 1.5;
+        }
+
         velocity.w *= canMoveToDestinationModifier;
 
         gl_FragColor = velocity;
@@ -280,6 +306,7 @@ function useGPGPU(count: number) {
         directionVariable.material.uniforms.uActiveLightTimeLeft = { value: 0 };
         directionVariable.material.uniforms.uConnectionsData = { value: graphArrays.dataConnections };
         directionVariable.material.uniforms.uConnectionsWalkConditionsData = { value: graphArrays.dataConnectionsWalkConditions };
+        directionVariable.material.uniforms.uPositionsData = { value: graphArrays.dataPositions };
     
         const destinationVariable = gpgpuRenderer.addVariable('uDestination', simulationDestinationFragmentShader, destinationTexture);
         destinationVariable.material.uniforms.uSize = { value: size };        
