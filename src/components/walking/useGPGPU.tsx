@@ -231,10 +231,10 @@ const simulationDestinationFragmentShader = `
             int newDestinationNumberInt = int(newDestinationNumber);
 
             finalDestination = vec4(
-                uPositionsData[(5 * newDestinationNumberInt) + 0] + (((random(1.0) * 2.0) - 1.0) * uPositionsData[(5 * newDestinationNumberInt) + 3]) * .25, 
+                uPositionsData[(5 * newDestinationNumberInt) + 0] + (((random(3.49) * 2.0) - 1.0) * uPositionsData[(5 * newDestinationNumberInt) + 3]) * .25, 
                 // uPositionsData[(5 * newDestinationNumberInt) + 1],
                 currentDestination, 
-                uPositionsData[(5 * newDestinationNumberInt) + 2] + (((random(1.0) * 2.0) - 1.0) * uPositionsData[(5 * newDestinationNumberInt) + 4]) * .25, 
+                uPositionsData[(5 * newDestinationNumberInt) + 2] + (((random(9.43) * 2.0) - 1.0) * uPositionsData[(5 * newDestinationNumberInt) + 4]) * .25, 
                 newDestinationNumber
             );
         }
