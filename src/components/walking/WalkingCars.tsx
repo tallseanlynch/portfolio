@@ -1,3 +1,4 @@
+import { pathData } from './pathData';
 import { BufferGeometry, EllipseCurve, Line, LineBasicMaterial, Vector3 } from 'three';
 
 const carSize = 2;
@@ -12,17 +13,6 @@ const ProtoCar = ({pos, color = carColor0}) => {
         </mesh>
     )
 }
-
-const turningMaterial = new LineBasicMaterial({
-    color: 0xff0000
-});
-
-const straightMaterial = new LineBasicMaterial({
-    color: 0x00ffff
-});
-
-const xVisualModifier = new Vector3(0.2, 0, 0);
-const zVisualModifier = new Vector3(0, 0, 0.2);
 
 type PointsProps = {
     points: Vector3[]
@@ -42,59 +32,7 @@ const CrosswalkPoints: React.FC<PointsProps> = ({points = []}) => {
     )
 }
 
-// debug mesh for turning points
-const TurningPoints: React.FC<PointsProps> = ({points = []}) => {
-    return (
-        points.map((tp, tpindex) => {
-            return (
-                <mesh key={tpindex} position={tp}>
-                    <boxGeometry args={[.5, .5, .5]} />
-                    <meshBasicMaterial color={0x00ff00} />
-                </mesh>
-            )            
-        })
-    )
-}
-
-//carPath(-25, 25, 7.5, 7.5, -Math.PI * .5, 0, false, 0)
-const vehiclePath0 = {
-    ellipseCenterX: -25,
-    ellipseCenterY: 25,
-    radiusX: 12.5,
-    radiusY: 12.5,
-    startAngle: -Math.PI * .5,
-    endAngle: 0,
-    clockWise: false,
-    rotation: 0,
-    directionalPointA: new Vector3(-130, 0, 0),
-    directionalPointB: new Vector3(0, 0, 130),
-    crossWalkPointA: new Vector3(-15, 0, 0),
-    crossWalkPointB: new Vector3(0, 0, 15),
-    straightEndPoint: new Vector3(0, 0, 115),
-    straightOppositeEndPoint: new Vector3(0, 0, -195),
-    visualModifier: new Vector3(.2, 0, 0)
-}
-
-const vehiclePath1 = {
-    ellipseCenterX: -25,
-    ellipseCenterY: 25,
-    radiusX: 7.5,
-    radiusY: 7.5,
-    startAngle: -Math.PI * .5,
-    endAngle: 0,
-    clockWise: false,
-    rotation: 0,
-    directionalPointA: new Vector3(-130, 0, 0),
-    directionalPointB: new Vector3(0, 0, 130),
-    crossWalkPointA: new Vector3(-15, 0, 0),
-    crossWalkPointB: new Vector3(0, 0, 15),
-    straightEndPoint: new Vector3(0, 0, 115),
-    straightOppositeEndPoint: new Vector3(0, 0, -195),
-    visualModifier: new Vector3(.2, 0, 0)
-}
-
-
-const VehiclePath = ({
+const vehicleTurnPath = ({
     ellipseCenterX = 0,
     ellipseCenterY = 0,
     radiusX = 0,
@@ -107,9 +45,7 @@ const VehiclePath = ({
     directionalPointB = new Vector3(),
     crossWalkPointA = new Vector3(),
     crossWalkPointB = new Vector3(),
-    straightEndPoint = new Vector3(),
-    straightOppositeEndPoint = new Vector3(),
-    visualModifier = new Vector3()
+    material = new LineBasicMaterial()
 }) => {
     const ellipse = new EllipseCurve(
         ellipseCenterX, ellipseCenterY, // center x, y
@@ -137,40 +73,77 @@ const VehiclePath = ({
         crosswalkPointB
     ]
     
-    const turningPoints = [
-        ellipsePoints3D[ellipsePoints3D.length - 1],
-        ellipsePoints3D[0].clone()
-    ]
+    const turningGeometryPoints = [ directionalEndPointA, crosswalkPointA, ...ellipsePoints3D, directionalEndPointB, crosswalkPointB ];
+    const geometry = new BufferGeometry().setFromPoints( turningGeometryPoints );
+    const line = new Line( geometry, material );
+
+    return {
+        geometry,
+        line,
+        crosswalkPoints
+    }
+}
+
+const vehicleStraightPath = ({
+    start = new Vector3(),
+    end = new Vector3(),
+    crosswalkPointA = new Vector3(),
+    crosswalkPointB = new Vector3(),
+    material = new LineBasicMaterial(),
+    visualModifier = new Vector3()
+}) => {
 
     const straightGeometryPoints = [
-        crosswalkPointB.clone().add(straightOppositeEndPoint).add(visualModifier),
-        crosswalkPointB.clone().add(visualModifier),
-        crosswalkPointB.clone().add(straightEndPoint).add(visualModifier)    
+        start.add(visualModifier),
+        crosswalkPointA.add(visualModifier),
+        crosswalkPointB.add(visualModifier),
+        end.add(visualModifier)
     ]
 
-    const straightGeometry = new BufferGeometry().setFromPoints( straightGeometryPoints );
-    const straightLine = new Line( straightGeometry, straightMaterial );
+    const crosswalkPoints = [crosswalkPointA, crosswalkPointB];
 
-    const turningGeometryPoints = [ directionalEndPointA, crosswalkPointA, ...ellipsePoints3D, directionalEndPointB, crosswalkPointB ];
-    const turningGeometry = new BufferGeometry().setFromPoints( turningGeometryPoints );
-    const turningLine = new Line( turningGeometry, turningMaterial );
+    const geometry = new BufferGeometry().setFromPoints( straightGeometryPoints );
+    const line = new Line( geometry, material );
 
+    return {
+        geometry,
+        line,
+        crosswalkPoints
+    }
+}
+
+
+type VehiclePath = {
+    pathLine: Line;
+    crosswalkPoints?: Vector3[]
+}
+
+const VehiclePath: React.FC<VehiclePath> = ({
+    pathLine,
+    crosswalkPoints = undefined
+}) => {
     return (
         <>
-            <CrosswalkPoints points={crosswalkPoints}/>
-            <TurningPoints points={turningPoints}/>
-            <primitive object={turningLine} />
-            <primitive object={straightLine} />
+            <primitive object={pathLine} />
+            {crosswalkPoints && <CrosswalkPoints points={crosswalkPoints}/>}
         </>
     )
-
 }
+
+const vehiclePath0Turning = vehicleTurnPath(pathData.vehiclePath0Turning);
+const vehcilePath0Straight = vehicleStraightPath(pathData.vehiclePath0Straight);
+const vehiclePath1Turning = vehicleTurnPath(pathData.vehiclePath1Turning);
+const vehcilePath1Straight = vehicleStraightPath(pathData.vehiclePath1Straight);
+// const vp0Turn = calculatedVehiclePath0.geometry;
+// const vp0Straight = calculatedVehiclePath0.straightGeometry;
 
 const WalkingCars = () => {
     return (
         <>
-            <VehiclePath {...vehiclePath0} />
-            <VehiclePath {...vehiclePath1} />
+            <VehiclePath pathLine={vehiclePath0Turning.line} crosswalkPoints={vehiclePath0Turning.crosswalkPoints}/>
+            <VehiclePath pathLine={vehcilePath0Straight.line} crosswalkPoints={vehcilePath0Straight.crosswalkPoints}/>
+            <VehiclePath pathLine={vehiclePath1Turning.line} crosswalkPoints={vehiclePath1Turning.crosswalkPoints}/>
+            <VehiclePath pathLine={vehcilePath1Straight.line} crosswalkPoints={vehcilePath1Straight.crosswalkPoints}/>
             <group position={new Vector3(-20, 0, 40)}>
                 <ProtoCar pos={new Vector3(2.5, (carSize / 2.0) + .25, 0)} color={carColor1} />
                 <ProtoCar pos={new Vector3(7.5, (carSize / 2.0) + .25, 0)} color={carColor1} />
