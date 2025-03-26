@@ -1,4 +1,5 @@
 import { useGPGPU } from './useGPGPU';
+import { WalkingBoundries } from './WalkingBoundries';
 import { WalkingBuildings } from './WalkingBuildings';
 import { WalkingCars } from './WalkingCars';
 import { WalkingGround } from './WalkingGround';
@@ -386,6 +387,7 @@ const WalkingPeople = ({
       <WalkingCars />
       <WalkingGround />
       <WalkingLights />
+      <WalkingBoundries />
 
       {/* <primitive object={testUVShaderMaterial} /> */}
 
@@ -459,7 +461,10 @@ const WalkingShaderCanvas = () => {
         consoleLogDebugBuffer={false}
         checkVector3s={false}
       />
-      <OrbitControls/>
+      <OrbitControls 
+        maxDistance={90}
+        maxPolarAngle={Math.PI * .49}
+      />
     </Canvas>
   );
 }
