@@ -5,27 +5,27 @@ const WalkingBoundry = ({groupPosition, groupRotation}) => {
         <group position={groupPosition} rotation={groupRotation}>
             <mesh rotation={[0, Math.PI * .5, 0]} frustumCulled={false}>
                 <planeGeometry args={[320, 100, 1, 1]} />
-                <meshBasicMaterial color={0xffffff} transparent={true} opacity={.1} side={DoubleSide} />
+                <meshBasicMaterial color={0xffffff} transparent={true} opacity={.1} side={DoubleSide} depthWrite={false} />
             </mesh>
             <mesh position={[-5, 0, 0]} rotation={[0, Math.PI * .5, 0]} frustumCulled={false}>
                 <planeGeometry args={[320, 100, 1, 1]} />
-                <meshBasicMaterial color={0xffffff} transparent={true} opacity={.2} side={DoubleSide}  />
+                <meshBasicMaterial color={0xffffff} transparent={true} opacity={.2} side={DoubleSide} depthWrite={false} />
             </mesh>
             <mesh position={[-10, 0, 0]} rotation={[0, Math.PI * .5, 0]} frustumCulled={false}>
                 <planeGeometry args={[320, 100, 1, 1]} />
-                <meshBasicMaterial color={0xffffff} transparent={true} opacity={.5} side={DoubleSide}  />
+                <meshBasicMaterial color={0xffffff} transparent={true} opacity={.5} side={DoubleSide} depthWrite={false} />
             </mesh>
             <mesh position={[-15, 0, 0]} rotation={[0, Math.PI * .5, 0]} frustumCulled={false}>
                 <planeGeometry args={[320, 100, 1, 1]} />
-                <meshBasicMaterial color={0xffffff} transparent={true} opacity={.75} side={DoubleSide}  />
+                <meshBasicMaterial color={0xffffff} transparent={true} opacity={.75} side={DoubleSide} depthWrite={false} />
             </mesh>
             <mesh position={[-20, 0, 0]} rotation={[0, Math.PI * .5, 0]} frustumCulled={false}>
                 <planeGeometry args={[320, 100, 1, 1]} />
-                <meshBasicMaterial color={0xffffff} transparent={true} opacity={.85} side={DoubleSide}  />
+                <meshBasicMaterial color={0xffffff} transparent={true} opacity={.85} side={DoubleSide} depthWrite={false} />
             </mesh>
             <mesh position={[-25, 0, 0]} rotation={[0, Math.PI * .5, 0]} frustumCulled={false}>
                 <planeGeometry args={[320, 100, 1, 1]} />
-                <meshBasicMaterial color={0xffffff} transparent={true} opacity={.95} side={DoubleSide}  />
+                <meshBasicMaterial color={0xffffff} transparent={true} opacity={.95} side={DoubleSide} depthWrite={false} />
             </mesh>
         </group>
     )
