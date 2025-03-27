@@ -1,16 +1,168 @@
 import { pathData } from './pathData';
-import { BufferGeometry, EllipseCurve, Line, LineBasicMaterial, Vector3 } from 'three';
+import { Line, Vector3 } from 'three';
+import { useVehicleGPGPU } from './useVehicleGPGPU';
+import { useEffect, useMemo, useRef } from 'react';
+import { DoubleSide, InstancedMesh, Object3D, ShaderMaterial } from 'three';
+import { useFrame } from '@react-three/fiber';
 
 const carSize = 2;
-const carColor0 = 0xff0000;
-const carColor1 = 0x00ff00;
+const instanceScale = .75;
 
-const ProtoCar = ({pos, color = carColor0}) => {
+const Cars = ({width = 1}) => {
+    const { gpgpuRenderer, data } = useVehicleGPGPU(width);
+    const instancedMeshRef = useRef<InstancedMesh>();
+    const numCars = width * width;
+    const matrixPositionObject =  new Object3D;
+
+    useEffect(() => {
+        if(instancedMeshRef.current) {
+        for ( let i=0 ; i<numCars ; i++ ) {
+            matrixPositionObject.scale.y = 2.0 + (Math.random() * instanceScale) - instanceScale / 2;
+            matrixPositionObject.position.set(0, matrixPositionObject.scale.y / 2, 0);        
+            matrixPositionObject.updateMatrix();
+            instancedMeshRef.current.setMatrixAt( i, matrixPositionObject.matrix );
+            instancedMeshRef.current.frustumCulled = false;
+        }
+        instancedMeshRef.current.instanceMatrix.needsUpdate = true;
+        instancedMeshRef.current.frustumCulled = false;
+        }
+
+    }, [])
+
+
+    const shaderMaterial = useMemo(() => new ShaderMaterial({
+        uniforms: {
+            gPositionMap: { value: data.position.texture},
+            gDirectionMap: { value: data.direction.texture},
+            gDestinationMap: { value: data.destination.texture },
+            time: { value: 0 }
+        },
+        vertexShader: `
+        uniform sampler2D gDirectionMap;
+        uniform sampler2D gPositionMap;
+        uniform sampler2D gDestinationMap;
+        uniform float time;
+
+        varying vec4 vPosition;
+        varying vec3 vOriginalPosition;
+        varying vec4 vgPosition;
+        varying vec4 vgDestination;
+        varying vec4 vgDirection;
+
+        void main() {
+            vOriginalPosition = position;
+            int index = gl_InstanceID;
+            float floatIndex = float(index);
+            float xCoor = mod(floatIndex, ${width}.0);
+            float yCoor = mod(floatIndex / ${width}.0, ${width}.0);
+            vec2 uv = vec2(xCoor / ${width}.0, yCoor / ${width}.0);
+            vec4 gDirectionData = texture2D(gDirectionMap, uv);        
+            vec4 gPositionData = texture2D(gPositionMap, uv);
+            vec4 gDestinationData = texture2D(gDestinationMap, uv);
+            vgDirection = gDirectionData;
+            vgPosition = gPositionData;
+            vgDestination = gDestinationData;
+            vec4 mvPosition = vec4( position, 1.0 );
+
+            #ifdef USE_INSTANCING
+                mvPosition = instanceMatrix * mvPosition;
+                vPosition = mvPosition;
+            #endif
+
+            float angle = atan(gDirectionData.x, gDirectionData.z);
+            mat4 rotationMatrix = mat4(
+                cos(angle), 0.0, -sin(angle), 0.0,
+                0.0, 1.0, 0.0, 0.0,
+                sin(angle), 0.0, cos(angle), 0.0,
+                0.0, 0.0, 0.0, 1.0
+            );
+
+            vPosition = rotationMatrix * vPosition;
+            vPosition.x = vPosition.x + gPositionData.x;
+            vPosition.y = vPosition.y + gPositionData.y;
+            vPosition.z = vPosition.z + gPositionData.z;
+
+            gl_Position = projectionMatrix * modelViewMatrix * vPosition;
+        }
+        `,
+        fragmentShader: `
+        varying vec4 vgPosition;
+        varying vec3 vOriginalPosition;
+        varying vec4 vgDestination;
+        varying vec4 vgDirection;
+
+        void main() {
+            vec4 positionColor = vgPosition;
+            vec4 destinationColor = vgDestination;
+            vec4 finalColor = positionColor;
+            vec3 positionCalc = vec3(vgPosition.xyz);
+            vec3 destinationCalc = vec3(vgDestination.xyz);
+            vec3 directionCalc = vec3(vgDirection.xyz);
+
+            if(vOriginalPosition.z > 0.0) {
+            finalColor = vec4(1.0, 1.0, 1.0, 1.0);
+            }
+
+            if(distance(positionCalc, destinationCalc) < .25) {
+            finalColor = vec4(.5, .5, .5, 1.0);
+            }
+
+            if(distance(positionCalc, destinationCalc) < 1.5 && vgDirection.w < .01) {
+            finalColor = vec4(.5, .5, .5, 1.0);
+            }
+
+            gl_FragColor = finalColor;
+        }
+        `,
+        side: DoubleSide
+    }), [
+        width, 
+        data.position.texture,
+        data.direction.texture,
+        data.destination.texture
+    ]);
+
+    useFrame(({
+        clock,
+        // gl
+    }) => {
+
+        // computer renderer
+        gpgpuRenderer.compute();
+
+        shaderMaterial.uniforms.time.value = clock.elapsedTime;
+
+        // positions
+        shaderMaterial.uniforms.gPositionMap.value = gpgpuRenderer
+            .getCurrentRenderTarget(data.position.variables.positionVariable).texture;
+        data.position.variables.positionVariable.material.uniforms.uTime.value = clock.elapsedTime;
+        data.position.variables.positionVariable.material.uniforms.uDeltaTime.value = clock.getDelta();
+
+        // direction
+        shaderMaterial.uniforms.gDirectionMap.value = gpgpuRenderer
+            .getCurrentRenderTarget(data.direction.variables.directionVariable).texture;
+        data.direction.variables.directionVariable.material.uniforms.uTime.value = clock.elapsedTime; // seconds as float -- not miliseconds
+        data.direction.variables.directionVariable.material.uniforms.uDeltaTime.value = clock.getDelta();
+        // console.log(clock.elapsedTime)
+        // data.direction.variables.directionVariable.material.uniforms.uActiveLightNumber.value = lightsTime.activeLightNumber;
+        // data.direction.variables.directionVariable.material.uniforms.uActiveLightTimeLeft.value = lightsTime.activeLightTimeLeft;
+
+        // destination
+        shaderMaterial.uniforms.gDestinationMap.value = gpgpuRenderer
+            .getCurrentRenderTarget(data.destination.variables.destinationVariable).texture;
+        data.destination.variables.destinationVariable.material.uniforms.uTime.value = clock.elapsedTime;
+        data.destination.variables.destinationVariable.material.uniforms.uDeltaTime.value = clock.getDelta();
+    });
+
     return (
-        <mesh position={pos}>
+        <instancedMesh 
+            ref={instancedMeshRef} 
+            args={[null as any, null as any, numCars]} 
+            material={shaderMaterial}
+        >
             <boxGeometry args={[2.5, carSize, 5.0]} />
-            <meshBasicMaterial color={color} transparent={true} opacity={.5}/>
-        </mesh>
+            {/* <boxGeometry args={[1, 1, .5, 1, 1, 1]} /> */}
+        </instancedMesh>
     )
 }
 
@@ -32,85 +184,6 @@ const CrosswalkPoints: React.FC<PointsProps> = ({points = []}) => {
     )
 }
 
-const vehicleTurnPath = ({
-    ellipseCenterX = 0,
-    ellipseCenterY = 0,
-    radiusX = 0,
-    radiusY = 0,
-    startAngle = 0,
-    endAngle = 0,
-    clockWise = false,
-    rotation = 0,
-    directionalPointA = new Vector3(),
-    directionalPointB = new Vector3(),
-    crossWalkPointA = new Vector3(),
-    crossWalkPointB = new Vector3(),
-    material = new LineBasicMaterial()
-}) => {
-    const ellipse = new EllipseCurve(
-        ellipseCenterX, ellipseCenterY, // center x, y
-        radiusX, radiusY, // radius x, y
-        startAngle, endAngle, // start angle, end angle
-        clockWise, // clockwise
-        rotation // rotation
-    );
-
-    const ellipsePoints = ellipse.getPoints(8);
-    const ellipsePoints3D = ellipsePoints.map(ep => new Vector3(ep.x, 0.1, ep.y));
-
-    const crosswalkPointA = ellipsePoints3D[0].clone();
-    crosswalkPointA.add(crossWalkPointA);
-    const directionalEndPointA = ellipsePoints3D[0].clone();
-    directionalEndPointA.add(directionalPointA);
-
-    const crosswalkPointB = ellipsePoints3D[ellipsePoints3D.length - 1].clone();
-    crosswalkPointB.add(crossWalkPointB);
-    const directionalEndPointB = ellipsePoints3D[ellipsePoints3D.length - 1].clone();
-    directionalEndPointB.add(directionalPointB);
-
-    const crosswalkPoints = [
-        crosswalkPointA,
-        crosswalkPointB
-    ]
-    
-    const turningGeometryPoints = [ directionalEndPointA, crosswalkPointA, ...ellipsePoints3D, directionalEndPointB, crosswalkPointB ];
-    const geometry = new BufferGeometry().setFromPoints( turningGeometryPoints );
-    const line = new Line( geometry, material );
-
-    return {
-        geometry,
-        line,
-        crosswalkPoints
-    }
-}
-
-const vehicleStraightPath = ({
-    start = new Vector3(),
-    end = new Vector3(),
-    crosswalkPointA = new Vector3(),
-    crosswalkPointB = new Vector3(),
-    material = new LineBasicMaterial(),
-    visualModifier = new Vector3()
-}) => {
-
-    const straightGeometryPoints = [
-        start.add(visualModifier),
-        crosswalkPointA.add(visualModifier),
-        crosswalkPointB.add(visualModifier),
-        end.add(visualModifier)
-    ]
-
-    const crosswalkPoints = [crosswalkPointA, crosswalkPointB];
-
-    const geometry = new BufferGeometry().setFromPoints( straightGeometryPoints );
-    const line = new Line( geometry, material );
-
-    return {
-        geometry,
-        line,
-        crosswalkPoints
-    }
-}
 
 
 type VehiclePath = {
@@ -130,32 +203,31 @@ const VehiclePath: React.FC<VehiclePath> = ({
     )
 }
 
-const vehiclePath0Turning = vehicleTurnPath(pathData.vehiclePath0Turning);
-const vehcilePath0Straight = vehicleStraightPath(pathData.vehiclePath0Straight);
-const vehiclePath1Turning = vehicleTurnPath(pathData.vehiclePath1Turning);
-const vehcilePath1Straight = vehicleStraightPath(pathData.vehiclePath1Straight);
-// const vp0Turn = calculatedVehiclePath0.geometry;
-// const vp0Straight = calculatedVehiclePath0.straightGeometry;
+// const vehiclePath0Turning = vehicleTurnPath(pathData.vehiclePath0Turning);
+// const vehcilePath0Straight = vehicleStraightPath(pathData.vehiclePath0Straight);
+// const vehiclePath1Turning = vehicleTurnPath(pathData.vehiclePath1Turning);
+// const vehcilePath1Straight = vehicleStraightPath(pathData.vehiclePath1Straight);
 
 const WalkingCars = () => {
     return (
         <>
-            <VehiclePath pathLine={vehiclePath0Turning.line} crosswalkPoints={vehiclePath0Turning.crosswalkPoints}/>
-            <VehiclePath pathLine={vehcilePath0Straight.line} crosswalkPoints={vehcilePath0Straight.crosswalkPoints}/>
-            <VehiclePath pathLine={vehiclePath1Turning.line} crosswalkPoints={vehiclePath1Turning.crosswalkPoints}/>
-            <VehiclePath pathLine={vehcilePath1Straight.line} crosswalkPoints={vehcilePath1Straight.crosswalkPoints}/>
-            <group position={new Vector3(-20, 0, 40)}>
-                <ProtoCar pos={new Vector3(2.5, (carSize / 2.0) + .25, 0)} color={carColor1} />
-                <ProtoCar pos={new Vector3(7.5, (carSize / 2.0) + .25, 0)} color={carColor1} />
-                <ProtoCar pos={new Vector3(12.5, (carSize / 2.0) + .25, 0)} color={carColor1} />
-                <ProtoCar pos={new Vector3(17, (carSize / 2.0) + .25, 0)} color={carColor1} />
-            </group>
-            <group position={new Vector3(3, 0, 40)}>
-                <ProtoCar pos={new Vector3(0, (carSize / 2.0) + .25, 0)} />
-                <ProtoCar pos={new Vector3(4.5, (carSize / 2.0) + .25, 0)} />
-                <ProtoCar pos={new Vector3(9.5, (carSize / 2.0) + .25, 0)} />
-                <ProtoCar pos={new Vector3(14.5, (carSize / 2.0) + .25, 0)} />
-            </group>
+            <VehiclePath 
+                pathLine={pathData.vehiclePath0TurningData.line} 
+                crosswalkPoints={pathData.vehiclePath0TurningData.crosswalkPoints}
+            />
+            <VehiclePath 
+                pathLine={pathData.vehiclePath0StraightData.line} 
+                crosswalkPoints={pathData.vehiclePath0StraightData.crosswalkPoints}
+            />
+            <VehiclePath 
+                pathLine={pathData.vehiclePath1TurningData.line} 
+                crosswalkPoints={pathData.vehiclePath1TurningData.crosswalkPoints}
+            />
+            <VehiclePath 
+                pathLine={pathData.vehiclePath1StraightData.line} 
+                crosswalkPoints={pathData.vehiclePath1StraightData.crosswalkPoints}
+            />
+            <Cars width={1} />
         </>
     )
 }

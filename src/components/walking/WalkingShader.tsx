@@ -1,4 +1,4 @@
-import { useGPGPU } from './useGPGPU';
+import { usePedestrianGPGPU } from './usePedestrianGPGPU';
 import { WalkingBoundries } from './WalkingBoundries';
 import { WalkingBuildings } from './WalkingBuildings';
 import { WalkingCars } from './WalkingCars';
@@ -44,7 +44,7 @@ const WalkingPeople = ({
 }) => {
   const instancedMeshRef = useRef<InstancedMesh>();
   const numPeople = width * width;
-  const { gpgpuRenderer, data } = useGPGPU(numPeople);
+  const { gpgpuRenderer, data } = usePedestrianGPGPU(numPeople);
   // const directionCheckMaterialRef = useRef<MeshBasicMaterial>();
   // const destinationCheckMaterialRef = useRef<MeshBasicMaterial>();
   // const positionCheckMaterialRef = useRef<MeshBasicMaterial>();
@@ -462,7 +462,7 @@ const WalkingShaderCanvas = () => {
         checkVector3s={false}
       />
       <OrbitControls 
-        maxDistance={90}
+        maxDistance={120}
         maxPolarAngle={Math.PI * .49}
       />
     </Canvas>

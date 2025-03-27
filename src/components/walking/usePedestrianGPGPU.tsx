@@ -266,7 +266,7 @@ const getPersonPosition = (graphPosition, destination = false) => {
     calcVector3.z += randomNeg1To1() * (graphPosition.height / 2)
 }
 
-function useGPGPU(count: number) {
+function usePedestrianGPGPU(count: number) {
     const size = Math.ceil(Math.sqrt(count));
     const gl = useThree((state) => state.gl);
 
@@ -404,4 +404,4 @@ function useGPGPU(count: number) {
     return { gpgpuRenderer, data };
 }
 
-export { useGPGPU };
+export { usePedestrianGPGPU };
