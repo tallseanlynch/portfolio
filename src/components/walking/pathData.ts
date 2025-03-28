@@ -119,7 +119,7 @@ const vehicleTurnPath = ({
     const turningGeometryPoints = [ directionalEndPointA, crosswalkPointA, ...ellipsePoints3D, crosswalkPointB, directionalEndPointB ].reverse();
     const geometry = new BufferGeometry().setFromPoints( turningGeometryPoints );
     const bufferArray = new Float32Array(turningGeometryPoints.length * 3);
-    for(let bufferIndex = 0; bufferIndex < turningGeometryPoints.length / 3; bufferIndex++) {
+    for(let bufferIndex = 0; bufferIndex < turningGeometryPoints.length; bufferIndex++) {
         const i3 = bufferIndex * 3;
         bufferArray[i3] = turningGeometryPoints[bufferIndex].x;
         bufferArray[i3 + 1] = turningGeometryPoints[bufferIndex].y;
@@ -157,7 +157,7 @@ const vehicleStraightPath = ({
     const geometry = new BufferGeometry().setFromPoints( straightGeometryPoints );
     const line = new Line( geometry, material );
     const bufferArray = new Float32Array(straightGeometryPoints.length * 3);
-    for(let bufferIndex = 0; bufferIndex < straightGeometryPoints.length / 3; bufferIndex++) {
+    for(let bufferIndex = 0; bufferIndex < straightGeometryPoints.length; bufferIndex++) {
         const i3 = bufferIndex * 3;
         bufferArray[i3] = straightGeometryPoints[bufferIndex].x;
         bufferArray[i3 + 1] = straightGeometryPoints[bufferIndex].y;
@@ -190,8 +190,8 @@ pathDataKeys.forEach((pdk, pdkIndex) => {
 const pathBufferIndexes = new Float32Array(pathDataKeys.length);
 const pathBufferTotalLength = pathDataKeys.reduce(
     (acc, pdk, index) => {
+        pathBufferIndexes[index] = acc;
         const length = acc + pathData[pdk].bufferLength
-        pathBufferIndexes[index] = length;
         return length;
     }, 
     0

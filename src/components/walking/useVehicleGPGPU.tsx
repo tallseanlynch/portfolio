@@ -89,10 +89,10 @@ const simulationDirectionFragmentShader = `
         }
 
         vec4 velocity = vec4(mixDirectionDestination, directionData.w);        
-        if(distanceToDestination < 1.0) {
-            // velocity.w = distanceToDestination;        
-            velocity.w = 0.0;        
-        }
+        // if(distanceToDestination < 1.0) {
+        //     // velocity.w = distanceToDestination;        
+        //     velocity.w = 0.0;        
+        // }
 
         // float checkDistanceMin = 5.0;
         // float lowestCheckDistance = 1000.0;
@@ -161,8 +161,6 @@ const simulationDirectionFragmentShader = `
 
         // int currentLocation = int(destinationData.y); // current position graph.number
         // int currentDestination = int(destinationData.w); // current position graph.number
-        // int northEastCornerIndexInt = 0;
-        // int southWestCornerIndexInt = 15;
         // int currentLocationConnectionIndex = 0;//int(uConnectionsData[0]);
 
         // for(int i = 0; i < 6; i++) {
@@ -220,6 +218,11 @@ const simulationDestinationFragmentShader = `
     uniform float uTime;
     uniform float uDeltaTime;
     uniform int graphRows;
+    uniform float uPathBuffer[${pathBuffer.length}];
+    uniform int uPathBufferLengths[${pathBufferLengths.length}];
+    uniform float uPathBufferIndexes[${pathBufferIndexes.length}];
+    uniform int PathBufferTotalLength;
+
     // uniform int uGraphConnectionsLengths[${graphArrays.graphPositions.length}];
     // uniform int uGraphTerminationsLengths[${graphArrays.graphPositions.length}];
     // uniform float uPositionsData[${graphArrays.dataPositions.length}];
@@ -240,27 +243,60 @@ const simulationDestinationFragmentShader = `
 
         vec4 finalDestination = destinationData;
 
-        // float distanceFromDestination = distance(destinationDataCalc, positionDataCalc);
-        // if(distanceFromDestination <= 1.0) {
-        //     float currentDestination = destinationData.w;
-        //     int currentDestinationInt = int(currentDestination);
+        float distanceFromDestination = distance(destinationDataCalc, positionDataCalc);
 
-        //     int connectionsLengthInt = uGraphConnectionsLengths[currentDestinationInt];
-        //     float connectionLength = float(connectionsLengthInt);
-        //     float randomConnectionLength = random(1.0) * connectionLength;
-        //     int randomConnectionLengthInt = int(randomConnectionLength);
+        float currentPathNumber = destinationData.y; // current path number
+        int currentPathNumberInt = int(currentPathNumber);
 
-        //     float newDestinationNumber = uConnectionsData[(currentDestinationInt * 6) + randomConnectionLengthInt];
-        //     int newDestinationNumberInt = int(newDestinationNumber);
+        float currentPathIndex = destinationData.w; // current path index
+        int currentPathIndexInt = int(currentPathIndex);
 
-        //     finalDestination = vec4(
-        //         uPositionsData[(5 * newDestinationNumberInt) + 0] + (((random(3.49) * 2.0) - 1.0) * uPositionsData[(5 * newDestinationNumberInt) + 3]) * .25, 
-        //         // uPositionsData[(5 * newDestinationNumberInt) + 1],
-        //         currentDestination, 
-        //         uPositionsData[(5 * newDestinationNumberInt) + 2] + (((random(9.43) * 2.0) - 1.0) * uPositionsData[(5 * newDestinationNumberInt) + 4]) * .25, 
-        //         newDestinationNumber
-        //     );
-        // }
+        if(distanceFromDestination <= 1.0) {
+            float modNextPathIndex = mod(currentPathIndex + 1.0, float(uPathBufferLengths[currentPathNumberInt]) / 3.0);
+            int nextPathIndexInt = int(modNextPathIndex);//currentPathIndexInt + 1;
+
+            int pathBufferPathIndex = int(uPathBufferIndexes[currentPathNumberInt]);
+            vec3 pathIndexVector3 = vec3(
+                uPathBuffer[pathBufferPathIndex + (nextPathIndexInt * 3)],
+                uPathBuffer[pathBufferPathIndex + (nextPathIndexInt * 3) + 1],
+                uPathBuffer[pathBufferPathIndex + (nextPathIndexInt * 3) + 2]
+            );
+
+            finalDestination = vec4(
+                pathIndexVector3.x,
+                currentPathNumber,
+                pathIndexVector3.z,
+                float(nextPathIndexInt)
+            );
+
+            // // if(uPathBufferLengths[currentPathNumberInt] == 39) {
+            // if(nextPathIndexInt == 13) {
+            // // if(nextPathIndexInt == 2) {
+            // // if(mod(40.0, float(uPathBufferLengths[currentPathNumberInt])) == 1.0) {
+            //     finalDestination = vec4(
+            //         0.0,
+            //         0.0,
+            //         0.0,
+            //         0.0
+            //     );            
+            // }
+
+            // int connectionsLengthInt = uGraphConnectionsLengths[currentDestinationInt];
+            // float connectionLength = float(connectionsLengthInt);
+            // float randomConnectionLength = random(1.0) * connectionLength;
+            // int randomConnectionLengthInt = int(randomConnectionLength);
+
+            // float newDestinationNumber = uConnectionsData[(currentDestinationInt * 6) + randomConnectionLengthInt];
+            // int newDestinationNumberInt = int(newDestinationNumber + 1);
+
+            // finalDestination = vec4(
+            //     uPositionsData[(5 * newDestinationNumberInt) + 0] + (((random(3.49) * 2.0) - 1.0) * uPositionsData[(5 * newDestinationNumberInt) + 3]) * .25, 
+            //     // uPositionsData[(5 * newDestinationNumberInt) + 1],
+            //     currentDestination, 
+            //     uPositionsData[(5 * newDestinationNumberInt) + 2] + (((random(9.43) * 2.0) - 1.0) * uPositionsData[(5 * newDestinationNumberInt) + 4]) * .25, 
+            //     newDestinationNumber
+            // );
+        }
 
         gl_FragColor = finalDestination;
     }
@@ -327,7 +363,7 @@ function useVehicleGPGPU(count: number) {
             (directionTexture.image.data as any)[i4 + 0] = (Math.random() - 0.5); // x
             (directionTexture.image.data as any)[i4 + 1] = 0.0; // y
             (directionTexture.image.data as any)[i4 + 2] = (Math.random() - 0.5); // z
-            (directionTexture.image.data as any)[i4 + 3] = 1.0; // w
+            (directionTexture.image.data as any)[i4 + 3] = 3.0; // w
     
             // destinations
             // (destinationTexture.image.data as any)[i4 + 0] = destinationPositionCalc.x; // x
@@ -335,7 +371,7 @@ function useVehicleGPGPU(count: number) {
             // (destinationTexture.image.data as any)[i4 + 2] = destinationPositionCalc.z; // z
             // (destinationTexture.image.data as any)[i4 + 3] = randomConnectionDestinationGraphPosition.number; // w - destinationPosition number
             (destinationTexture.image.data as any)[i4 + 0] = pathBuffer[3];//randomNeg1To1() * 10; // x
-            (destinationTexture.image.data as any)[i4 + 1] = 1.0; // y - current path number
+            (destinationTexture.image.data as any)[i4 + 1] = 0.0; // y - current path number
             (destinationTexture.image.data as any)[i4 + 2] = pathBuffer[5];//randomNeg1To1() * 10; // z
             (destinationTexture.image.data as any)[i4 + 3] = 1.0; // w - path destination number
 
@@ -368,6 +404,11 @@ function useVehicleGPGPU(count: number) {
         destinationVariable.material.uniforms.uSize = { value: size };        
         destinationVariable.material.uniforms.uTime = { value: 0 };
         destinationVariable.material.uniforms.uDeltaTime = { value: 0 };
+        destinationVariable.material.uniforms.uPathBuffer = { value: pathBuffer };
+        destinationVariable.material.uniforms.uPathBufferLengths = { value: pathBufferLengths };
+        destinationVariable.material.uniforms.uPathBufferIndexes = { value: pathBufferIndexes };
+        destinationVariable.material.uniforms.uPathBufferTotalLength = { value: pathBufferTotalLength };
+
         // destinationVariable.material.uniforms.uGraphRows = { value: graphArrays.graphPositions.length };
         // destinationVariable.material.uniforms.uGraphCols = { value: 10 };
         // destinationVariable.material.uniforms.uPositionsData = { value: graphArrays.dataPositions };

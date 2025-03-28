@@ -387,7 +387,7 @@ const WalkingPeople = ({
       <WalkingCars />
       <WalkingGround />
       <WalkingLights />
-      <WalkingBoundries />
+      {/* <WalkingBoundries /> */}
 
       {/* <primitive object={testUVShaderMaterial} /> */}
 
