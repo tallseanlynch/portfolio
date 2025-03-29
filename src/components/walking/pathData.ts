@@ -28,14 +28,14 @@ const vehiclePath0Turning = {
     ellipseCenterY: 25,
     radiusX: 7.5,
     radiusY: 7.5,
-    startAngle: -Math.PI * .5,
-    endAngle: 0,
-    clockWise: false,
+    startAngle: 0,
+    endAngle: -Math.PI * .5,
+    clockWise: true,
     rotation: 0,
-    directionalPointA: new Vector3(-130, 0, 0),
-    directionalPointB: new Vector3(0, 0, 130),
-    crossWalkPointA: new Vector3(-15, 0, 0),
-    crossWalkPointB: new Vector3(0, 0, 15),
+    directionalPointA: new Vector3(0, 0, 130),
+    directionalPointB: new Vector3(-130, 0, 0),
+    crossWalkPointA: new Vector3(0, 0, 15),
+    crossWalkPointB: new Vector3(-15, 0, 0),
     visualModifier: xVisualModifier,
     material: turningMaterialA
 }
@@ -54,14 +54,14 @@ const vehiclePath1Turning = {
     ellipseCenterY: 25,
     radiusX: 12.5,
     radiusY: 12.5,
-    startAngle: -Math.PI * .5,
-    endAngle: 0,
-    clockWise: false,
+    startAngle: 0,
+    endAngle: -Math.PI * .5,
+    clockWise: true,
     rotation: 0,
-    directionalPointA: new Vector3(-130, 0, 0),
-    directionalPointB: new Vector3(0, 0, 130),
-    crossWalkPointA: new Vector3(-15, 0, 0),
-    crossWalkPointB: new Vector3(0, 0, 15),
+    directionalPointA: new Vector3(0, 0, 130),
+    directionalPointB: new Vector3(-130, 0, 0),
+    crossWalkPointA: new Vector3(0, 0, 15),
+    crossWalkPointB: new Vector3(-15, 0, 0),
     visualModifier: xVisualModifier,
     material: turningMaterialA
 }
@@ -114,11 +114,23 @@ const vehicleTurnPath = ({
     const crosswalkPoints = [
         crosswalkPointA,
         crosswalkPointB
-    ].reverse()
+    ]
     
-    const turningGeometryPoints = [ directionalEndPointA, crosswalkPointA, ...ellipsePoints3D, crosswalkPointB, directionalEndPointB ].reverse();
-    // const startingAreaA = [directionalEndPointA, crosswalkPointA];
-    // const startingAreaB = [directionalEndPointB, crosswalkPointB];
+    const turningGeometryPoints = [ directionalEndPointA, crosswalkPointA, ...ellipsePoints3D, crosswalkPointB, directionalEndPointB ];
+    let startingPointAIndex = -1;
+    turningGeometryPoints.forEach((gp, gpIndex) => {
+        if(gp.distanceTo(crosswalkPointA) < .01){
+            startingPointAIndex = gpIndex;
+        }
+    })
+    let startingPointBIndex = -1;
+    turningGeometryPoints.forEach((gp, gpIndex) => {
+        if(gp.distanceTo(crosswalkPointB) < .01){
+            startingPointBIndex = gpIndex;
+        }
+    })
+    const startingPointIndexes = [startingPointAIndex, startingPointBIndex];
+    console.log(startingPointIndexes);
     const geometry = new BufferGeometry().setFromPoints( turningGeometryPoints );
     const bufferArray = new Float32Array(turningGeometryPoints.length * 3);
     for(let bufferIndex = 0; bufferIndex < turningGeometryPoints.length; bufferIndex++) {
@@ -154,7 +166,7 @@ const vehicleStraightPath = ({
         end.add(visualModifier)
     ]
 
-    const crosswalkPoints = [crosswalkPointA, crosswalkPointB].reverse();
+    const crosswalkPoints = [crosswalkPointA, crosswalkPointB];
 
     const geometry = new BufferGeometry().setFromPoints( straightGeometryPoints );
     const line = new Line( geometry, material );
