@@ -16,13 +16,14 @@ const Cars = ({width = 1}) => {
 
     useEffect(() => {
         if(instancedMeshRef.current) {
-        for ( let i=0 ; i<numCars ; i++ ) {
-            matrixPositionObject.scale.y = 2.0 + (Math.random() * instanceScale) - instanceScale / 2;
-            matrixPositionObject.position.set(0, matrixPositionObject.scale.y / 2, 0);        
-            matrixPositionObject.updateMatrix();
-            instancedMeshRef.current.setMatrixAt( i, matrixPositionObject.matrix );
-            instancedMeshRef.current.frustumCulled = false;
-        }
+            console.log(numCars);
+            for ( let i=0 ; i<numCars ; i++ ) {
+                matrixPositionObject.scale.y = 2.0 + (Math.random() * instanceScale) - instanceScale / 2;
+                matrixPositionObject.position.set(0, matrixPositionObject.scale.y / 2, 0);        
+                matrixPositionObject.updateMatrix();
+                instancedMeshRef.current.setMatrixAt( i, matrixPositionObject.matrix );
+                instancedMeshRef.current.frustumCulled = false;
+            }
         instancedMeshRef.current.instanceMatrix.needsUpdate = true;
         instancedMeshRef.current.frustumCulled = false;
         }
@@ -227,7 +228,7 @@ const WalkingCars = () => {
                 pathLine={pathData.vehiclePath1StraightData.line} 
                 crosswalkPoints={pathData.vehiclePath1StraightData.crosswalkPoints}
             />
-            <Cars width={1} />
+            <Cars width={3} />
         </>
     )
 }

@@ -33,12 +33,31 @@ const simulationPositionFragmentShader = `
         vec2 uv = gl_FragCoord.xy / resolution.xy;
         vec4 positionData = texture(uPosition, uv);
         vec4 directionData = texture(uDirection, uv);
+        vec4 destinationData = texture(uDestination, uv);
 
         vec3 positionDataCalc = vec3(positionData.xyz);
         vec3 directionDataCalc = vec3(directionData.xyz);
-        positionDataCalc.y = 0.0;
+        vec3 destinationDataCalc = vec3(
+            destinationData.x,
+            0.1,
+            destinationData.z
+        );
 
-        gl_FragColor = vec4(positionDataCalc, 1.0) + vec4(clamp(directionDataCalc * .075 * directionData.w, -1.0, 1.0), 0.0);
+        positionDataCalc.y = 0.0;
+        vec4 finalPosition = vec4(positionDataCalc, 1.0) + vec4(clamp(directionDataCalc * .075 * directionData.w, -1.0, 1.0), 0.0);
+
+        float destinationPathIndex = destinationData.w;
+        float distanceToDestination = distance(positionDataCalc, destinationDataCalc);
+        if(destinationData.w < 1.0 && distanceToDestination > 100.0) {
+            finalPosition = vec4(
+                destinationDataCalc.x,
+                0.1,
+                destinationDataCalc.z,
+                positionData.w
+            );
+        }
+
+        gl_FragColor = finalPosition;
     }
 `
 const simulationDirectionFragmentShader = `
@@ -326,20 +345,19 @@ const randomNeg1To1 = () => (Math.random() -.5) * 2;
 // }
 
 function useVehicleGPGPU(count: number) {
-    const size = Math.ceil(Math.sqrt(count));
+    const size = count * count;
     const gl = useThree((state) => state.gl);
 
     const [gpgpuRenderer, data] = useMemo(() => {
-        const gpgpuRenderer = new GPUComputationRenderer(size, size, gl);
+        const gpgpuRenderer = new GPUComputationRenderer(count, count, gl);
 
         const positionTexture = gpgpuRenderer.createTexture();
         const directionTexture = gpgpuRenderer.createTexture();
         const destinationTexture = gpgpuRenderer.createTexture();
         const stateTexture = gpgpuRenderer.createTexture();
 
-        for (let i = 0; i < count; i++) {
+        for (let i = 0; i < size; i++) {
             const i4 = i * 4;
-
             // const graphPosition = positionsGraph[i % positionsGraph.length];
             // getPersonPosition(graphPosition);
             // const connectionDestinations = graphPosition.connections;
@@ -354,9 +372,9 @@ function useVehicleGPGPU(count: number) {
             // (positionTexture.image.data as any)[i4 + 1] = 0.01; // y
             // (positionTexture.image.data as any)[i4 + 2] = startingPositionCalc.z; // z
             // (positionTexture.image.data as any)[i4 + 3] = graphPosition.number; // w - graphPosition number
-            (positionTexture.image.data as any)[i4 + 0] = pathBuffer[0];//randomNeg1To1() * 10; // x
+            (positionTexture.image.data as any)[i4 + 0] = pathBuffer[3];//randomNeg1To1() * 10; // x
             (positionTexture.image.data as any)[i4 + 1] = 0.01; // y
-            (positionTexture.image.data as any)[i4 + 2] = pathBuffer[2];//randomNeg1To1() * 10; // z
+            (positionTexture.image.data as any)[i4 + 2] = pathBuffer[5] + (i * 15) + randomNeg1To1() * 2; // z
             (positionTexture.image.data as any)[i4 + 3] = 1.0; // w - graphPosition number
 
             // velocities
@@ -461,7 +479,7 @@ function useVehicleGPGPU(count: number) {
                 },
             },
         ];
-    }, [count, gl, size]);
+    }, [gl, size]);
 
     useEffect(() => {
         return () => {

@@ -117,6 +117,8 @@ const vehicleTurnPath = ({
     ].reverse()
     
     const turningGeometryPoints = [ directionalEndPointA, crosswalkPointA, ...ellipsePoints3D, crosswalkPointB, directionalEndPointB ].reverse();
+    // const startingAreaA = [directionalEndPointA, crosswalkPointA];
+    // const startingAreaB = [directionalEndPointB, crosswalkPointB];
     const geometry = new BufferGeometry().setFromPoints( turningGeometryPoints );
     const bufferArray = new Float32Array(turningGeometryPoints.length * 3);
     for(let bufferIndex = 0; bufferIndex < turningGeometryPoints.length; bufferIndex++) {
