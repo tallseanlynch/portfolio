@@ -130,7 +130,7 @@ const vehicleTurnPath = ({
         }
     })
     const startingPointIndexes = [startingPointAIndex, startingPointBIndex];
-    console.log(startingPointIndexes);
+
     const geometry = new BufferGeometry().setFromPoints( turningGeometryPoints );
     const bufferArray = new Float32Array(turningGeometryPoints.length * 3);
     for(let bufferIndex = 0; bufferIndex < turningGeometryPoints.length; bufferIndex++) {
@@ -146,7 +146,8 @@ const vehicleTurnPath = ({
         line,
         crosswalkPoints,
         bufferArray,
-        bufferLength: bufferArray.length
+        bufferLength: bufferArray.length,
+        startingPointIndexes
     }
 }
 
@@ -167,6 +168,19 @@ const vehicleStraightPath = ({
     ]
 
     const crosswalkPoints = [crosswalkPointA, crosswalkPointB];
+    let startingPointAIndex = -1;
+    straightGeometryPoints.forEach((gp, gpIndex) => {
+        if(gp.distanceTo(crosswalkPointA) < .01){
+            startingPointAIndex = gpIndex;
+        }
+    })
+    let startingPointBIndex = -1;
+    straightGeometryPoints.forEach((gp, gpIndex) => {
+        if(gp.distanceTo(crosswalkPointB) < .01){
+            startingPointBIndex = gpIndex;
+        }
+    })
+    const startingPointIndexes = [startingPointAIndex, startingPointBIndex];
 
     const geometry = new BufferGeometry().setFromPoints( straightGeometryPoints );
     const line = new Line( geometry, material );
@@ -183,7 +197,8 @@ const vehicleStraightPath = ({
         line,
         crosswalkPoints,
         bufferArray,
-        bufferLength: bufferArray.length
+        bufferLength: bufferArray.length,
+        startingPointIndexes
     }
 }
 
@@ -220,10 +235,32 @@ const pathArray = pathDataKeys.reduce(
 const pathBuffer = new Float32Array(pathArray);
 const pathBufferLengths = pathDataKeys.map(pdk => pathData[pdk].bufferLength);
 
+let crosswalkPointsBufferLocal: number[] = [];
+pathDataKeys.forEach(
+    (pdk) => {
+        crosswalkPointsBufferLocal = [
+            ...crosswalkPointsBufferLocal,
+            ...pathData[pdk].startingPointIndexes
+        ]
+    }
+);
+
+let bufferFullOffset = 0;
+let bufferLengthIndex = 0;
+const crosswalkPointsBufferIndexes = crosswalkPointsBufferLocal.map((bufferPosition, bufferPositionIndex) => {
+    const updatedValue = bufferPosition + bufferFullOffset;
+    if(bufferPositionIndex % 2 === 1) {
+        bufferFullOffset += pathBufferLengths[bufferLengthIndex]
+        bufferLengthIndex += 1;
+    }
+    return updatedValue;
+})
+
 export { 
     pathData, 
     pathBuffer, 
     pathBufferLengths, 
     pathBufferIndexes, 
-    pathBufferTotalLength 
+    pathBufferTotalLength,
+    crosswalkPointsBufferIndexes
 };

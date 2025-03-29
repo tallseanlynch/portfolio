@@ -1,26 +1,26 @@
 import { uniformData } from './useLightsTime';
 import { 
-    graphArrays, 
-    // positionsGraph 
+    graphArrays
 } from './positionsGraph';
 import { 
     pathData, 
     pathBuffer, 
     pathBufferLengths,
     pathBufferIndexes,
-    pathBufferTotalLength
+    pathBufferTotalLength,
+    crosswalkPointsBufferIndexes
 } from './pathData';
 import { useThree } from '@react-three/fiber';
 import { useEffect, useMemo } from 'react';
 import { GPUComputationRenderer } from 'three/examples/jsm/misc/GPUComputationRenderer.js';
-// import { Vector3 } from 'three';
 
 console.log({ 
     pathData, 
     pathBuffer, 
     pathBufferLengths,
     pathBufferIndexes,
-    pathBufferTotalLength
+    pathBufferTotalLength,
+    crosswalkPointsBufferIndexes
 });
 
 const simulationPositionFragmentShader = `

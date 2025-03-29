@@ -16,7 +16,6 @@ const Cars = ({width = 1}) => {
 
     useEffect(() => {
         if(instancedMeshRef.current) {
-            console.log(numCars);
             for ( let i=0 ; i<numCars ; i++ ) {
                 matrixPositionObject.scale.y = 2.0 + (Math.random() * instanceScale) - instanceScale / 2;
                 matrixPositionObject.position.set(0, matrixPositionObject.scale.y / 2, 0);        
