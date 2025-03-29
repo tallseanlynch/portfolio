@@ -1,14 +1,13 @@
 import { uniformData } from './useLightsTime';
 import { 
-    graphArrays
-} from './positionsGraph';
-import { 
     pathData, 
     pathBuffer, 
     pathBufferLengths,
     pathBufferIndexes,
     pathBufferTotalLength,
-    crosswalkPointsBufferIndexes
+    crosswalkPointsBufferIndexes,
+    crosswalkPointsBufferLanes,
+    crosswalkPointsBufferLocal
 } from './pathData';
 import { useThree } from '@react-three/fiber';
 import { useEffect, useMemo } from 'react';
@@ -20,7 +19,9 @@ console.log({
     pathBufferLengths,
     pathBufferIndexes,
     pathBufferTotalLength,
-    crosswalkPointsBufferIndexes
+    crosswalkPointsBufferIndexes,
+    crosswalkPointsBufferLanes,
+    crosswalkPointsBufferLocal
 });
 
 const simulationPositionFragmentShader = `
@@ -64,11 +65,6 @@ const simulationDirectionFragmentShader = `
     uniform int uSize;
     uniform float uTime; // seconds as float
     uniform float uDeltaTime;
-    // uniform int uConnectionsWalkConditionsData[${graphArrays.dataConnectionsWalkConditions.length}];
-    // uniform float uConnectionsData[${graphArrays.dataConnections.length}];
-    // uniform float uPositionsData[${graphArrays.dataPositions.length}];
-    // uniform int uLightTimes[${uniformData.lightsUniformArray.length}];
-    // uniform int uLightTimesTotalLength;
 
     void main() {
         float time = uTime;
@@ -242,12 +238,6 @@ const simulationDestinationFragmentShader = `
     uniform float uPathBufferIndexes[${pathBufferIndexes.length}];
     uniform int PathBufferTotalLength;
 
-    // uniform int uGraphConnectionsLengths[${graphArrays.graphPositions.length}];
-    // uniform int uGraphTerminationsLengths[${graphArrays.graphPositions.length}];
-    // uniform float uPositionsData[${graphArrays.dataPositions.length}];
-    // uniform float uConnectionsData[${graphArrays.dataConnections.length}];
-    // uniform float uTerminationsData[${graphArrays.dataTerminations.length}];
-
     float random(float n) {
         return fract(sin(n + uTime) * 43758.5453123);
     }
@@ -333,7 +323,7 @@ const simulationStateFragmentShader = `
     }
 `
 
-const randomNeg1To1 = () => (Math.random() -.5) * 2;
+// const randomNeg1To1 = () => (Math.random() -.5) * 2;
 
 // const startingPositionCalc = new Vector3();
 // const destinationPositionCalc = new Vector3();
@@ -355,27 +345,28 @@ function useVehicleGPGPU(count: number) {
         const directionTexture = gpgpuRenderer.createTexture();
         const destinationTexture = gpgpuRenderer.createTexture();
         const stateTexture = gpgpuRenderer.createTexture();
+        const lanes = new Array(24).fill(0);
+        console.log(lanes)
 
         for (let i = 0; i < size; i++) {
             const i4 = i * 4;
-            // const graphPosition = positionsGraph[i % positionsGraph.length];
-            // getPersonPosition(graphPosition);
-            // const connectionDestinations = graphPosition.connections;
-            // const randomConnectionDestination = connectionDestinations[Math.floor(Math.random() * graphPosition.connections.length)];
-            // const randomConnectionDestinationGraphPosition = positionsGraph.filter(graphPosition => {
-            //     return graphPosition.name === randomConnectionDestination
-            // })[0];
-            // getPersonPosition(randomConnectionDestinationGraphPosition, true);
+            const modPositionLane = i % crosswalkPointsBufferLanes.length;
+            const modPaths = modPositionLane / 2;
+            const startingPositionBufferIndex = crosswalkPointsBufferIndexes[modPositionLane];
+            const startingPositionBufferIndexLocal = crosswalkPointsBufferLocal[modPositionLane];
+            console.log({startingPositionBufferIndexLocal});
+            const startingPositionBufferVector3x = pathBuffer[startingPositionBufferIndex * 3];
+            const startingPositionBufferVector3z = pathBuffer[(startingPositionBufferIndex * 3) + 2];
+            const startingDestinationBufferVector3x = pathBuffer[(startingPositionBufferIndex + 1) * 3];
+            const startingDestinationBufferVector3z = pathBuffer[((startingPositionBufferIndex + 1) * 3) + 2];
 
             // positions
-            // (positionTexture.image.data as any)[i4 + 0] = startingPositionCalc.x; // x
-            // (positionTexture.image.data as any)[i4 + 1] = 0.01; // y
-            // (positionTexture.image.data as any)[i4 + 2] = startingPositionCalc.z; // z
-            // (positionTexture.image.data as any)[i4 + 3] = graphPosition.number; // w - graphPosition number
-            (positionTexture.image.data as any)[i4 + 0] = pathBuffer[3];//randomNeg1To1() * 10; // x
+            (positionTexture.image.data as any)[i4 + 0] = startingPositionBufferVector3x;//pathBuffer[3];//randomNeg1To1() * 10; // x
             (positionTexture.image.data as any)[i4 + 1] = 0.01; // y
-            (positionTexture.image.data as any)[i4 + 2] = pathBuffer[5] + (i * 15) + randomNeg1To1() * 2; // z
+            (positionTexture.image.data as any)[i4 + 2] = startingPositionBufferVector3z + lanes[crosswalkPointsBufferLanes[modPositionLane]] * 15;//pathBuffer[5] + (lanes[modPositionLane] * 15) + randomNeg1To1() * 2; // z
             (positionTexture.image.data as any)[i4 + 3] = 1.0; // w - graphPosition number
+
+            lanes[crosswalkPointsBufferLanes[modPositionLane]] += 1;
 
             // velocities
             (directionTexture.image.data as any)[i4 + 0] = (Math.random() - 0.5); // x
@@ -384,14 +375,10 @@ function useVehicleGPGPU(count: number) {
             (directionTexture.image.data as any)[i4 + 3] = 3.0; // w
     
             // destinations
-            // (destinationTexture.image.data as any)[i4 + 0] = destinationPositionCalc.x; // x
-            // (destinationTexture.image.data as any)[i4 + 1] = graphPosition.number; // y - current graphPosition number
-            // (destinationTexture.image.data as any)[i4 + 2] = destinationPositionCalc.z; // z
-            // (destinationTexture.image.data as any)[i4 + 3] = randomConnectionDestinationGraphPosition.number; // w - destinationPosition number
-            (destinationTexture.image.data as any)[i4 + 0] = pathBuffer[3];//randomNeg1To1() * 10; // x
-            (destinationTexture.image.data as any)[i4 + 1] = 0.0; // y - current path number
-            (destinationTexture.image.data as any)[i4 + 2] = pathBuffer[5];//randomNeg1To1() * 10; // z
-            (destinationTexture.image.data as any)[i4 + 3] = 1.0; // w - path destination number
+            (destinationTexture.image.data as any)[i4 + 0] = startingDestinationBufferVector3x;//pathBuffer[3];//randomNeg1To1() * 10; // x
+            (destinationTexture.image.data as any)[i4 + 1] = modPaths; // y - current path number
+            (destinationTexture.image.data as any)[i4 + 2] = startingDestinationBufferVector3z;//pathBuffer[5];//randomNeg1To1() * 10; // z
+            (destinationTexture.image.data as any)[i4 + 3] = startingPositionBufferIndexLocal; // w - path destination number
 
             // states
             (stateTexture.image.data as any)[i4 + 0] = 0.0; // x

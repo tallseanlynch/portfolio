@@ -37,7 +37,9 @@ const vehiclePath0Turning = {
     crossWalkPointA: new Vector3(0, 0, 15),
     crossWalkPointB: new Vector3(-15, 0, 0),
     visualModifier: xVisualModifier,
-    material: turningMaterialA
+    material: turningMaterialA,
+    laneA: 0,
+    laneB: 23,
 }
 
 const vehiclePath0Straight = {
@@ -46,7 +48,9 @@ const vehiclePath0Straight = {
     crosswalkPointB: new Vector3(-17.5, 0.1, -40),
     end: new Vector3(-17.5, 0.1, -155),
     material: straightMaterialA,
-    visualModifier: xVisualModifier
+    visualModifier: xVisualModifier,
+    laneA: 0,
+    laneB: 15,
 }
 
 const vehiclePath1Turning = {
@@ -63,7 +67,9 @@ const vehiclePath1Turning = {
     crossWalkPointA: new Vector3(0, 0, 15),
     crossWalkPointB: new Vector3(-15, 0, 0),
     visualModifier: xVisualModifier,
-    material: turningMaterialA
+    material: turningMaterialA,
+    laneA: 1,
+    laneB: 22,
 }
 
 const vehiclePath1Straight = {
@@ -72,7 +78,9 @@ const vehiclePath1Straight = {
     crosswalkPointB: new Vector3(-12.5, 0.1, -40),
     end: new Vector3(-12.5, 0.1, -155),
     material: straightMaterialA,
-    visualModifier: xVisualModifier
+    visualModifier: xVisualModifier,
+    laneA: 1,
+    laneB: 14,
 }
 
 const vehicleTurnPath = ({
@@ -88,7 +96,9 @@ const vehicleTurnPath = ({
     directionalPointB = new Vector3(),
     crossWalkPointA = new Vector3(),
     crossWalkPointB = new Vector3(),
-    material = new LineBasicMaterial()
+    material = new LineBasicMaterial(),
+    laneA = -1,
+    laneB = -1
 }) => {
     const ellipse = new EllipseCurve(
         ellipseCenterX, ellipseCenterY, // center x, y
@@ -147,7 +157,8 @@ const vehicleTurnPath = ({
         crosswalkPoints,
         bufferArray,
         bufferLength: bufferArray.length,
-        startingPointIndexes
+        startingPointIndexes,
+        lanes: [laneA, laneB]
     }
 }
 
@@ -157,7 +168,9 @@ const vehicleStraightPath = ({
     crosswalkPointA = new Vector3(),
     crosswalkPointB = new Vector3(),
     material = new LineBasicMaterial(),
-    visualModifier = new Vector3()
+    visualModifier = new Vector3(),
+    laneA = -1,
+    laneB = -1
 }) => {
 
     const straightGeometryPoints = [
@@ -198,7 +211,8 @@ const vehicleStraightPath = ({
         crosswalkPoints,
         bufferArray,
         bufferLength: bufferArray.length,
-        startingPointIndexes
+        startingPointIndexes,
+        lanes: [laneA, laneB]
     }
 }
 
@@ -236,11 +250,17 @@ const pathBuffer = new Float32Array(pathArray);
 const pathBufferLengths = pathDataKeys.map(pdk => pathData[pdk].bufferLength);
 
 let crosswalkPointsBufferLocal: number[] = [];
+let crosswalkPointsBufferLanes: number[] = [];
+
 pathDataKeys.forEach(
     (pdk) => {
         crosswalkPointsBufferLocal = [
             ...crosswalkPointsBufferLocal,
             ...pathData[pdk].startingPointIndexes
+        ]
+        crosswalkPointsBufferLanes = [
+            ...crosswalkPointsBufferLanes,
+            ...pathData[pdk].lanes
         ]
     }
 );
@@ -250,7 +270,7 @@ let bufferLengthIndex = 0;
 const crosswalkPointsBufferIndexes = crosswalkPointsBufferLocal.map((bufferPosition, bufferPositionIndex) => {
     const updatedValue = bufferPosition + bufferFullOffset;
     if(bufferPositionIndex % 2 === 1) {
-        bufferFullOffset += pathBufferLengths[bufferLengthIndex]
+        bufferFullOffset += pathBufferLengths[bufferLengthIndex] / 3;
         bufferLengthIndex += 1;
     }
     return updatedValue;
@@ -262,5 +282,7 @@ export {
     pathBufferLengths, 
     pathBufferIndexes, 
     pathBufferTotalLength,
-    crosswalkPointsBufferIndexes
+    crosswalkPointsBufferIndexes,
+    crosswalkPointsBufferLanes,
+    crosswalkPointsBufferLocal
 };
