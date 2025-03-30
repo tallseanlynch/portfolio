@@ -40,6 +40,12 @@ const vehiclePath0Turning = {
     material: turningMaterialA,
     laneA: 0,
     laneB: 23,
+    trafficConditions: {
+        northSouth: false,
+        northSouthTurning: true,
+        westTurning: true,
+        noTraffic: false
+    }
 }
 
 const vehiclePath0Straight = {
@@ -51,26 +57,32 @@ const vehiclePath0Straight = {
     visualModifier: xVisualModifier,
     laneA: 0,
     laneB: 15,
+    trafficConditions: {
+        northSouth: true,
+        northSouthTurning: false,
+        westTurning: false,
+        noTraffic: false
+    }
 }
 
-const vehiclePath1Turning = {
-    ellipseCenterX: -25,
-    ellipseCenterY: 25,
-    radiusX: 12.5,
-    radiusY: 12.5,
-    startAngle: 0,
-    endAngle: -Math.PI * .5,
-    clockWise: true,
-    rotation: 0,
-    directionalPointA: new Vector3(0, 0, 130),
-    directionalPointB: new Vector3(-130, 0, 0),
-    crossWalkPointA: new Vector3(0, 0, 15),
-    crossWalkPointB: new Vector3(-15, 0, 0),
-    visualModifier: xVisualModifier,
-    material: turningMaterialA,
-    laneA: 1,
-    laneB: 22,
-}
+// const vehiclePath1Turning = {
+//     ellipseCenterX: -25,
+//     ellipseCenterY: 25,
+//     radiusX: 12.5,
+//     radiusY: 12.5,
+//     startAngle: 0,
+//     endAngle: -Math.PI * .5,
+//     clockWise: true,
+//     rotation: 0,
+//     directionalPointA: new Vector3(0, 0, 130),
+//     directionalPointB: new Vector3(-130, 0, 0),
+//     crossWalkPointA: new Vector3(0, 0, 15),
+//     crossWalkPointB: new Vector3(-15, 0, 0),
+//     visualModifier: xVisualModifier,
+//     material: turningMaterialA,
+//     laneA: 1,
+//     laneB: 22,
+// }
 
 const vehiclePath1Straight = {
     start: new Vector3(-12.5, 0.1, 155),
@@ -81,6 +93,12 @@ const vehiclePath1Straight = {
     visualModifier: xVisualModifier,
     laneA: 1,
     laneB: 14,
+    trafficConditions: {
+        northSouth: true,
+        northSouthTurning: false,
+        westTurning: false,
+        noTraffic: false
+    }
 }
 
 const vehicleTurnPath = ({
@@ -98,7 +116,8 @@ const vehicleTurnPath = ({
     crossWalkPointB = new Vector3(),
     material = new LineBasicMaterial(),
     laneA = -1,
-    laneB = -1
+    laneB = -1,
+    trafficConditions
 }) => {
     const ellipse = new EllipseCurve(
         ellipseCenterX, ellipseCenterY, // center x, y
@@ -158,7 +177,8 @@ const vehicleTurnPath = ({
         bufferArray,
         bufferLength: bufferArray.length,
         startingPointIndexes,
-        lanes: [laneA, laneB]
+        lanes: [laneA, laneB],
+        trafficConditions
     }
 }
 
@@ -170,7 +190,8 @@ const vehicleStraightPath = ({
     material = new LineBasicMaterial(),
     visualModifier = new Vector3(),
     laneA = -1,
-    laneB = -1
+    laneB = -1,
+    trafficConditions
 }) => {
 
     const straightGeometryPoints = [
@@ -212,15 +233,16 @@ const vehicleStraightPath = ({
         bufferArray,
         bufferLength: bufferArray.length,
         startingPointIndexes,
-        lanes: [laneA, laneB]
+        lanes: [laneA, laneB],
+        trafficConditions
     }
 }
 
 
 const pathData = {
     vehiclePath0TurningData: vehicleTurnPath(vehiclePath0Turning),
-    vehiclePath0StraightData: vehicleStraightPath(vehiclePath0Straight),
-    vehiclePath1TurningData: vehicleTurnPath(vehiclePath1Turning),
+    // vehiclePath0StraightData: vehicleStraightPath(vehiclePath0Straight),
+    // vehiclePath1TurningData: vehicleTurnPath(vehiclePath1Turning),
     vehiclePath1StraightData: vehicleStraightPath(vehiclePath1Straight)
 };
 
@@ -276,6 +298,26 @@ const crosswalkPointsBufferIndexes = crosswalkPointsBufferLocal.map((bufferPosit
     return updatedValue;
 })
 
+let trafficConditionsBuffer: number[] = [];
+pathDataKeys.forEach(
+    (pdk) => {
+        const trafficConditionsKeys = Object.keys(pathData[pdk].trafficConditions);
+        const trafficConditionsBooleanNumbers: number[] = [];
+
+        trafficConditionsKeys.forEach(tck => {
+            trafficConditionsBooleanNumbers.push(
+                pathData[pdk].trafficConditions[tck] === true ? 1 : 0
+            );
+        })
+
+        trafficConditionsBuffer = [
+            ...trafficConditionsBuffer,
+            ...trafficConditionsBooleanNumbers
+        ];
+    }
+);
+
+
 export { 
     pathData, 
     pathBuffer, 
@@ -284,5 +326,6 @@ export {
     pathBufferTotalLength,
     crosswalkPointsBufferIndexes,
     crosswalkPointsBufferLanes,
-    crosswalkPointsBufferLocal
+    crosswalkPointsBufferLocal,
+    trafficConditionsBuffer
 };

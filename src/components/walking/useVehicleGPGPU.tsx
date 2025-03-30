@@ -7,7 +7,8 @@ import {
     pathBufferTotalLength,
     crosswalkPointsBufferIndexes,
     crosswalkPointsBufferLanes,
-    crosswalkPointsBufferLocal
+    crosswalkPointsBufferLocal,
+    trafficConditionsBuffer
 } from './pathData';
 import { useThree } from '@react-three/fiber';
 import { useEffect, useMemo } from 'react';
@@ -22,7 +23,8 @@ console.log({
     pathBufferTotalLength,
     crosswalkPointsBufferIndexes,
     crosswalkPointsBufferLanes,
-    crosswalkPointsBufferLocal
+    crosswalkPointsBufferLocal,
+    trafficConditionsBuffer
 });
 
 const simulationPositionFragmentShader = `
@@ -66,25 +68,28 @@ const simulationDirectionFragmentShader = `
     uniform int uSize;
     uniform float uTime; // seconds as float
     uniform float uDeltaTime;
+    uniform int uLightTimes[${uniformData.lightsUniformArray.length}];
+    uniform int uLightTimesTotalLength;
+    uniform int uTrafficConditionsBuffer[${trafficConditionsBuffer.length}];
 
     void main() {
         float time = uTime;
 
-        // int activeLightNumber = 0;
-        // int activeLightTimeLeft = 0;
+        int activeLightNumber = 0;
+        int activeLightTimeLeft = 0;
 
-        // float totalCycleTime = float(uLightTimesTotalLength);
-        // float cycleTime = mod(time, totalCycleTime);
-        // float cycleTimeCheckValue = 0.0;
+        float totalCycleTime = float(uLightTimesTotalLength);
+        float cycleTime = mod(time, totalCycleTime);
+        float cycleTimeCheckValue = 0.0;
 
-        // for(int lightIndex = 0; lightIndex < ${uniformData.lightsUniformArray.length}; lightIndex++) {
-        //     float lightTimeCheck = float(uLightTimes[lightIndex]);
-        //     if(cycleTime > cycleTimeCheckValue) {
-        //         activeLightNumber = lightIndex;
-        //         cycleTimeCheckValue += lightTimeCheck;
-        //         activeLightTimeLeft = int(cycleTimeCheckValue - cycleTime);
-        //     }
-        // }
+        for(int lightIndex = 0; lightIndex < ${uniformData.lightsUniformArray.length}; lightIndex++) {
+            float lightTimeCheck = float(uLightTimes[lightIndex]);
+            if(cycleTime > cycleTimeCheckValue) {
+                activeLightNumber = lightIndex;
+                cycleTimeCheckValue += lightTimeCheck;
+                activeLightTimeLeft = int(cycleTimeCheckValue - cycleTime);
+            }
+        }
 
         vec2 uv = gl_FragCoord.xy / resolution.xy;
         vec4 positionData = texture(uPosition, uv);
@@ -104,58 +109,67 @@ const simulationDirectionFragmentShader = `
             mixDirectionDestination = mix(directionDataCalc, directionToDestination, interpolationFactor);        
         }
 
-        vec4 velocity = vec4(mixDirectionDestination, directionData.w);        
-        // if(distanceToDestination < 1.0) {
-        //     // velocity.w = distanceToDestination;        
-        //     velocity.w = 0.0;        
-        // }
+        // vec4 velocity = vec4(mixDirectionDestination, directionData.w);        
+        vec4 velocity = vec4(mixDirectionDestination, 3.0);        
 
-        // float checkDistanceMin = 5.0;
-        // float lowestCheckDistance = 1000.0;
+        float checkDistanceMin = 10.0;
+        float lowestCheckDistance = 1000.0;
         // vec3 collisionReflection = vec3(0.0, 0.0, 0.0);
-        // vec3 upVector = vec3(0.0, 1.0, 0.0);
-        // int numberOfPotentialCollisions = 0;
-        // bool isFrontCollision = false;
+        vec3 upVector = vec3(0.0, 1.0, 0.0);
+        int numberOfPotentialCollisions = 0;
+        bool isFrontCollision = false;
 
-        // for(int i = 0; i < uSize; i++) {
-        //     for(int j = 0; j < uSize; j++) {
-        //         vec2 checkUV = vec2(float(i), float(j)) / resolution.xy;
-        //         vec4 checkPersonPosition = texture(uPosition, checkUV);
-        //         vec3 checkPersonPositionCalc = vec3(checkPersonPosition.xyz);
-        //         float checkDistance = distance(positionDataCalc, checkPersonPositionCalc);
-        //         // if(checkDistance < checkDistanceMin && checkDistance > 0.001) {
-        //         if(
-        //             checkDistance < checkDistanceMin && 
-        //             checkDistance > 0.001 && 
-        //             checkDistance < lowestCheckDistance &&
-        //             distanceToDestination > .1
-        //         ) {
-        //             lowestCheckDistance = checkDistance;
-        //             numberOfPotentialCollisions += 1;
+        // Person
+        for(int i = 0; i < uSize; i++) {
+            for(int j = 0; j < uSize; j++) {
+                vec2 checkUV = vec2(float(i), float(j)) / resolution.xy;
+                vec4 checkVehiclePosition = texture(uPosition, checkUV);
+                vec4 checkVehicleDirection = texture(uDestination, checkUV);
+                vec3 checkVehiclePositionCalc = vec3(checkVehiclePosition.xyz);
+                float checkDistance = distance(positionDataCalc, checkVehiclePositionCalc);
+                // if(checkDistance < checkDistanceMin && checkDistance > 0.001) {
+                if(
+                    checkDistance < checkDistanceMin && 
+                    checkDistance > 0.001 && 
+                    checkDistance < lowestCheckDistance &&
+                    distanceToDestination > .1
+                ) {
+                    lowestCheckDistance = checkDistance;
+                    numberOfPotentialCollisions += 1;
 
-        //             vec3 frontCheckPosition = positionDataCalc + normalize(directionDataCalc);
-        //             vec3 backCheckPosition = positionDataCalc + normalize(directionDataCalc) * -1.0;
+                    vec3 frontCheckPosition = positionDataCalc + normalize(directionDataCalc) * .001;
+                    vec3 backCheckPosition = positionDataCalc + normalize(directionDataCalc) * -.001;
 
-        //             float frontDistance = distance(frontCheckPosition, checkPersonPositionCalc);
-        //             float backDistance = distance(backCheckPosition, checkPersonPositionCalc);
+                    float frontDistance = distance(frontCheckPosition, checkVehiclePositionCalc);
+                    float backDistance = distance(backCheckPosition, checkVehiclePositionCalc);
 
-        //             isFrontCollision = frontDistance < backDistance;
+                    isFrontCollision = frontDistance < backDistance;
 
-        //             float lessThanCheckDistanceModifier = 1.0;
-        //             if(checkDistance < 3.0 && isFrontCollision) {
-        //                 lessThanCheckDistanceModifier += (3.0 - checkDistance);
-        //                 velocity.w = checkDistance  * .5;
-        //             }
+                    if(checkDistance < checkDistanceMin && isFrontCollision) {
+                        velocity.w = 0.5;
+                    }
 
-        //             vec3 directionToCollision = normalize(checkPersonPositionCalc - positionDataCalc);
-        //             float dotProductToCollision = dot(directionToCollision, mixDirectionDestination);                    
-        //             collisionReflection = mixDirectionDestination - directionToCollision * 2.0 * lessThanCheckDistanceModifier * dotProductToCollision;
+                    if(checkDistance < checkDistanceMin * .5 && isFrontCollision) {
+                        velocity.w = 0.0;
+                    }
+
+                    vec3 directionToCollision = normalize(checkVehiclePositionCalc - positionDataCalc);
+                    // float dotProductToCollision = dot(directionToCollision, mixDirectionDestination);                    
+                    // collisionReflection = mixDirectionDestination - directionToCollision * 2.0 * lessThanCheckDistanceModifier * dotProductToCollision;
                     
-        //             vec3 collisionMixDirectionDestination = mix(mixDirectionDestination, collisionReflection, (1.0 - ((checkDistanceMin - checkDistance) / checkDistanceMin)) * .125 * lessThanCheckDistanceModifier);
-        //             velocity = vec4(collisionMixDirectionDestination, velocity.w);
-        //         }
-        //     }
-        // }
+                    // vec3 collisionMixDirectionDestination = mix(mixDirectionDestination, collisionReflection, (1.0 - ((checkDistanceMin - checkDistance) / checkDistanceMin)) * .125 * lessThanCheckDistanceModifier);
+                    // velocity = vec4(collisionMixDirectionDestination, velocity.w);
+                }
+            }
+        }
+
+        float pathNumber = destinationData.y;
+        int pathNumberInt = int(pathNumber);
+        int trafficConditionsBooleanNumber = uTrafficConditionsBuffer[(pathNumberInt * 4) + activeLightNumber];
+
+        if(trafficConditionsBooleanNumber == 0) {
+            velocity.w = 0.0;
+        }
 
         // if(numberOfPotentialCollisions < 1) {
         //     velocity.w = 1.0;
@@ -436,9 +450,10 @@ function useVehicleGPGPU(count: number) {
         // directionVariable.material.uniforms.uConnectionsData = { value: graphArrays.dataConnections };
         // directionVariable.material.uniforms.uConnectionsWalkConditionsData = { value: graphArrays.dataConnectionsWalkConditions };
         // directionVariable.material.uniforms.uPositionsData = { value: graphArrays.dataPositions };
-        // directionVariable.material.uniforms.uLightTimes = { value: uniformData.lightsUniformArray };
-        // directionVariable.material.uniforms.uLightTimesTotalLength = { value: uniformData.lightsTotalLengthOfTimeUniformInt };
-    
+        directionVariable.material.uniforms.uLightTimes = { value: uniformData.lightsUniformArray };
+        directionVariable.material.uniforms.uLightTimesTotalLength = { value: uniformData.lightsTotalLengthOfTimeUniformInt };
+        directionVariable.material.uniforms.uTrafficConditionsBuffer = { value: trafficConditionsBuffer };
+
         const destinationVariable = gpgpuRenderer.addVariable('uDestination', simulationDestinationFragmentShader, destinationTexture);
         destinationVariable.material.uniforms.uSize = { value: size };        
         destinationVariable.material.uniforms.uTime = { value: 0 };
