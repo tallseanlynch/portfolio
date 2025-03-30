@@ -192,7 +192,7 @@ const WalkingPeople = ({
         gl_FragColor = finalColor;
       }
     `,
-    side: DoubleSide
+    // side: DoubleSide
   }), [
     width, 
     data.position.texture,

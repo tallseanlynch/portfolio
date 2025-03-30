@@ -114,7 +114,7 @@ const Cars = ({width = 1}) => {
             gl_FragColor = finalColor;
         }
         `,
-        side: DoubleSide
+        // side: DoubleSide
     }), [
         width, 
         data.position.texture,
