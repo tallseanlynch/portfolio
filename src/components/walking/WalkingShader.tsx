@@ -369,10 +369,10 @@ const WalkingPeople = ({
 
   return (
     <>      
-      {/* <gridHelper 
+      <gridHelper 
         args={[300, 300, 0xaaaaaa, 0xaaaaaa]} 
         position={[0, 0.01, 0]}
-      /> */}
+      />
       
       <instancedMesh 
         ref={instancedMeshRef} 

@@ -48,22 +48,22 @@ const vehiclePath0Turning = {
     }
 }
 
-const vehiclePath0Straight = {
-    start: new Vector3(-17.5, 0.1, 155),
-    crosswalkPointA: new Vector3(-17.5, 0.1, 40),
-    crosswalkPointB: new Vector3(-17.5, 0.1, -40),
-    end: new Vector3(-17.5, 0.1, -155),
-    material: straightMaterialA,
-    visualModifier: xVisualModifier,
-    laneA: 0,
-    laneB: 15,
-    trafficConditions: {
-        northSouth: true,
-        northSouthTurning: false,
-        westTurning: false,
-        noTraffic: false
-    }
-}
+// const vehiclePath0Straight = {
+//     start: new Vector3(-17.5, 0.1, 155),
+//     crosswalkPointA: new Vector3(-17.5, 0.1, 40),
+//     crosswalkPointB: new Vector3(-17.5, 0.1, -40),
+//     end: new Vector3(-17.5, 0.1, -155),
+//     material: straightMaterialA,
+//     visualModifier: xVisualModifier,
+//     laneA: 0,
+//     laneB: 15,
+//     trafficConditions: {
+//         northSouth: true,
+//         northSouthTurning: false,
+//         westTurning: false,
+//         noTraffic: false
+//     }
+// }
 
 // const vehiclePath1Turning = {
 //     ellipseCenterX: -25,
@@ -100,6 +100,41 @@ const vehiclePath1Straight = {
         noTraffic: false
     }
 }
+
+const vehiclePath2Straight = {
+    start: new Vector3(-7.5, 0.1, 155),
+    crosswalkPointA: new Vector3(-7.5, 0.1, 40),
+    crosswalkPointB: new Vector3(-7.5, 0.1, -40),
+    end: new Vector3(-7.5, 0.1, -155),
+    material: straightMaterialA,
+    visualModifier: xVisualModifier,
+    laneA: 2,
+    laneB: 13,
+    trafficConditions: {
+        northSouth: true,
+        northSouthTurning: false,
+        westTurning: false,
+        noTraffic: false
+    }
+}
+
+const vehiclePath3Straight = {
+    start: new Vector3(-2.5, 0.1, 155),
+    crosswalkPointA: new Vector3(-2.5, 0.1, 40),
+    crosswalkPointB: new Vector3(-2.5, 0.1, -40),
+    end: new Vector3(-2.5, 0.1, -155),
+    material: straightMaterialA,
+    visualModifier: xVisualModifier,
+    laneA: 3,
+    laneB: 12,
+    trafficConditions: {
+        northSouth: true,
+        northSouthTurning: false,
+        westTurning: false,
+        noTraffic: false
+    }
+}
+
 
 const vehicleTurnPath = ({
     ellipseCenterX = 0,
@@ -243,7 +278,9 @@ const pathData = {
     vehiclePath0TurningData: vehicleTurnPath(vehiclePath0Turning),
     // vehiclePath0StraightData: vehicleStraightPath(vehiclePath0Straight),
     // vehiclePath1TurningData: vehicleTurnPath(vehiclePath1Turning),
-    vehiclePath1StraightData: vehicleStraightPath(vehiclePath1Straight)
+    vehiclePath1StraightData: vehicleStraightPath(vehiclePath1Straight),
+    vehiclePath2StraightData: vehicleStraightPath(vehiclePath2Straight),
+    vehiclePath3StraightData: vehicleStraightPath(vehiclePath3Straight)    
 };
 
 const pathDataKeys = Object.keys(pathData);

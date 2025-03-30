@@ -227,7 +227,15 @@ const WalkingCars = () => {
                 pathLine={pathData.vehiclePath1StraightData.line} 
                 crosswalkPoints={pathData.vehiclePath1StraightData.crosswalkPoints}
             />
-            <Cars width={6} />
+            <VehiclePath 
+                pathLine={pathData.vehiclePath2StraightData.line} 
+                crosswalkPoints={pathData.vehiclePath2StraightData.crosswalkPoints}
+            />
+            <VehiclePath 
+                pathLine={pathData.vehiclePath3StraightData.line} 
+                crosswalkPoints={pathData.vehiclePath3StraightData.crosswalkPoints}
+            />
+            <Cars width={9} />
         </>
     )
 }
