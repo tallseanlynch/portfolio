@@ -17,7 +17,6 @@ import {
 } from 'react';
 import { 
   CanvasTexture,
-  DoubleSide,
   InstancedMesh,
   MeshBasicMaterial,
   NoToneMapping,

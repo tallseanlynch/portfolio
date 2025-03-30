@@ -2,7 +2,7 @@ import { pathData } from './pathData';
 import { Line, Vector3 } from 'three';
 import { useVehicleGPGPU } from './useVehicleGPGPU';
 import { useEffect, useMemo, useRef } from 'react';
-import { DoubleSide, InstancedMesh, Object3D, ShaderMaterial } from 'three';
+import { InstancedMesh, Object3D, ShaderMaterial } from 'three';
 import { useFrame } from '@react-three/fiber';
 
 const carSize = 2;
@@ -227,7 +227,7 @@ const WalkingCars = () => {
                 pathLine={pathData.vehiclePath1StraightData.line} 
                 crosswalkPoints={pathData.vehiclePath1StraightData.crosswalkPoints}
             />
-            <Cars width={5} />
+            <Cars width={6} />
         </>
     )
 }
