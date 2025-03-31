@@ -16,6 +16,8 @@ import {
   useMemo
 } from 'react';
 import { 
+  BoxGeometry,
+  Color,
   CanvasTexture,
   InstancedMesh,
   MeshBasicMaterial,
@@ -25,6 +27,7 @@ import {
   ShaderMaterial,
   Vector3
 } from 'three';
+import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js'
 
 const planeSize = 100;
 const planeUnitResolution = 10;
@@ -34,6 +37,58 @@ rotatedPlaneGeometry.rotateX(Math.PI / 2);
 
 const matrixPositionObject =  new Object3D;
 const instanceScale = .75;
+
+const personTorso = new BoxGeometry(1, .75, .5, 1, 1, 1);
+const personHead = new BoxGeometry(.5, .5, .5, 1, 1, 1);
+personHead.translate(0, .5, 0);
+const personLegA = new BoxGeometry(.25, .75, .5, 1, 1, 1);
+personLegA.translate(-.37, -.75, 0);
+const personLegB = new BoxGeometry(.25, .75, .5, 1, 1, 1);
+personLegB.translate(.37, -.75, 0);
+const personArmA = new BoxGeometry(.25, .75, .5, 1, 1, 1);
+personArmA.translate(-.475, -.225, 0);
+personArmA.rotateZ(-.4);
+const personArmB = new BoxGeometry(.25, .75, .5, 1, 1, 1);
+personArmB.translate(.475, -.225, 0);
+personArmB.rotateZ(.4);
+const peopleGeometry = mergeGeometries([
+  personTorso, 
+  personHead, 
+  personLegA, 
+  personLegB, 
+  personArmA, 
+  personArmB
+]);
+peopleGeometry.translate(0, .725, 0);
+
+const colorsRaw = [
+  "25ced1","ffffff","fceade","ff8a5b","ea526f",
+  "050517","cf5c36","efc88b","f4e3b2","d3d5d7",
+  "a18276","b9d2b1","dac6b5","f1d6b8","fbacbe",
+  "264653","2a9d8f","e9c46a","f4a261","e76f51",
+  //pants also
+  "413620","9c6615","9f7833","ffd791","cdd1de"
+];
+
+const colorsBottomRaw = [
+  "413620",
+  "9c6615",
+  "9f7833",
+  "000000",
+  "cdd1de",
+  "ffffff",
+  "413620",
+  "9c6615",
+  "9f7833",
+  "000000"
+]
+
+const colors = colorsRaw.map(c => new Color(`#${c}`));
+const colorsBottom = colorsBottomRaw.map(c => new Color(`#${c}`));
+
+// const colors = [
+//   new Color(125, 206, 160)
+// ]
 
 const WalkingPeople = ({ 
   width = 100, 
@@ -112,7 +167,9 @@ const WalkingPeople = ({
       gPositionMap: { value: data.position.texture},
       gDirectionMap: { value: data.direction.texture},
       gDestinationMap: { value: data.destination.texture },
-      time: { value: 0 }
+      time: { value: 0 },
+      uColors: { value: colors },
+      uColorsBottom: { value: colorsBottom } 
     },
     vertexShader: `
       uniform sampler2D gDirectionMap;
@@ -125,14 +182,18 @@ const WalkingPeople = ({
       varying vec4 vgPosition;
       varying vec4 vgDestination;
       varying vec4 vgDirection;
+      varying float instanceId;
+      varying vec2 vUv;
 
       void main() {
         vOriginalPosition = position;
         int index = gl_InstanceID;
+        instanceId = float(index);
         float floatIndex = float(index);
         float xCoor = mod(floatIndex, ${width}.0);
         float yCoor = mod(floatIndex / ${width}.0, ${width}.0);
         vec2 uv = vec2(xCoor / ${width}.0, yCoor / ${width}.0);
+        vUv = uv;
         vec4 gDirectionData = texture2D(gDirectionMap, uv);        
         vec4 gPositionData = texture2D(gPositionMap, uv);
         vec4 gDestinationData = texture2D(gDestinationMap, uv);
@@ -163,30 +224,83 @@ const WalkingPeople = ({
       }
     `,
     fragmentShader: `
+      uniform vec3 uColors[${colors.length}];
+      uniform vec3 uColorsBottom[${colorsBottom.length}];
+
       varying vec4 vgPosition;
       varying vec3 vOriginalPosition;
       varying vec4 vgDestination;
       varying vec4 vgDirection;
+      varying float instanceId;
+      varying vec2 vUv;
 
       void main() {
+        float colorsLength = ${colors.length}.0;
+        float colorsBottomLength = ${colorsBottom.length}.0;
         vec4 positionColor = vgPosition;
         vec4 destinationColor = vgDestination;
         vec4 finalColor = positionColor;
         vec3 positionCalc = vec3(vgPosition.xyz);
         vec3 destinationCalc = vec3(vgDestination.xyz);
         vec3 directionCalc = vec3(vgDirection.xyz);
+        float instanceIdColor = instanceId / ${width * width}.0;
 
-        if(vOriginalPosition.z > 0.0) {
-          finalColor = vec4(1.0, 1.0, 1.0, 1.0);
+        vec3 personHue = vec3(250.0, 215.0, 195.0) / 256.0;
+        personHue = personHue * instanceIdColor;
+        finalColor = vec4(personHue, 1.0);
+
+        float modColor = mod((instanceId + instanceId) / (vUv.x * 10.0), colorsLength);
+        int modColorInt = int(modColor);
+        if(vOriginalPosition.y > 0.5 && vOriginalPosition.y < 1.125) {
+          finalColor = vec4(uColors[modColorInt], 1.0);
         }
 
-        if(distance(positionCalc, destinationCalc) < .25) {
-          finalColor = vec4(.5, .5, .5, 1.0);
+        float modColorBottom = mod((instanceId + instanceId) / (vUv.x * 10.0), colorsBottomLength);
+        int modColorBottomInt = int(modColorBottom);
+
+        if(vOriginalPosition.y < 0.5 && vOriginalPosition.x < .5 && vOriginalPosition.x > -.5) {
+          finalColor = vec4(uColorsBottom[modColorBottomInt], 1.0);
         }
 
-        if(distance(positionCalc, destinationCalc) < 1.5 && vgDirection.w < .01) {
-          finalColor = vec4(.5, .5, .5, 1.0);
+        // hair
+        float modColorHair = mod((instanceId) + instanceId / ((vUv.y + vUv.x) * 10.0), colorsBottomLength);
+        int modColorHairInt = int(modColorHair);
+
+        if(vOriginalPosition.y > 1.4) {
+          finalColor = vec4(uColorsBottom[modColorHairInt], 1.0);
         }
+
+        if(vOriginalPosition.y > 1.3 - vUv.y * .25 && vOriginalPosition.z < 0.0) {
+          finalColor = vec4(uColorsBottom[modColorHairInt], 1.0);
+        }
+
+        if(
+          vOriginalPosition.x > .1 && vOriginalPosition.x < .2 && 
+          vOriginalPosition.y > 1.25 && vOriginalPosition.y < 1.3 && 
+          vOriginalPosition.z > 0.23
+        ) {
+          finalColor = mix(vec4(personHue, 1.0), vec4(1.0, 1.0, 1.0, 1.0), .5);
+        }
+
+        if(
+          vOriginalPosition.x < -.1 && vOriginalPosition.x > -.2 && 
+          vOriginalPosition.y > 1.25 && vOriginalPosition.y < 1.3 && 
+          vOriginalPosition.z > 0.23
+        ) {
+          finalColor = mix(vec4(personHue, 1.0), vec4(1.0, 1.0, 1.0, 1.0), .5);
+        }
+
+        // if(vOriginalPosition.z > 0.0) {
+        //   finalColor = vec4(1.0, 1.0, 1.0, 1.0);
+        // }
+
+        // if(distance(positionCalc, destinationCalc) < .25) {
+        //   finalColor = vec4(.5, .5, .5, 1.0);
+        // }
+
+        // if(distance(positionCalc, destinationCalc) < 1.5 && vgDirection.w < .01) {
+        //   finalColor = vec4(.5, .5, .5, 1.0);
+        // }
 
         gl_FragColor = finalColor;
       }
@@ -379,7 +493,7 @@ const WalkingPeople = ({
         args={[null as any, null as any, numPeople]} 
         material={shaderMaterial}
       >
-        <boxGeometry args={[1, 1, .5, 1, 1, 1]} />
+        <primitive object={peopleGeometry} />
       </instancedMesh>
 
       <WalkingBuildings />
