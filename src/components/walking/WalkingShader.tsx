@@ -369,10 +369,10 @@ const WalkingPeople = ({
 
   return (
     <>      
-      <gridHelper 
+      {/* <gridHelper 
         args={[300, 300, 0xaaaaaa, 0xaaaaaa]} 
         position={[0, 0.01, 0]}
-      />
+      /> */}
       
       <instancedMesh 
         ref={instancedMeshRef} 
@@ -455,7 +455,7 @@ const WalkingShaderCanvas = () => {
       <ambientLight intensity={0.5} />
       <pointLight position={[10, 10, 10]} />
       <WalkingPeople 
-        width={100} 
+        width={75} 
         renderDebugPlane={false}
         consoleLogDebugBuffer={false}
         checkVector3s={false}

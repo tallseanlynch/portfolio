@@ -135,6 +135,181 @@ const vehiclePath3Straight = {
     }
 }
 
+const vehiclePath4Straight = {
+    start: new Vector3(7.5, 0.1, -155),
+    crosswalkPointA: new Vector3(7.5, 0.1, -40),
+    crosswalkPointB: new Vector3(7.5, 0.1, 40),
+    end: new Vector3(7.5, 0.1, 155),
+    material: straightMaterialA,
+    visualModifier: xVisualModifier,
+    laneA: 10,
+    laneB: 5,
+    trafficConditions: {
+        northSouth: true,
+        northSouthTurning: false,
+        westTurning: false,
+        noTraffic: false
+    }
+}
+
+const vehiclePath5Straight = {
+    start: new Vector3(12.5, 0.1, -155),
+    crosswalkPointA: new Vector3(12.5, 0.1, -40),
+    crosswalkPointB: new Vector3(12.5, 0.1, 40),
+    end: new Vector3(12.5, 0.1, 155),
+    material: straightMaterialA,
+    visualModifier: xVisualModifier,
+    laneA: 9,
+    laneB: 6,
+    trafficConditions: {
+        northSouth: true,
+        northSouthTurning: false,
+        westTurning: false,
+        noTraffic: false
+    }
+}
+
+const vehiclePath6Straight = {
+    start: new Vector3(17.5, 0.1, -155),
+    crosswalkPointA: new Vector3(17.5, 0.1, -40),
+    crosswalkPointB: new Vector3(17.5, 0.1, 40),
+    end: new Vector3(17.5, 0.1, 155),
+    material: straightMaterialA,
+    visualModifier: xVisualModifier,
+    laneA: 8,
+    laneB: 7,
+    trafficConditions: {
+        northSouth: true,
+        northSouthTurning: false,
+        westTurning: false,
+        noTraffic: false
+    }
+}
+
+const vehiclePath7Turning = {
+    ellipseCenterX: -25,
+    ellipseCenterY: -25,
+    radiusX: 27.5,
+    radiusY: 27.5,
+    startAngle: 0,
+    endAngle: Math.PI * .5,
+    clockWise: false,
+    rotation: 0,
+    directionalPointA: new Vector3(0, 0, -130),
+    directionalPointB: new Vector3(-130, 0, 0),
+    crossWalkPointA: new Vector3(0, 0, -15),
+    crossWalkPointB: new Vector3(-15, 0, 0),
+    visualModifier: xVisualModifier,
+    material: turningMaterialA,
+    laneA: 11,
+    laneB: 20,
+    trafficConditions: {
+        northSouth: false,
+        northSouthTurning: true,
+        westTurning: false,
+        noTraffic: false
+    }
+}
+
+const vehiclePath8Turning = {
+    ellipseCenterX: -25,
+    ellipseCenterY: -25,
+    radiusX: 7.5,
+    radiusY: 7.5,
+    startAngle: Math.PI * .5,
+    endAngle: 0,
+    clockWise: true,
+    rotation: 0,
+    directionalPointA: new Vector3(-130, 0, 0),
+    directionalPointB: new Vector3(0, 0, -130),
+    crossWalkPointA: new Vector3(-15, 0, 0),
+    crossWalkPointB: new Vector3(0, 0, -15),
+    visualModifier: xVisualModifier,
+    material: turningMaterialA,
+    laneA: 16,
+    laneB: 15,
+    trafficConditions: {
+        northSouth: false,
+        northSouthTurning: false,
+        westTurning: true,
+        noTraffic: false
+    }
+}
+
+const vehiclePath9Turning = {
+    ellipseCenterX: -25,
+    ellipseCenterY: -25,
+    radiusX: 12.5,
+    radiusY: 12.5,
+    startAngle: Math.PI * .5,
+    endAngle: 0,
+    clockWise: true,
+    rotation: 0,
+    directionalPointA: new Vector3(-130, 0, 0),
+    directionalPointB: new Vector3(0, 0, -130),
+    crossWalkPointA: new Vector3(-15, 0, 0),
+    crossWalkPointB: new Vector3(0, 0, -15),
+    visualModifier: xVisualModifier,
+    material: turningMaterialA,
+    laneA: 17,
+    laneB: 14,
+    trafficConditions: {
+        northSouth: false,
+        northSouthTurning: false,
+        westTurning: true,
+        noTraffic: false
+    }
+}
+
+const vehiclePath10Turning = {
+    ellipseCenterX: -25,
+    ellipseCenterY: 25,
+    radiusX: 27.5,
+    radiusY: 27.5,
+    startAngle: -Math.PI * .5,
+    endAngle: 0,
+    clockWise: false,
+    rotation: 0,
+    directionalPointA: new Vector3(-130, 0, 0),
+    directionalPointB: new Vector3(0, 0, 130),
+    crossWalkPointA: new Vector3(-15, 0, 0),
+    crossWalkPointB: new Vector3(0, 0, 15),
+    visualModifier: xVisualModifier,
+    material: turningMaterialA,
+    laneA: 19,
+    laneB: 4,
+    trafficConditions: {
+        northSouth: false,
+        northSouthTurning: false,
+        westTurning: true,
+        noTraffic: false
+    }
+}
+
+const vehiclePath11Turning = {
+    ellipseCenterX: -25,
+    ellipseCenterY: 25,
+    radiusX: 32.5,
+    radiusY: 32.5,
+    startAngle: -Math.PI * .5,
+    endAngle: 0,
+    clockWise: false,
+    rotation: 0,
+    directionalPointA: new Vector3(-130, 0, 0),
+    directionalPointB: new Vector3(0, 0, 130),
+    crossWalkPointA: new Vector3(-15, 0, 0),
+    crossWalkPointB: new Vector3(0, 0, 15),
+    visualModifier: xVisualModifier,
+    material: turningMaterialA,
+    laneA: 19,
+    laneB: 4,
+    trafficConditions: {
+        northSouth: false,
+        northSouthTurning: false,
+        westTurning: true,
+        noTraffic: false
+    }
+}
 
 const vehicleTurnPath = ({
     ellipseCenterX = 0,
@@ -280,7 +455,15 @@ const pathData = {
     // vehiclePath1TurningData: vehicleTurnPath(vehiclePath1Turning),
     vehiclePath1StraightData: vehicleStraightPath(vehiclePath1Straight),
     vehiclePath2StraightData: vehicleStraightPath(vehiclePath2Straight),
-    vehiclePath3StraightData: vehicleStraightPath(vehiclePath3Straight)    
+    vehiclePath3StraightData: vehicleStraightPath(vehiclePath3Straight),
+    vehiclePath4StraightData: vehicleStraightPath(vehiclePath4Straight),
+    vehiclePath5StraightData: vehicleStraightPath(vehiclePath5Straight),
+    vehiclePath6StraightData: vehicleStraightPath(vehiclePath6Straight),
+    vehiclePath7TurningData: vehicleTurnPath(vehiclePath7Turning),
+    vehiclePath8TurningData: vehicleTurnPath(vehiclePath8Turning),
+    vehiclePath9TurningData: vehicleTurnPath(vehiclePath9Turning),
+    vehiclePath10TurningData: vehicleTurnPath(vehiclePath10Turning),
+    vehiclePath11TurningData: vehicleTurnPath(vehiclePath11Turning)
 };
 
 const pathDataKeys = Object.keys(pathData);

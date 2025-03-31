@@ -111,6 +111,8 @@ const simulationDirectionFragmentShader = `
             mixDirectionDestination = mix(directionDataCalc, directionToDestination, interpolationFactor);        
         }
 
+        // vec4 velocity = vec4(mixDirectionDestination, 2.0 + uv.x * 1.5);        
+        float velocityValue = 2.0 + uv.x * 1.5;
         vec4 velocity = vec4(mixDirectionDestination, 2.0 + uv.x * 1.5);        
 
         float checkDistanceMin = 10.0;
@@ -122,6 +124,8 @@ const simulationDirectionFragmentShader = `
         bool isFrontCollision = false;
         bool isRightCollision = false;
         bool frontIsShortest = false;
+
+        bool crossWalkStop = false;
 
         for(int i = 0; i < uSize; i++) {
             for(int j = 0; j < uSize; j++) {
@@ -166,7 +170,8 @@ const simulationDirectionFragmentShader = `
                             frontCollisionDistance1 < frontCollisionCheckDistance || 
                             frontCollisionDistance2 < frontCollisionCheckDistance
                         ) {
-                            velocity.w = 0.0;
+                            velocityValue = 0.0;
+                            // velocityValue = checkVehicleDirection.w;
                         }
                     }
 
@@ -185,84 +190,17 @@ const simulationDirectionFragmentShader = `
         );
         float distanceToCrosswalkPointAVec3 = distance(crosswalkPointAVec3, positionDataCalc);
 
-        if((distanceToCrosswalkPointAVec3 < 2.0 && activeLightTimeLeft < 5) || (distanceToCrosswalkPointAVec3 < 2.0 && trafficConditionsBooleanNumber == 0)) {
-            velocity.w = 0.0;
+        if((distanceToCrosswalkPointAVec3 < 2.0 && activeLightTimeLeft < 10) || (distanceToCrosswalkPointAVec3 < 2.0 && trafficConditionsBooleanNumber == 0)) {
+            velocityValue = 0.0;
+            crossWalkStop = true;
         }
 
-        // if(trafficConditionsBooleanNumber == 0) {
-        //     velocity.w = 0.0;
-        // }
-
-
-
-        // if(numberOfPotentialCollisions < 1) {
-        //     velocity.w = 1.0;
-        // }
-
-        // if(distanceToDestination < .1) {
-        //     velocity.w = 0.0;
-        // };
-
-        // // still testing
-        // // implemented to prevent double stragglers
-        // if(lowestCheckDistance < .5 && numberOfPotentialCollisions > 0) {
-        //     velocity.w = 1.0;
-        // };
-
-        // if(isFrontCollision == true && numberOfPotentialCollisions > 0 && distanceToDestination < 1.5) {
-        //     velocity.w = 0.0;
-        // }
-
-        // int currentLocation = int(destinationData.y); // current position graph.number
-        // int currentDestination = int(destinationData.w); // current position graph.number
-        // int currentLocationConnectionIndex = 0;//int(uConnectionsData[0]);
-
-        // for(int i = 0; i < 6; i++) {
-        //     if(int(uConnectionsData[(currentLocation * 6) + i]) == currentDestination) {
-        //         currentLocationConnectionIndex = i;
-        //     }
-        // }
-
-        // int canMoveToDestination = uConnectionsWalkConditionsData[
-        //     (currentLocation * 20) + (currentLocationConnectionIndex * 4) + activeLightNumber
-        // ];
-
-        // float canMoveToDestinationModifier = float(canMoveToDestination);
-
-        // vec3 currentLocationCenter = vec3(
-        //     uPositionsData[(5 * currentLocation) + 0], 
-        //     uPositionsData[(5 * currentLocation) + 1],
-        //     uPositionsData[(5 * currentLocation) + 2] 
-        // );
-
-        // int loopActiveLightNumber = 1 + activeLightNumber;
-        // if(loopActiveLightNumber > 3) {
-        //     loopActiveLightNumber = 0;
-        // }
-        // int nextCanMoveToDestination = uConnectionsWalkConditionsData[
-        //     (currentLocation * 20) + (currentLocationConnectionIndex * 4) + loopActiveLightNumber
-        // ];
-
-        // float checkDistanceFromStart = distance(positionDataCalc, currentLocationCenter);
-        // float checkDistanceToDestination = distanceToDestination;
-        // if(activeLightTimeLeft < 25 && checkDistanceFromStart < 9.0 && nextCanMoveToDestination == 0) {
-        //     canMoveToDestinationModifier = 0.0;
-        // }
-
-        // if(distanceToDestination < checkDistanceFromStart * 1.5 && canMoveToDestinationModifier == 0.0) {
-        // // if(distanceToDestination < checkDistanceFromStart && canMoveToDestinationModifier == 0.0) {
-        //     canMoveToDestinationModifier = 1.5;
-        // }
-
-        // // if(totalCycleTime == 165.0) {
-        // // if(activeLightNumber == 1) {
-        // // if(uLightTimes[3] == 60) {
-        // // if(cycleTime < 45.0) {
-        // //     canMoveToDestinationModifier = 0.0;
-        // // }
-
-        // velocity.w *= canMoveToDestinationModifier;
-
+        // float mixVelocity = mix(velocityValue, directionData.w, .25);
+        float mixVelocity = mix(directionData.w, velocityValue, .05);
+        velocity.w = mixVelocity;
+        if(crossWalkStop == true) {
+            velocity.w = 0.0;        
+        }
         gl_FragColor = velocity;
     }
 `
@@ -444,7 +382,7 @@ function useVehicleGPGPU(count: number) {
             (directionTexture.image.data as any)[i4 + 1] = 0.0; // y
             (directionTexture.image.data as any)[i4 + 2] = (Math.random() - 0.5); // z
             // (directionTexture.image.data as any)[i4 + 3] = .1; // w
-            (directionTexture.image.data as any)[i4 + 3] = 3.0; // w
+            (directionTexture.image.data as any)[i4 + 3] = 0.0; // w
     
             // destinations
             (destinationTexture.image.data as any)[i4 + 0] = startingDestinationBufferVector3x;//pathBuffer[3];//randomNeg1To1() * 10; // x

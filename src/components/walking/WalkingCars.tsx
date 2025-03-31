@@ -211,18 +211,10 @@ const VehiclePath: React.FC<VehiclePath> = ({
 const WalkingCars = () => {
     return (
         <>
-            <VehiclePath 
+            {/* <VehiclePath 
                 pathLine={pathData.vehiclePath0TurningData.line} 
                 crosswalkPoints={pathData.vehiclePath0TurningData.crosswalkPoints}
             />
-            {/* <VehiclePath 
-                pathLine={pathData.vehiclePath0StraightData.line} 
-                crosswalkPoints={pathData.vehiclePath0StraightData.crosswalkPoints}
-            /> */}
-            {/* <VehiclePath 
-                pathLine={pathData.vehiclePath1TurningData.line} 
-                crosswalkPoints={pathData.vehiclePath1TurningData.crosswalkPoints}
-            /> */}
             <VehiclePath 
                 pathLine={pathData.vehiclePath1StraightData.line} 
                 crosswalkPoints={pathData.vehiclePath1StraightData.crosswalkPoints}
@@ -235,7 +227,39 @@ const WalkingCars = () => {
                 pathLine={pathData.vehiclePath3StraightData.line} 
                 crosswalkPoints={pathData.vehiclePath3StraightData.crosswalkPoints}
             />
-            <Cars width={9} />
+            <VehiclePath 
+                pathLine={pathData.vehiclePath4StraightData.line} 
+                crosswalkPoints={pathData.vehiclePath4StraightData.crosswalkPoints}
+            />
+            <VehiclePath 
+                pathLine={pathData.vehiclePath5StraightData.line} 
+                crosswalkPoints={pathData.vehiclePath5StraightData.crosswalkPoints}
+            />
+            <VehiclePath 
+                pathLine={pathData.vehiclePath6StraightData.line} 
+                crosswalkPoints={pathData.vehiclePath6StraightData.crosswalkPoints}
+            />
+            <VehiclePath 
+                pathLine={pathData.vehiclePath7TurningData.line} 
+                crosswalkPoints={pathData.vehiclePath7TurningData.crosswalkPoints}
+            />
+            <VehiclePath 
+                pathLine={pathData.vehiclePath8TurningData.line} 
+                crosswalkPoints={pathData.vehiclePath8TurningData.crosswalkPoints}
+            />
+            <VehiclePath 
+                pathLine={pathData.vehiclePath9TurningData.line} 
+                crosswalkPoints={pathData.vehiclePath9TurningData.crosswalkPoints}
+            />
+            <VehiclePath 
+                pathLine={pathData.vehiclePath10TurningData.line} 
+                crosswalkPoints={pathData.vehiclePath10TurningData.crosswalkPoints}
+            />
+            <VehiclePath 
+                pathLine={pathData.vehiclePath11TurningData.line} 
+                crosswalkPoints={pathData.vehiclePath11TurningData.crosswalkPoints}
+            /> */}
+            <Cars width={11} />
         </>
     )
 }
