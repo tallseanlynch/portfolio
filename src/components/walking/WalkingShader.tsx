@@ -302,7 +302,13 @@ const WalkingPeople = ({
         //   finalColor = vec4(.5, .5, .5, 1.0);
         // }
 
-        gl_FragColor = finalColor;
+
+        float saturation = 2.25;
+        float avg = (finalColor.r + finalColor.g + finalColor.b) / 3.0;
+        vec3 gray = vec3(avg, avg, avg);
+        gl_FragColor = vec4(mix(gray, finalColor.rgb, saturation), finalColor.a);
+
+//        gl_FragColor = finalColor;
       }
     `,
     // side: DoubleSide
