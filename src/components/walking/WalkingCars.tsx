@@ -34,7 +34,7 @@ const Cars = ({width = 1}) => {
         "555555","854d27","dd7230","f4c95d","e7e393",
         "4281a4","48a9a6","e4dfda","d4b483","c1666b",
         "fbf5f3","e28413","aaaaaa","de3c4b","c42847",
-        "fbffff","605f5e","cacaca","ffffff","247ba0"
+        "fbffff","605f5e","cacaca","ffffff","aed6f1"
     ];
     const carColors = carColorsRaw.map(c => new Color(`#${c}`));
 

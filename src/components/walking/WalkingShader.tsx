@@ -7,7 +7,7 @@ import { WalkingLights } from './WalkingLights';
 import { OrbitControls } from '@react-three/drei';
 import { 
   Canvas, 
-  useFrame 
+  useFrame
 } from '@react-three/fiber';
 import { 
   useCallback,
@@ -301,6 +301,7 @@ const WalkingPeople = ({
       }
     `,
     // side: DoubleSide
+    // depthWrite: false
   }), [
     width, 
     data.position.texture,
@@ -560,7 +561,11 @@ const WalkingShaderCanvas = () => {
         precision: 'highp'
       }}
       linear
-      camera={{position: [0, 50, 75]}}
+      camera={{
+        position: [0, 50, 75],
+        // near: .01,
+        far: 500
+      }}
     >
       <ambientLight intensity={0.5} />
       <pointLight position={[10, 10, 10]} />

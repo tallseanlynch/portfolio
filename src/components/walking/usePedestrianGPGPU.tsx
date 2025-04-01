@@ -112,7 +112,7 @@ const simulationDirectionFragmentShader = `
                     float dotProductToCollision = dot(directionToCollision, mixDirectionDestination);                    
                     collisionReflection = mixDirectionDestination - directionToCollision * 2.0 * lessThanCheckDistanceModifier * dotProductToCollision;
                     
-                    vec3 collisionMixDirectionDestination = mix(mixDirectionDestination, collisionReflection, (1.0 - ((checkDistanceMin - checkDistance) / checkDistanceMin)) * .125 * lessThanCheckDistanceModifier);
+                    vec3 collisionMixDirectionDestination = mix(mixDirectionDestination, collisionReflection, (1.0 - ((checkDistanceMin - checkDistance) / checkDistanceMin)) * .075125 * lessThanCheckDistanceModifier);
                     velocity = vec4(collisionMixDirectionDestination, velocity.w);
                 }
             }
