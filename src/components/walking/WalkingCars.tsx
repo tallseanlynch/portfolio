@@ -31,10 +31,10 @@ const Cars = ({width = 1}) => {
     }, [])
 
     const carColorsRaw = [
-        "2f1f27","854d27","dd7230","f4c95d","e7e393",
+        "555555","854d27","dd7230","f4c95d","e7e393",
         "4281a4","48a9a6","e4dfda","d4b483","c1666b",
-        "fbf5f3","e28413","333322","de3c4b","c42847",
-        "fbffff","605f5e","1d3461","1f487e","247ba0"
+        "fbf5f3","e28413","aaaaaa","de3c4b","c42847",
+        "fbffff","605f5e","cacaca","ffffff","247ba0"
     ];
     const carColors = carColorsRaw.map(c => new Color(`#${c}`));
 
@@ -57,7 +57,7 @@ const Cars = ({width = 1}) => {
         varying vec4 vgPosition;
         varying vec4 vgDestination;
         varying vec4 vgDirection;
-        varying float vehicleConfig;
+        varying float vVehicleConfig;
         varying vec2 vUv;
         varying float vInstanceId;
 
@@ -96,14 +96,44 @@ const Cars = ({width = 1}) => {
             vPosition.y = vPosition.y + gPositionData.y;
             vPosition.z = vPosition.z + gPositionData.z;
 
-            vehicleConfig = 0.0;
+            vVehicleConfig = mod(vInstanceId + xCoor * 11.5, 4.0);
+            vVehicleConfig = vVehicleConfig - fract(vVehicleConfig);
+            // vVehicleConfig = 3.0;
 
-            if(vOriginalPosition.z > 1.0 && vOriginalPosition.y > .25) {
-                vPosition.y = 2.0;
+            if(vVehicleConfig == 0.0) {
+                if(vOriginalPosition.z > 1.0 && vOriginalPosition.y > .25) {
+                    vPosition.y = 2.0;
+                }
+
+                if(vOriginalPosition.z < -1.5 && vOriginalPosition.y > .25) {
+                    vPosition.y = 2.0;
+                }            
             }
 
-            if(vOriginalPosition.z < -1.5 && vOriginalPosition.y > .25) {
-                vPosition.y = 2.0;
+            if(vVehicleConfig == 1.0) {
+                if(vOriginalPosition.z > 1.0 && vOriginalPosition.y > .25) {
+                    vPosition.y = 2.0;
+                }
+
+                // if(vOriginalPosition.z < -1.5 && vOriginalPosition.y > .25) {
+                //     vPosition.y = 2.0;
+                // }            
+            }
+
+            // if(vVehicleConfig == 2.0) {
+            //     // if(vOriginalPosition.z > 1.0 && vOriginalPosition.y > .25) {
+            //     //     vPosition.y = 2.0;
+            //     // }
+
+            //     // if(vOriginalPosition.z < -1.5 && vOriginalPosition.y > .25) {
+            //     //     vPosition.y = 2.0;
+            //     // }            
+            // }
+
+            if(vVehicleConfig == 3.0) {
+                if(vOriginalPosition.z < .5 && vOriginalPosition.y > .225) {
+                    vPosition.y = 2.0;
+                }
             }
 
             gl_Position = projectionMatrix * modelViewMatrix * vPosition;
@@ -116,7 +146,7 @@ const Cars = ({width = 1}) => {
         varying vec3 vOriginalPosition;
         varying vec4 vgDestination;
         varying vec4 vgDirection;
-        varying float vehicleConfig;
+        varying float vVehicleConfig;
         varying vec2 vUv;
         varying float vInstanceId;
 
@@ -141,7 +171,7 @@ const Cars = ({width = 1}) => {
             vec4 vehicleColor = vec4(uCarColors[modCarColorInt] * 1.25, 1.0);
             vec4 mixVehicleColorBlack = mix(vehicleColor, black, .75);
 
-            if(vehicleConfig == 0.0) {
+            if(vVehicleConfig == 0.0) {
                 // finalColor = vec4(vUv, 0.0, 1.0);                
                 // finalColor = white;                
                 // finalColor = vec4(uCarColors[modCarColorInt] * 1.5, 1.0);                
@@ -248,6 +278,348 @@ const Cars = ({width = 1}) => {
 
             }
 
+            if(vVehicleConfig == 1.0) {
+                // finalColor = vec4(vUv, 0.0, 1.0);                
+                // finalColor = white;                
+                // finalColor = vec4(uCarColors[modCarColorInt] * 1.5, 1.0);                
+                // finalColor = vec4(uCarColors[modCarColorInt] * (1.25 + vInstanceId / 50.0), 1.0);                
+                // finalColor = vec4(uCarColors[modCarColorInt] * 1.25, 1.0);                
+
+                finalColor = vehicleColor;
+                // finalColor = vec4(vUv, 0.0, 1.0);                
+
+                if(
+                    vOriginalPosition.y > 0.2 && vOriginalPosition.x < -1.245 && 
+                    vUv.y > .5 && vUv.y < .95 && 
+                    vUv.x > .025 && vUv.x < 0.4
+                ) {
+                    finalColor = mixVehicleColorBlack;
+                }
+
+                if(
+                    vOriginalPosition.y > 0.2 && vOriginalPosition.x < -1.245 && 
+                    vUv.y > .5 && vUv.y < .95 && 
+                    vUv.x > .45 && vUv.x + vUv.y * .3 < .95
+                ) {
+                    finalColor = mixVehicleColorBlack;
+                }
+
+
+                if(
+                    vOriginalPosition.y > 0.2 && vOriginalPosition.x > 1.245 && 
+                    vUv.y > .5 && vUv.y < .95 && 
+                    vUv.x - vUv.y * .3 > .05 && vUv.x < 0.55
+                ) {
+                    finalColor = mixVehicleColorBlack;
+                }
+
+                if(
+                    vOriginalPosition.y > 0.2 && vOriginalPosition.x > 1.245 && 
+                    vUv.y > .5 && vUv.y < .95 && 
+                    vUv.x > .6 && vUv.x < .975
+                ) {
+                    finalColor = mixVehicleColorBlack;
+                }
+
+                if(
+                    vOriginalPosition.y > 0.2 
+                    && vOriginalPosition.y < .65 
+                    && vOriginalPosition.z < -2.49
+                    // && vOriginalPosition.z > -2.0
+                    && vOriginalPosition.x > -.975
+                    && vOriginalPosition.x < .975
+                    
+                    // && vUv.x > .05
+                    // && vUv.x < .95
+                ) {
+                    finalColor = mixVehicleColorBlack;
+                }
+
+                if(
+                    vOriginalPosition.y > 0.2
+                    && vOriginalPosition.z > 1.0
+                    && vOriginalPosition.z < 1.5
+                    && vOriginalPosition.x > -.975
+                    && vOriginalPosition.x < .975
+                    // && vUv.x > .05
+                    // && vUv.x < .95
+                ) {
+                    finalColor = mixVehicleColorBlack;
+                }
+
+                // wheels lol
+                if(
+                    vOriginalPosition.y < -0.35
+                    && vOriginalPosition.x > 1.2
+                    && vUv.x > .15
+                    && vUv.x < .3
+                ) {
+                    finalColor = mixVehicleColorBlack;
+                }
+
+                if(
+                    vOriginalPosition.y < -0.35
+                    && vOriginalPosition.x > 1.2
+                    && vUv.x > .75
+                    && vUv.x < .9
+                ) {
+                    finalColor = mixVehicleColorBlack;
+                }
+
+                if(
+                    vOriginalPosition.y < -0.35
+                    && vOriginalPosition.x < -1.2
+                    && vUv.x > .15
+                    && vUv.x < .3
+                ) {
+                    finalColor = mixVehicleColorBlack;
+                }
+
+                if(
+                    vOriginalPosition.y < -0.35
+                    && vOriginalPosition.x < -1.2
+                    && vUv.x > .75
+                    && vUv.x < .9
+                ) {
+                    finalColor = mixVehicleColorBlack;
+                }
+
+            }
+
+            if(vVehicleConfig == 2.0) {
+                // finalColor = vec4(vUv, 0.0, 1.0);                
+                // finalColor = white;                
+                // finalColor = vec4(uCarColors[modCarColorInt] * 1.5, 1.0);                
+                // finalColor = vec4(uCarColors[modCarColorInt] * (1.25 + vInstanceId / 50.0), 1.0);                
+                // finalColor = vec4(uCarColors[modCarColorInt] * 1.25, 1.0);                
+
+                finalColor = vehicleColor;
+                // finalColor = vec4(vUv, 0.0, 1.0);                
+
+                if(
+                    vOriginalPosition.y > 0.2 && vOriginalPosition.x < -1.245 && 
+                    vUv.y > .5 && vUv.y < .95 && 
+                    vUv.x > .025 && vUv.x < 0.4
+                ) {
+                    finalColor = mixVehicleColorBlack;
+                }
+
+                if(
+                    vOriginalPosition.y > 0.2 && vOriginalPosition.x < -1.245 && 
+                    vUv.y > .5 && vUv.y < .95 && 
+                    vUv.x > .45 && vUv.x < .95
+                ) {
+                    finalColor = mixVehicleColorBlack;
+                }
+
+
+                if(
+                    vOriginalPosition.y > 0.2 && vOriginalPosition.x > 1.245 && 
+                    vUv.y > .5 && vUv.y < .95 && 
+                    vUv.x > .05 && vUv.x < 0.55
+                ) {
+                    finalColor = mixVehicleColorBlack;
+                }
+
+                if(
+                    vOriginalPosition.y > 0.2 && vOriginalPosition.x > 1.245 && 
+                    vUv.y > .5 && vUv.y < .95 && 
+                    vUv.x > .6 && vUv.x < .975
+                ) {
+                    finalColor = mixVehicleColorBlack;
+                }
+
+                if(
+                    vOriginalPosition.y > 0.2 
+                    && vOriginalPosition.y < .65 
+                    && vOriginalPosition.z < -2.49
+                    // && vOriginalPosition.z > -2.0
+                    && vOriginalPosition.x > -.975
+                    && vOriginalPosition.x < .975
+                    
+                    // && vUv.x > .05
+                    // && vUv.x < .95
+                ) {
+                    finalColor = mixVehicleColorBlack;
+                }
+
+                if(
+                    vOriginalPosition.y > 0.2 
+                    && vOriginalPosition.y < .65 
+                    && vOriginalPosition.z > 2.0
+                    && vOriginalPosition.x > -.975
+                    && vOriginalPosition.x < .975
+                    
+                    // && vUv.x > .05
+                    // && vUv.x < .95
+                ) {
+                    finalColor = mixVehicleColorBlack;
+                }
+
+                if(
+                    vOriginalPosition.y > 0.2
+                    && vOriginalPosition.z > 1.0
+                    && vOriginalPosition.z < 1.5
+                    && vOriginalPosition.x > -.975
+                    && vOriginalPosition.x < .975
+                    // && vUv.x > .05
+                    // && vUv.x < .95
+                ) {
+                    finalColor = mixVehicleColorBlack;
+                }
+
+                // wheels lol
+                if(
+                    vOriginalPosition.y < -0.35
+                    && vOriginalPosition.x > 1.2
+                    && vUv.x > .15
+                    && vUv.x < .3
+                ) {
+                    finalColor = mixVehicleColorBlack;
+                }
+
+                if(
+                    vOriginalPosition.y < -0.35
+                    && vOriginalPosition.x > 1.2
+                    && vUv.x > .75
+                    && vUv.x < .9
+                ) {
+                    finalColor = mixVehicleColorBlack;
+                }
+
+                if(
+                    vOriginalPosition.y < -0.35
+                    && vOriginalPosition.x < -1.2
+                    && vUv.x > .15
+                    && vUv.x < .3
+                ) {
+                    finalColor = mixVehicleColorBlack;
+                }
+
+                if(
+                    vOriginalPosition.y < -0.35
+                    && vOriginalPosition.x < -1.2
+                    && vUv.x > .75
+                    && vUv.x < .9
+                ) {
+                    finalColor = mixVehicleColorBlack;
+                }
+
+            }
+
+            if(vVehicleConfig == 3.0) {
+                // finalColor = vec4(vUv, 0.0, 1.0);                
+                // finalColor = white;                
+                // finalColor = vec4(uCarColors[modCarColorInt] * 1.5, 1.0);                
+                // finalColor = vec4(uCarColors[modCarColorInt] * (1.25 + vInstanceId / 50.0), 1.0);                
+                // finalColor = vec4(uCarColors[modCarColorInt] * 1.25, 1.0);                
+
+                finalColor = vehicleColor;
+                // finalColor = vec4(vUv, 0.0, 1.0);                
+
+                // if(
+                //     vOriginalPosition.y > 0.2 && vOriginalPosition.x < -1.245 && 
+                //     vUv.y > .5 && vUv.y < .95 && 
+                //     vUv.x > .025 && vUv.x < 0.4
+                // ) {
+                //     finalColor = mixVehicleColorBlack;
+                // }
+
+                if(
+                    vOriginalPosition.y > 0.2 && vOriginalPosition.x < -1.245 && 
+                    vUv.y > .5 && vUv.y < .95 && 
+                    vUv.x > .65 && vUv.x < .95
+                ) {
+                    finalColor = mixVehicleColorBlack;
+                }
+
+
+                if(
+                    vOriginalPosition.y > 0.2 && vOriginalPosition.x > 1.245 && 
+                    vUv.y > .5 && vUv.y < .95 && 
+                    vUv.x > .05 && vUv.x < 0.35
+                ) {
+                    finalColor = mixVehicleColorBlack;
+                }
+
+                // if(
+                //     vOriginalPosition.y > 0.2 && vOriginalPosition.x > 1.245 && 
+                //     vUv.y > .5 && vUv.y < .95 && 
+                //     vUv.x > .6 && vUv.x < .975
+                // ) {
+                //     finalColor = mixVehicleColorBlack;
+                // }
+
+                if(
+                    vOriginalPosition.y > 0.2 
+                    && vOriginalPosition.y < .65 
+                    && vOriginalPosition.z < -2.49
+                    && vOriginalPosition.x > -.975
+                    && vOriginalPosition.x < .975
+                ) {
+                    finalColor = mixVehicleColorBlack;
+                }
+
+                if(
+                    vOriginalPosition.y > 0.2 
+                    && vOriginalPosition.y < .65 
+                    && vOriginalPosition.z > 2.0
+                    && vOriginalPosition.x > -.975
+                    && vOriginalPosition.x < .975
+                ) {
+                    finalColor = mixVehicleColorBlack;
+                }
+
+                if(
+                    vOriginalPosition.y > 0.2
+                    && vOriginalPosition.z > 0.2
+                    && vOriginalPosition.z < .45
+                    && vOriginalPosition.x > -.975
+                    && vOriginalPosition.x < .975
+                ) {
+                    finalColor = mixVehicleColorBlack;
+                }
+
+                // wheels lol
+                if(
+                    vOriginalPosition.y < -0.35
+                    && vOriginalPosition.x > 1.2
+                    && vUv.x > .15
+                    && vUv.x < .3
+                ) {
+                    finalColor = mixVehicleColorBlack;
+                }
+
+                if(
+                    vOriginalPosition.y < -0.35
+                    && vOriginalPosition.x > 1.2
+                    && vUv.x > .75
+                    && vUv.x < .9
+                ) {
+                    finalColor = mixVehicleColorBlack;
+                }
+
+                if(
+                    vOriginalPosition.y < -0.35
+                    && vOriginalPosition.x < -1.2
+                    && vUv.x > .15
+                    && vUv.x < .3
+                ) {
+                    finalColor = mixVehicleColorBlack;
+                }
+
+                if(
+                    vOriginalPosition.y < -0.35
+                    && vOriginalPosition.x < -1.2
+                    && vUv.x > .75
+                    && vUv.x < .9
+                ) {
+                    finalColor = mixVehicleColorBlack;
+                }
+
+            }
+
+
             // if(distance(positionCalc, destinationCalc) < .25) {
             // finalColor = vec4(.5, .5, .5, 1.0);
             // }
@@ -259,6 +631,7 @@ const Cars = ({width = 1}) => {
             float saturation = 2.25;
             float avg = (finalColor.r + finalColor.g + finalColor.b) / 3.0;
             vec3 gray = vec3(avg, avg, avg);
+            // gl_FragColor = vec4(mix(gray, finalColor.rgb, saturation), finalColor.a) * (1.0 + vInstanceId/200.0);
             gl_FragColor = vec4(mix(gray, finalColor.rgb, saturation), finalColor.a);
 
 

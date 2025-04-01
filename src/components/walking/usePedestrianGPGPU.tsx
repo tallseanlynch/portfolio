@@ -266,6 +266,9 @@ const getPersonPosition = (graphPosition, destination = false) => {
     calcVector3.z += randomNeg1To1() * (graphPosition.height / 2)
 }
 
+// const debugVector3 = new Vector3();
+// const debugVectors: Vector3[] = [];
+
 function usePedestrianGPGPU(count: number) {
     const size = Math.ceil(Math.sqrt(count));
     const gl = useThree((state) => state.gl);
@@ -295,6 +298,12 @@ function usePedestrianGPGPU(count: number) {
             (positionTexture.image.data as any)[i4 + 1] = 0.01; // y
             (positionTexture.image.data as any)[i4 + 2] = startingPositionCalc.z; // z
             (positionTexture.image.data as any)[i4 + 3] = graphPosition.number; // w - graphPosition number
+            // debugVectors.push(new Vector3(startingPositionCalc.x, 0.01, startingPositionCalc.z));
+
+            // (positionTexture.image.data as any)[i4 + 0] = 0.0; // x
+            // (positionTexture.image.data as any)[i4 + 1] = 0.01; // y
+            // (positionTexture.image.data as any)[i4 + 2] = 0.0; // z
+            // (positionTexture.image.data as any)[i4 + 3] = 0.0; // w - graphPosition number
 
             // velocities
             (directionTexture.image.data as any)[i4 + 0] = (Math.random() - 0.5); // x
@@ -359,6 +368,17 @@ function usePedestrianGPGPU(count: number) {
         gpgpuRenderer.setVariableDependencies(stateVariable, [positionVariable, directionVariable, destinationVariable, stateVariable]);
 
         gpgpuRenderer.init();
+
+        // for(let di = 0; di < debugVectors.length; di++) {
+        //     debugVector3.copy(debugVectors[di]);
+        //     for(let ji = 0; ji < debugVectors.length; ji++) {
+        //         if(di !== ji) {
+        //             if(debugVector3.distanceTo(debugVectors[ji]) < .01) {
+        //                 console.log(debugVectors[ji], debugVector3.distanceTo(debugVectors[ji]) < .001)
+        //             }
+        //         }
+        //     }    
+        // }
 
         return [
             gpgpuRenderer,

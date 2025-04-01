@@ -224,6 +224,7 @@ const WalkingPeople = ({
       }
     `,
     fragmentShader: `
+      precision highp float;
       uniform vec3 uColors[${colors.length}];
       uniform vec3 uColorsBottom[${colorsBottom.length}];
 
@@ -250,6 +251,7 @@ const WalkingPeople = ({
         finalColor = vec4(personHue, 1.0);
 
         float modColor = mod((instanceId + instanceId) / (vUv.x * 10.0), colorsLength);
+        // float modColor = mod(instanceId, colorsLength);
         int modColorInt = int(modColor);
         if(vOriginalPosition.y > 0.5 && vOriginalPosition.y < 1.125) {
           finalColor = vec4(uColors[modColorInt], 1.0);
@@ -290,25 +292,12 @@ const WalkingPeople = ({
           finalColor = mix(vec4(personHue, 1.0), vec4(1.0, 1.0, 1.0, 1.0), .5);
         }
 
-        // if(vOriginalPosition.z > 0.0) {
-        //   finalColor = vec4(1.0, 1.0, 1.0, 1.0);
-        // }
-
-        // if(distance(positionCalc, destinationCalc) < .25) {
-        //   finalColor = vec4(.5, .5, .5, 1.0);
-        // }
-
-        // if(distance(positionCalc, destinationCalc) < 1.5 && vgDirection.w < .01) {
-        //   finalColor = vec4(.5, .5, .5, 1.0);
-        // }
-
-
         float saturation = 2.25;
         float avg = (finalColor.r + finalColor.g + finalColor.b) / 3.0;
         vec3 gray = vec3(avg, avg, avg);
         gl_FragColor = vec4(mix(gray, finalColor.rgb, saturation), finalColor.a);
 
-//        gl_FragColor = finalColor;
+      //  gl_FragColor = finalColor;
       }
     `,
     // side: DoubleSide
@@ -567,7 +556,8 @@ const WalkingShaderCanvas = () => {
     <Canvas
       gl={{ 
         antialias: true, 
-        toneMapping: NoToneMapping 
+        toneMapping: NoToneMapping,
+        precision: 'highp'
       }}
       linear
       camera={{position: [0, 50, 75]}}
