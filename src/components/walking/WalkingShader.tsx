@@ -4,6 +4,7 @@ import { WalkingBuildings } from './WalkingBuildings';
 import { WalkingCars } from './WalkingCars';
 import { WalkingGround } from './WalkingGround';
 import { WalkingLights } from './WalkingLights';
+import { WalkingPark } from './WalkingPark';
 import { OrbitControls } from '@react-three/drei';
 import { 
   Canvas, 
@@ -497,6 +498,7 @@ const WalkingPeople = ({
       <WalkingGround />
       <WalkingLights />
       <WalkingBoundries />
+      <WalkingPark />
 
       {/* <primitive object={testUVShaderMaterial} /> */}
 
