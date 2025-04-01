@@ -154,9 +154,9 @@ const simulationDirectionFragmentShader = `
                     // float rightDistance = distance(rightCheckPosition, checkVehiclePositionCalc);
                     // float leftDistance = distance(leftCheckPosition, checkVehiclePositionCalc);
 
-                    vec3 frontCollisonCheckPosition0 = positionDataCalc + normalize(directionDataCalc) * 3.0;// - uv.x * 3.0;
-                    vec3 frontCollisonCheckPosition1 = positionDataCalc + normalize(directionDataCalc) * 6.0;// - uv.x * 2.0;
-                    vec3 frontCollisonCheckPosition2 = positionDataCalc + normalize(directionDataCalc) * 9.0;// - uv.y * 1.5;
+                    vec3 frontCollisonCheckPosition0 = positionDataCalc + normalize(directionDataCalc) * 4.0;// - uv.x * 3.0;
+                    vec3 frontCollisonCheckPosition1 = positionDataCalc + normalize(directionDataCalc) * 8.0;// - uv.x * 2.0;
+                    vec3 frontCollisonCheckPosition2 = positionDataCalc + normalize(directionDataCalc) * 12.0;// - uv.y * 1.5;
 
                     isFrontCollision = frontDistance < backDistance;
                     // isRightCollision = rightDistance < leftDistance;
@@ -196,7 +196,7 @@ const simulationDirectionFragmentShader = `
         }
 
         // float mixVelocity = mix(velocityValue, directionData.w, .25);
-        float mixVelocity = mix(directionData.w, velocityValue, .05);
+        float mixVelocity = mix(directionData.w, velocityValue, .06);
         velocity.w = mixVelocity;
         if(crossWalkStop == true) {
             velocity.w = 0.0;        

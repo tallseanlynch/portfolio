@@ -190,9 +190,21 @@ const WalkingSignal = ({
         const isActiveB = walkSignalTrafficDirection[walkSignalConfig.directionAB.b];
         const isActiveC = walkSignalConfig.directionAB.c && walkSignalTrafficDirection[walkSignalConfig.directionAB.c];
 
-        const colorA = isActiveA ? lightBulbGreenColor : lightBulbRedColor;
-        const colorB = isActiveB ? lightBulbGreenColor : lightBulbRedColor;
-        const colorC = isActiveC ? lightBulbGreenColor : lightBulbRedColor;
+        const walkSignalConfigKeys = Object.keys(walkSignalConfig);
+        const indexOfCurrentTrafficDirection = walkSignalConfigKeys.indexOf(lightsTime.activeLight.name);
+        const nextWalkSignalConfigIndex = (indexOfCurrentTrafficDirection + 1) % walkSignalConfigKeys.length;
+        const removeABNextWalkSignalConfigIndex = nextWalkSignalConfigIndex === 0 ? 1 : nextWalkSignalConfigIndex;
+        const removeABNextWalkSignalConfigName = walkSignalConfigKeys[removeABNextWalkSignalConfigIndex];
+        const walkSignalNextTrafficDirection = walkSignalConfig[removeABNextWalkSignalConfigName];
+        const isNextActiveA = walkSignalNextTrafficDirection[walkSignalConfig.directionAB.a];
+        const isNextActiveB = walkSignalNextTrafficDirection[walkSignalConfig.directionAB.b];
+        const isNextActiveC = walkSignalConfig.directionAB.c && walkSignalNextTrafficDirection[walkSignalConfig.directionAB.c];
+
+        const timeLeftYellow = lightsTime.activeLight.timeLeft <= 10000;
+
+        const colorA = isActiveA ? (timeLeftYellow && isNextActiveA === false ? lightBulbYellowColor : lightBulbGreenColor) : lightBulbRedColor;
+        const colorB = isActiveB ? (timeLeftYellow && isNextActiveB === false ? lightBulbYellowColor : lightBulbGreenColor) : lightBulbRedColor;
+        const colorC = isActiveC ? (timeLeftYellow && isNextActiveC === false ? lightBulbYellowColor : lightBulbGreenColor) : lightBulbRedColor;
 
         return {
             aColorOption: colorA,
@@ -203,10 +215,6 @@ const WalkingSignal = ({
         lightsTime,
         walkSignalConfig
     ])
-
-    // useEffect(() => {
-    //     console.log(walkSignalConfig);
-    // }, [walkSignalConfig])
 
     return (
         <group>

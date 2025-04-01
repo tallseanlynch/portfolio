@@ -301,8 +301,8 @@ const vehiclePath11Turning = {
     crossWalkPointB: new Vector3(0, 0, 15),
     visualModifier: xVisualModifier,
     material: turningMaterialA,
-    laneA: 19,
-    laneB: 4,
+    laneA: 18,
+    laneB: 5,
     trafficConditions: {
         northSouth: false,
         northSouthTurning: false,

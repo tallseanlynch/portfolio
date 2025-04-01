@@ -244,7 +244,7 @@ const WalkingPeople = ({
         vec3 positionCalc = vec3(vgPosition.xyz);
         vec3 destinationCalc = vec3(vgDestination.xyz);
         vec3 directionCalc = vec3(vgDirection.xyz);
-        float instanceIdColor = instanceId / ${width * width}.0;
+        float instanceIdColor = (instanceId / ${width * width}.0) + .1;
 
         vec3 personHue = vec3(250.0, 215.0, 195.0) / 256.0;
         personHue = personHue * instanceIdColor;
@@ -563,7 +563,6 @@ const WalkingShaderCanvas = () => {
       linear
       camera={{
         position: [0, 50, 75],
-        // near: .01,
         far: 500
       }}
     >

@@ -4,7 +4,8 @@ const trafficLightsConfig = {
         // traffic direction: ['active light name']
         // if !traffic direction && active light name = red light
         northSouth: ['straight'],
-        northSouthTurning: ['leftTurn']
+        northSouthTurning: ['leftTurn'],
+        westTurning: ['leftTurn']
     },
     northEast: {
         westTurning: ['leftTurn', 'rightTurn']
