@@ -201,6 +201,25 @@ const WalkingBuildings = () => {
                 <shaderMaterial {...building1Shader} />
                 {/* <meshBasicMaterial color={0x0000ff} /> */}
             </mesh>
+
+            <mesh position={[67, 20, -52.5]}>
+                <boxGeometry args={[60, 40, 30]} />
+                {/* <shaderMaterial {...building1Shader} /> */}
+                <meshBasicMaterial color={0xffffff} />
+            </mesh>
+
+            <mesh position={[67, 17.5, -85.5]}>
+                <boxGeometry args={[60, 35, 30]} />
+                {/* <shaderMaterial {...building1Shader} /> */}
+                <meshBasicMaterial color={0xefefef} />
+            </mesh>
+
+            <mesh position={[67, 30, -122.5]}>
+                <boxGeometry args={[60, 60, 40]} />
+                {/* <shaderMaterial {...building1Shader} /> */}
+                <meshBasicMaterial color={0xffffff} />
+            </mesh>
+
             {/* top left */}
             <mesh position={[-95.5, 20, -92.5]}>
                 <boxGeometry args={[115, 40, 115]} />
