@@ -728,7 +728,5 @@ const createGraphArrays = (graphs: GraphNode[]) => {
 }
 
 const graphArrays = createGraphArrays(positionsGraph);
-(window as any).graphArrays = graphArrays;
-console.log(graphArrays);
 
 export { positionsGraph, graphArrays };

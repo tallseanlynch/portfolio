@@ -71,7 +71,6 @@ const Lights = ({
     const onlyTurnsAdj = onlyTurns ? 1 : 0;
 
     const lightOptions = useMemo(() => {
-        // console.log(lightPostName, lightsTime.activeLight.timeLeft);
         const lightIsActive = trafficLightsConfig[lightsTime.activeLight.name] !== undefined;
         const lightStraight = lightIsActive && trafficLightsConfig[lightsTime.activeLight.name].indexOf('straight') > -1 ;
         const lightLeftTurn = lightIsActive && trafficLightsConfig[lightsTime.activeLight.name].indexOf('leftTurn') > -1;
@@ -86,7 +85,7 @@ const Lights = ({
             lightLeftTurn: lightIsActive && lightLeftTurn ? (timeLeftYellow === false ? lightBulbGreenColor : lightBulbYellowColor) : lightBulbRedColor,
             lightRightTurn: lightIsActive && lightRightTurn ? (timeLeftYellow === false ? lightBulbGreenColor : lightBulbYellowColor) : lightBulbRedColor
         }
-    }, [lightsTime])
+    }, [lightsTime, trafficLightsConfig]);
 
     const three = useMemo(() => {
         return {
@@ -100,12 +99,7 @@ const Lights = ({
             lightBoxTurnGeometryRight: lightBoxTurnGeometry.clone(),
             arrowBulbGeometryRight: arrowBulbGeometry.clone().rotateY(Math.PI)
         }
-    }, [])
-
-    // useEffect(() => {
-    //     console.log(lightsTime)
-    //     console.log(trafficLightsConfig)
-    // }, [lightsTime.activeLight])
+    }, []);
 
     return (
         <group position={position} rotation={rotation}>
@@ -163,10 +157,7 @@ const Lights = ({
 
         </group>
     )
-}
-
-// const walkSignalColorDebug2 = new Color(0x00ffff);
-// const walkSignalColorDebug3 = new Color(0xffffff);
+};
 
 const WalkingSignal = ({
     walkSignalConfig,
@@ -182,7 +173,7 @@ const WalkingSignal = ({
             walkingSignalGeometry2: walkingSignalGeometry.clone(),
             walkingSignalLightGeometry2: walkingSignalLightGeometry.clone()
         }
-    }, [])
+    }, []);
     
     const lightOptions = useMemo(() => {
         const walkSignalTrafficDirection = walkSignalConfig[lightsTime.activeLight.name];
@@ -214,7 +205,7 @@ const WalkingSignal = ({
     }, [
         lightsTime,
         walkSignalConfig
-    ])
+    ]);
 
     return (
         <group>
@@ -229,6 +220,7 @@ const WalkingSignal = ({
                     <meshBasicMaterial color={lightOptions.aColorOption} />
                 </mesh>
             </group>
+
             {/* B */}
             <group position={[1, -2, 0]} rotation={[0, Math.PI / 2, 0]}>
                 <mesh>
@@ -240,6 +232,7 @@ const WalkingSignal = ({
                     <meshBasicMaterial color={lightOptions.bColorOption} />
                 </mesh>
             </group>
+
             {/* C */}
             {diagonalWalkSignal === true && (
                 <group position={[.5, -.25, .5]} rotation={[0, Math.PI / 4, 0]}>
@@ -255,7 +248,7 @@ const WalkingSignal = ({
             )}
         </group>
     )
-}
+};
 
 const LightPost = ({
     position = new Vector3(), 
@@ -269,11 +262,6 @@ const LightPost = ({
     walkSignalConfig,
     diagonalWalkSignal = false
 }) => {
-
-    // useEffect(() => {
-    //     console.log(trafficLightsConfig);
-    // }, [trafficLightsConfig])
-
     const three = useMemo(() => {
         return {
             lightBoxGeometry: lightBoxGeometry.clone().scale(1.75, 2, .3).translate(5, .5, .5),
@@ -282,10 +270,6 @@ const LightPost = ({
             lightsPosition: new Vector3(10.5, 6, .5)
         }
     }, [])
-
-    // useEffect(() => {
-    //     console.log(lightsTime.activeLight)
-    // }, [lightsTime.activeLight])
 
     return (
         <group 
@@ -325,7 +309,7 @@ const LightPost = ({
             />
         </group>
     )
-}
+};
 
 const WalkingLights = () => {
     const lightsTime = useLightsTime();
@@ -388,6 +372,6 @@ const WalkingLights = () => {
             />        
         </>
     )
-}
+};
 
 export { WalkingLights };

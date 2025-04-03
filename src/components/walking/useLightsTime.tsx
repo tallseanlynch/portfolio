@@ -88,6 +88,6 @@ const lightsTotalLengthOfTimeUniformInt = totalLengthOfTime / 1000;
 const uniformData = {
     lightsUniformArray,
     lightsTotalLengthOfTimeUniformInt
-}
-console.log(uniformData);
+};
+
 export { useLightsTime, uniformData };

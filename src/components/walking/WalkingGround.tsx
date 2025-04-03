@@ -137,7 +137,7 @@ const StreetLines = ({position = new Vector3(), rotation = new Euler()}) => {
 
 const LargeGroundPlane = () => {
     return (
-        <mesh position={[0, 0, 0]} onClick={e => console.log(e.point)}>
+        <mesh position={[0, 0, 0]}>
             <primitive object={rotatedGroundPlaneGeometry} />
             <meshBasicMaterial color={roadColor} />
         </mesh>
@@ -228,15 +228,11 @@ const WalkingGround = () => {
 
     return (
         <group>
-
             <SideWalks />
-
             <StreetLines />
             <StreetLines position={new Vector3(0, 0, 0)} rotation={new Euler(0, Math.PI, 0)}/>
-            <StreetLines position={new Vector3(0, 0, 0)} rotation={new Euler(0, -Math.PI / 2, 0)}/>
-            
+            <StreetLines position={new Vector3(0, 0, 0)} rotation={new Euler(0, -Math.PI / 2, 0)}/>            
             <LargeGroundPlane />
-            
             <CrossWalks />
         </group>
     )

@@ -84,7 +84,6 @@ const simulationDirectionFragmentShader = `
                 vec4 checkPersonPosition = texture(uPosition, checkUV);
                 vec3 checkPersonPositionCalc = vec3(checkPersonPosition.xyz);
                 float checkDistance = distance(positionDataCalc, checkPersonPositionCalc);
-                // if(checkDistance < checkDistanceMin && checkDistance > 0.001) {
                 if(
                     checkDistance < checkDistanceMin && 
                     checkDistance > 0.001 && 
@@ -126,8 +125,6 @@ const simulationDirectionFragmentShader = `
             velocity.w = 0.0;
         };
 
-        // still testing
-        // implemented to prevent double stragglers
         if(lowestCheckDistance < .5 && numberOfPotentialCollisions > 0) {
             velocity.w = 1.0;
         };
@@ -175,16 +172,8 @@ const simulationDirectionFragmentShader = `
         }
 
         if(distanceToDestination < checkDistanceFromStart * 1.5 && canMoveToDestinationModifier == 0.0) {
-        // if(distanceToDestination < checkDistanceFromStart && canMoveToDestinationModifier == 0.0) {
             canMoveToDestinationModifier = 1.5;
         }
-
-        // if(totalCycleTime == 165.0) {
-        // if(activeLightNumber == 1) {
-        // if(uLightTimes[3] == 60) {
-        // if(cycleTime < 45.0) {
-        //     canMoveToDestinationModifier = 0.0;
-        // }
 
         velocity.w *= canMoveToDestinationModifier;
 
@@ -232,7 +221,6 @@ const simulationDestinationFragmentShader = `
 
             finalDestination = vec4(
                 uPositionsData[(5 * newDestinationNumberInt) + 0] + (((random(3.49) * 2.0) - 1.0) * uPositionsData[(5 * newDestinationNumberInt) + 3]) * .25, 
-                // uPositionsData[(5 * newDestinationNumberInt) + 1],
                 currentDestination, 
                 uPositionsData[(5 * newDestinationNumberInt) + 2] + (((random(9.43) * 2.0) - 1.0) * uPositionsData[(5 * newDestinationNumberInt) + 4]) * .25, 
                 newDestinationNumber
@@ -240,18 +228,6 @@ const simulationDestinationFragmentShader = `
         }
 
         gl_FragColor = finalDestination;
-    }
-`
-
-const simulationStateFragmentShader = `
-    uniform int uSize;
-    uniform float uTime;
-    uniform float uDeltaTime;
-
-    void main() {
-        vec2 uv = gl_FragCoord.xy / resolution.xy;
-        vec4 stateData = texture(uState, uv);
-        gl_FragColor = stateData;
     }
 `
 
@@ -266,9 +242,6 @@ const getPersonPosition = (graphPosition, destination = false) => {
     calcVector3.z += randomNeg1To1() * (graphPosition.height / 2)
 }
 
-// const debugVector3 = new Vector3();
-// const debugVectors: Vector3[] = [];
-
 function usePedestrianGPGPU(count: number) {
     const size = Math.ceil(Math.sqrt(count));
     const gl = useThree((state) => state.gl);
@@ -279,7 +252,6 @@ function usePedestrianGPGPU(count: number) {
         const positionTexture = gpgpuRenderer.createTexture();
         const directionTexture = gpgpuRenderer.createTexture();
         const destinationTexture = gpgpuRenderer.createTexture();
-        const stateTexture = gpgpuRenderer.createTexture();
 
         for (let i = 0; i < count; i++) {
             const i4 = i * 4;
@@ -298,12 +270,6 @@ function usePedestrianGPGPU(count: number) {
             (positionTexture.image.data as any)[i4 + 1] = 0.01; // y
             (positionTexture.image.data as any)[i4 + 2] = startingPositionCalc.z; // z
             (positionTexture.image.data as any)[i4 + 3] = graphPosition.number; // w - graphPosition number
-            // debugVectors.push(new Vector3(startingPositionCalc.x, 0.01, startingPositionCalc.z));
-
-            // (positionTexture.image.data as any)[i4 + 0] = 0.0; // x
-            // (positionTexture.image.data as any)[i4 + 1] = 0.01; // y
-            // (positionTexture.image.data as any)[i4 + 2] = 0.0; // z
-            // (positionTexture.image.data as any)[i4 + 3] = 0.0; // w - graphPosition number
 
             // velocities
             (directionTexture.image.data as any)[i4 + 0] = (Math.random() - 0.5); // x
@@ -316,12 +282,6 @@ function usePedestrianGPGPU(count: number) {
             (destinationTexture.image.data as any)[i4 + 1] = graphPosition.number; // y - current graphPosition number
             (destinationTexture.image.data as any)[i4 + 2] = destinationPositionCalc.z; // z
             (destinationTexture.image.data as any)[i4 + 3] = randomConnectionDestinationGraphPosition.number; // w - destinationPosition number
-
-            // states
-            (stateTexture.image.data as any)[i4 + 0] = 0.0; // x
-            (stateTexture.image.data as any)[i4 + 1] = 0.0; // y
-            (stateTexture.image.data as any)[i4 + 2] = 0.0; // z
-            (stateTexture.image.data as any)[i4 + 3] = 0.0; // w - destinationPosition number
         }
 
         // gpugpu variables initialization
@@ -354,31 +314,12 @@ function usePedestrianGPGPU(count: number) {
         destinationVariable.material.uniforms.uGraphConnectionsLengths = { value: graphArrays.graphConnectionsLengths };
         destinationVariable.material.uniforms.uGraphTerminationsLengths = { value: graphArrays.graphTerminationsLengths };
         
-        const stateVariable = gpgpuRenderer.addVariable('uState', simulationStateFragmentShader, stateTexture);
-        stateVariable.material.uniforms.uSize = { value: size };        
-        stateVariable.material.uniforms.uTime = { value: 0 };
-        stateVariable.material.uniforms.uDeltaTime = { value: 0 };
-        stateVariable.material.uniforms.uGraphRows = { value: graphArrays.graphPositions.length };
-        stateVariable.material.uniforms.uGraphCols = { value: 10 };
-
         // init
-        gpgpuRenderer.setVariableDependencies(positionVariable, [positionVariable, directionVariable, destinationVariable, stateVariable]);
-        gpgpuRenderer.setVariableDependencies(directionVariable, [positionVariable, directionVariable, destinationVariable, stateVariable]);
-        gpgpuRenderer.setVariableDependencies(destinationVariable, [positionVariable, directionVariable, destinationVariable, stateVariable]);
-        gpgpuRenderer.setVariableDependencies(stateVariable, [positionVariable, directionVariable, destinationVariable, stateVariable]);
+        gpgpuRenderer.setVariableDependencies(positionVariable, [positionVariable, directionVariable, destinationVariable]);
+        gpgpuRenderer.setVariableDependencies(directionVariable, [positionVariable, directionVariable, destinationVariable]);
+        gpgpuRenderer.setVariableDependencies(destinationVariable, [positionVariable, directionVariable, destinationVariable]);
 
         gpgpuRenderer.init();
-
-        // for(let di = 0; di < debugVectors.length; di++) {
-        //     debugVector3.copy(debugVectors[di]);
-        //     for(let ji = 0; ji < debugVectors.length; ji++) {
-        //         if(di !== ji) {
-        //             if(debugVector3.distanceTo(debugVectors[ji]) < .01) {
-        //                 console.log(debugVectors[ji], debugVector3.distanceTo(debugVectors[ji]) < .001)
-        //             }
-        //         }
-        //     }    
-        // }
 
         return [
             gpgpuRenderer,
@@ -400,14 +341,8 @@ function usePedestrianGPGPU(count: number) {
                     variables: {
                         destinationVariable,
                     },
-                },
-                state: {
-                    texture: stateTexture,
-                    variables: {
-                        stateVariable,
-                    },
-                },
-            },
+                }
+            }
         ];
     }, [count, gl, size]);
 
@@ -417,7 +352,6 @@ function usePedestrianGPGPU(count: number) {
             data.destination.texture.dispose();
             data.direction.texture.dispose();
             data.position.texture.dispose();
-            data.state.texture.dispose();
         };
     }, [gpgpuRenderer, data]);
 

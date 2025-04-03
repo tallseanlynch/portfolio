@@ -13,15 +13,7 @@ const straightMaterialA = new LineBasicMaterial({
     color: 0x00ffff
 });
 
-// const turningMaterialB = new LineBasicMaterial({
-//     color: 0x00ff00
-// });
-// const straightMaterialB = new LineBasicMaterial({
-//     color: 0xff00ff
-// });
-
 const xVisualModifier = new Vector3(0.2, 0, 0);
-// const zVisualModifier = new Vector3(0, 0, 0.2);
 
 const vehiclePath0Turning = {
     ellipseCenterX: -25,
@@ -47,42 +39,6 @@ const vehiclePath0Turning = {
         noTraffic: false
     }
 }
-
-// const vehiclePath0Straight = {
-//     start: new Vector3(-17.5, 0.1, 155),
-//     crosswalkPointA: new Vector3(-17.5, 0.1, 40),
-//     crosswalkPointB: new Vector3(-17.5, 0.1, -40),
-//     end: new Vector3(-17.5, 0.1, -155),
-//     material: straightMaterialA,
-//     visualModifier: xVisualModifier,
-//     laneA: 0,
-//     laneB: 15,
-//     trafficConditions: {
-//         northSouth: true,
-//         northSouthTurning: false,
-//         westTurning: false,
-//         noTraffic: false
-//     }
-// }
-
-// const vehiclePath1Turning = {
-//     ellipseCenterX: -25,
-//     ellipseCenterY: 25,
-//     radiusX: 12.5,
-//     radiusY: 12.5,
-//     startAngle: 0,
-//     endAngle: -Math.PI * .5,
-//     clockWise: true,
-//     rotation: 0,
-//     directionalPointA: new Vector3(0, 0, 130),
-//     directionalPointB: new Vector3(-130, 0, 0),
-//     crossWalkPointA: new Vector3(0, 0, 15),
-//     crossWalkPointB: new Vector3(-15, 0, 0),
-//     visualModifier: xVisualModifier,
-//     material: turningMaterialA,
-//     laneA: 1,
-//     laneB: 22,
-// }
 
 const vehiclePath1Straight = {
     start: new Vector3(-12.5, 0.1, 155),
@@ -451,8 +407,6 @@ const vehicleStraightPath = ({
 
 const pathData = {
     vehiclePath0TurningData: vehicleTurnPath(vehiclePath0Turning),
-    // vehiclePath0StraightData: vehicleStraightPath(vehiclePath0Straight),
-    // vehiclePath1TurningData: vehicleTurnPath(vehiclePath1Turning),
     vehiclePath1StraightData: vehicleStraightPath(vehiclePath1Straight),
     vehiclePath2StraightData: vehicleStraightPath(vehiclePath2Straight),
     vehiclePath3StraightData: vehicleStraightPath(vehiclePath3Straight),
@@ -536,7 +490,6 @@ pathDataKeys.forEach(
         ];
     }
 );
-
 
 export { 
     pathData, 

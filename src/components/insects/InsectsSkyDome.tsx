@@ -27,7 +27,7 @@ const skyDomeShader = {
 
 const InsectsSkyDome: React.FC = (): JSX.Element => {
     return (
-        <mesh scale={[300, 300, 300]}>
+        <mesh scale={[500, 500, 500]}>
             <sphereGeometry />
             <shaderMaterial
                 vertexShader={skyDomeShader.vertexShader}

@@ -1,12 +1,10 @@
-// import { pathData } from './pathData';
-import { Color, Line, Vector3 } from 'three';
+import { Color } from 'three';
 import { useVehicleGPGPU } from './useVehicleGPGPU';
 import { useEffect, useMemo, useRef } from 'react';
 import { InstancedMesh, Object3D, ShaderMaterial } from 'three';
 import { useFrame } from '@react-three/fiber';
 
 const carSize = 1.5;
-// const instanceScale = .75;
 
 const Cars = ({width = 1}) => {
     const { gpgpuRenderer, data } = useVehicleGPGPU(width);
@@ -17,8 +15,7 @@ const Cars = ({width = 1}) => {
     useEffect(() => {
         if(instancedMeshRef.current) {
             for ( let i=0 ; i<numCars ; i++ ) {
-                matrixPositionObject.scale.y = carSize + 1.0;//2.0 + (Math.random() * instanceScale) - instanceScale / 2;
-//                matrixPositionObject.position.set(0, matrixPositionObject.scale.y / 2, 0);        
+                matrixPositionObject.scale.y = carSize + 1.0;
                 matrixPositionObject.position.set(0, carSize + .2, 0);        
                 matrixPositionObject.updateMatrix();
                 instancedMeshRef.current.setMatrixAt( i, matrixPositionObject.matrix );
@@ -98,7 +95,6 @@ const Cars = ({width = 1}) => {
 
             vVehicleConfig = mod(vInstanceId + xCoor * 11.5, 4.0);
             vVehicleConfig = vVehicleConfig - fract(vVehicleConfig);
-            // vVehicleConfig = 3.0;
 
             if(vVehicleConfig == 0.0) {
                 if(vOriginalPosition.z > 1.0 && vOriginalPosition.y > .25) {
@@ -114,21 +110,7 @@ const Cars = ({width = 1}) => {
                 if(vOriginalPosition.z > 1.0 && vOriginalPosition.y > .25) {
                     vPosition.y = 2.0;
                 }
-
-                // if(vOriginalPosition.z < -1.5 && vOriginalPosition.y > .25) {
-                //     vPosition.y = 2.0;
-                // }            
             }
-
-            // if(vVehicleConfig == 2.0) {
-            //     // if(vOriginalPosition.z > 1.0 && vOriginalPosition.y > .25) {
-            //     //     vPosition.y = 2.0;
-            //     // }
-
-            //     // if(vOriginalPosition.z < -1.5 && vOriginalPosition.y > .25) {
-            //     //     vPosition.y = 2.0;
-            //     // }            
-            // }
 
             if(vVehicleConfig == 3.0) {
                 if(vOriginalPosition.z < .5 && vOriginalPosition.y > .225) {
@@ -159,27 +141,16 @@ const Cars = ({width = 1}) => {
             vec3 destinationCalc = vec3(vgDestination.xyz);
             vec3 directionCalc = vec3(vgDirection.xyz);
 
-            // if(vOriginalPosition.z > 0.0) {
-            //     finalColor = vec4(1.0, 1.0, 1.0, 1.0);
-            // }
-
             float modCarColor = mod(vInstanceId, carColorsLength);
             int modCarColorInt = int(modCarColor);
 
             vec4 white = vec4(1.0, 1.0, 1.0, 1.0);
             vec4 black = vec4(0.0, 0.0, 0.0, 1.0);
             vec4 vehicleColor = vec4(uCarColors[modCarColorInt] * 1.25, 1.0);
-            vec4 mixVehicleColorBlack = mix(vehicleColor, black, .75);
+            vec4 mixVehicleColorBlack = mix(vehicleColor, black, .75 + vgPosition.y);
 
             if(vVehicleConfig == 0.0) {
-                // finalColor = vec4(vUv, 0.0, 1.0);                
-                // finalColor = white;                
-                // finalColor = vec4(uCarColors[modCarColorInt] * 1.5, 1.0);                
-                // finalColor = vec4(uCarColors[modCarColorInt] * (1.25 + vInstanceId / 50.0), 1.0);                
-                // finalColor = vec4(uCarColors[modCarColorInt] * 1.25, 1.0);                
-
                 finalColor = vehicleColor;
-                // finalColor = vec4(vUv, 0.0, 1.0);                
 
                 if(
                     vOriginalPosition.y > 0.2 && vOriginalPosition.x < -1.245 && 
@@ -196,7 +167,6 @@ const Cars = ({width = 1}) => {
                 ) {
                     finalColor = mixVehicleColorBlack;
                 }
-
 
                 if(
                     vOriginalPosition.y > 0.2 && vOriginalPosition.x > 1.245 && 
@@ -232,61 +202,14 @@ const Cars = ({width = 1}) => {
                     && vOriginalPosition.z < 1.5
                     && vOriginalPosition.x > -.975
                     && vOriginalPosition.x < .975
-                    // && vUv.x > .05
-                    // && vUv.x < .95
                 ) {
                     finalColor = mixVehicleColorBlack;
                 }
-
-                // wheels lol
-                if(
-                    vOriginalPosition.y < -0.35
-                    && vOriginalPosition.x > 1.2
-                    && vUv.x > .15
-                    && vUv.x < .3
-                ) {
-                    finalColor = mixVehicleColorBlack;
-                }
-
-                if(
-                    vOriginalPosition.y < -0.35
-                    && vOriginalPosition.x > 1.2
-                    && vUv.x > .75
-                    && vUv.x < .9
-                ) {
-                    finalColor = mixVehicleColorBlack;
-                }
-
-                if(
-                    vOriginalPosition.y < -0.35
-                    && vOriginalPosition.x < -1.2
-                    && vUv.x > .15
-                    && vUv.x < .3
-                ) {
-                    finalColor = mixVehicleColorBlack;
-                }
-
-                if(
-                    vOriginalPosition.y < -0.35
-                    && vOriginalPosition.x < -1.2
-                    && vUv.x > .75
-                    && vUv.x < .9
-                ) {
-                    finalColor = mixVehicleColorBlack;
-                }
-
 
             }
 
             if(vVehicleConfig == 1.0) {
-                // finalColor = vec4(vUv, 0.0, 1.0);                
-                // finalColor = white;                
-                // finalColor = vec4(uCarColors[modCarColorInt] * 1.5, 1.0);                
-                // finalColor = vec4(uCarColors[modCarColorInt] * (1.25 + vInstanceId / 50.0), 1.0);                
-                // finalColor = vec4(uCarColors[modCarColorInt] * 1.25, 1.0);                
-
                 finalColor = vehicleColor;
-                // finalColor = vec4(vUv, 0.0, 1.0);                
 
                 if(
                     vOriginalPosition.y > 0.2 && vOriginalPosition.x < -1.245 && 
@@ -328,9 +251,6 @@ const Cars = ({width = 1}) => {
                     // && vOriginalPosition.z > -2.0
                     && vOriginalPosition.x > -.975
                     && vOriginalPosition.x < .975
-                    
-                    // && vUv.x > .05
-                    // && vUv.x < .95
                 ) {
                     finalColor = mixVehicleColorBlack;
                 }
@@ -341,45 +261,6 @@ const Cars = ({width = 1}) => {
                     && vOriginalPosition.z < 1.5
                     && vOriginalPosition.x > -.975
                     && vOriginalPosition.x < .975
-                    // && vUv.x > .05
-                    // && vUv.x < .95
-                ) {
-                    finalColor = mixVehicleColorBlack;
-                }
-
-                // wheels lol
-                if(
-                    vOriginalPosition.y < -0.35
-                    && vOriginalPosition.x > 1.2
-                    && vUv.x > .15
-                    && vUv.x < .3
-                ) {
-                    finalColor = mixVehicleColorBlack;
-                }
-
-                if(
-                    vOriginalPosition.y < -0.35
-                    && vOriginalPosition.x > 1.2
-                    && vUv.x > .75
-                    && vUv.x < .9
-                ) {
-                    finalColor = mixVehicleColorBlack;
-                }
-
-                if(
-                    vOriginalPosition.y < -0.35
-                    && vOriginalPosition.x < -1.2
-                    && vUv.x > .15
-                    && vUv.x < .3
-                ) {
-                    finalColor = mixVehicleColorBlack;
-                }
-
-                if(
-                    vOriginalPosition.y < -0.35
-                    && vOriginalPosition.x < -1.2
-                    && vUv.x > .75
-                    && vUv.x < .9
                 ) {
                     finalColor = mixVehicleColorBlack;
                 }
@@ -387,14 +268,7 @@ const Cars = ({width = 1}) => {
             }
 
             if(vVehicleConfig == 2.0) {
-                // finalColor = vec4(vUv, 0.0, 1.0);                
-                // finalColor = white;                
-                // finalColor = vec4(uCarColors[modCarColorInt] * 1.5, 1.0);                
-                // finalColor = vec4(uCarColors[modCarColorInt] * (1.25 + vInstanceId / 50.0), 1.0);                
-                // finalColor = vec4(uCarColors[modCarColorInt] * 1.25, 1.0);                
-
                 finalColor = vehicleColor;
-                // finalColor = vec4(vUv, 0.0, 1.0);                
 
                 if(
                     vOriginalPosition.y > 0.2 && vOriginalPosition.x < -1.245 && 
@@ -433,12 +307,8 @@ const Cars = ({width = 1}) => {
                     vOriginalPosition.y > 0.2 
                     && vOriginalPosition.y < .65 
                     && vOriginalPosition.z < -2.49
-                    // && vOriginalPosition.z > -2.0
                     && vOriginalPosition.x > -.975
                     && vOriginalPosition.x < .975
-                    
-                    // && vUv.x > .05
-                    // && vUv.x < .95
                 ) {
                     finalColor = mixVehicleColorBlack;
                 }
@@ -448,10 +318,7 @@ const Cars = ({width = 1}) => {
                     && vOriginalPosition.y < .65 
                     && vOriginalPosition.z > 2.0
                     && vOriginalPosition.x > -.975
-                    && vOriginalPosition.x < .975
-                    
-                    // && vUv.x > .05
-                    // && vUv.x < .95
+                    && vOriginalPosition.x < .975                    
                 ) {
                     finalColor = mixVehicleColorBlack;
                 }
@@ -462,69 +329,13 @@ const Cars = ({width = 1}) => {
                     && vOriginalPosition.z < 1.5
                     && vOriginalPosition.x > -.975
                     && vOriginalPosition.x < .975
-                    // && vUv.x > .05
-                    // && vUv.x < .95
                 ) {
                     finalColor = mixVehicleColorBlack;
                 }
-
-                // wheels lol
-                if(
-                    vOriginalPosition.y < -0.35
-                    && vOriginalPosition.x > 1.2
-                    && vUv.x > .15
-                    && vUv.x < .3
-                ) {
-                    finalColor = mixVehicleColorBlack;
-                }
-
-                if(
-                    vOriginalPosition.y < -0.35
-                    && vOriginalPosition.x > 1.2
-                    && vUv.x > .75
-                    && vUv.x < .9
-                ) {
-                    finalColor = mixVehicleColorBlack;
-                }
-
-                if(
-                    vOriginalPosition.y < -0.35
-                    && vOriginalPosition.x < -1.2
-                    && vUv.x > .15
-                    && vUv.x < .3
-                ) {
-                    finalColor = mixVehicleColorBlack;
-                }
-
-                if(
-                    vOriginalPosition.y < -0.35
-                    && vOriginalPosition.x < -1.2
-                    && vUv.x > .75
-                    && vUv.x < .9
-                ) {
-                    finalColor = mixVehicleColorBlack;
-                }
-
             }
 
             if(vVehicleConfig == 3.0) {
-                // finalColor = vec4(vUv, 0.0, 1.0);                
-                // finalColor = white;                
-                // finalColor = vec4(uCarColors[modCarColorInt] * 1.5, 1.0);                
-                // finalColor = vec4(uCarColors[modCarColorInt] * (1.25 + vInstanceId / 50.0), 1.0);                
-                // finalColor = vec4(uCarColors[modCarColorInt] * 1.25, 1.0);                
-
                 finalColor = vehicleColor;
-                // finalColor = vec4(vUv, 0.0, 1.0);                
-
-                // if(
-                //     vOriginalPosition.y > 0.2 && vOriginalPosition.x < -1.245 && 
-                //     vUv.y > .5 && vUv.y < .95 && 
-                //     vUv.x > .025 && vUv.x < 0.4
-                // ) {
-                //     finalColor = mixVehicleColorBlack;
-                // }
-
                 if(
                     vOriginalPosition.y > 0.2 && vOriginalPosition.x < -1.245 && 
                     vUv.y > .5 && vUv.y < .95 && 
@@ -533,7 +344,6 @@ const Cars = ({width = 1}) => {
                     finalColor = mixVehicleColorBlack;
                 }
 
-
                 if(
                     vOriginalPosition.y > 0.2 && vOriginalPosition.x > 1.245 && 
                     vUv.y > .5 && vUv.y < .95 && 
@@ -541,14 +351,6 @@ const Cars = ({width = 1}) => {
                 ) {
                     finalColor = mixVehicleColorBlack;
                 }
-
-                // if(
-                //     vOriginalPosition.y > 0.2 && vOriginalPosition.x > 1.245 && 
-                //     vUv.y > .5 && vUv.y < .95 && 
-                //     vUv.x > .6 && vUv.x < .975
-                // ) {
-                //     finalColor = mixVehicleColorBlack;
-                // }
 
                 if(
                     vOriginalPosition.y > 0.2 
@@ -580,65 +382,52 @@ const Cars = ({width = 1}) => {
                     finalColor = mixVehicleColorBlack;
                 }
 
-                // wheels lol
-                if(
-                    vOriginalPosition.y < -0.35
-                    && vOriginalPosition.x > 1.2
-                    && vUv.x > .15
-                    && vUv.x < .3
-                ) {
-                    finalColor = mixVehicleColorBlack;
-                }
-
-                if(
-                    vOriginalPosition.y < -0.35
-                    && vOriginalPosition.x > 1.2
-                    && vUv.x > .75
-                    && vUv.x < .9
-                ) {
-                    finalColor = mixVehicleColorBlack;
-                }
-
-                if(
-                    vOriginalPosition.y < -0.35
-                    && vOriginalPosition.x < -1.2
-                    && vUv.x > .15
-                    && vUv.x < .3
-                ) {
-                    finalColor = mixVehicleColorBlack;
-                }
-
-                if(
-                    vOriginalPosition.y < -0.35
-                    && vOriginalPosition.x < -1.2
-                    && vUv.x > .75
-                    && vUv.x < .9
-                ) {
-                    finalColor = mixVehicleColorBlack;
-                }
-
             }
 
+            // all vehicles
+            // wheels
+            if(
+                vOriginalPosition.y < -0.35
+                && vOriginalPosition.x > 1.2
+                && vUv.x > .15
+                && vUv.x < .3
+            ) {
+                finalColor = mixVehicleColorBlack;
+            }
 
-            // if(distance(positionCalc, destinationCalc) < .25) {
-            // finalColor = vec4(.5, .5, .5, 1.0);
-            // }
+            if(
+                vOriginalPosition.y < -0.35
+                && vOriginalPosition.x > 1.2
+                && vUv.x > .75
+                && vUv.x < .9
+            ) {
+                finalColor = mixVehicleColorBlack;
+            }
 
-            // if(distance(positionCalc, destinationCalc) < 1.5 && vgDirection.w < .01) {
-            // finalColor = vec4(.5, .5, .5, 1.0);
-            // }
+            if(
+                vOriginalPosition.y < -0.35
+                && vOriginalPosition.x < -1.2
+                && vUv.x > .15
+                && vUv.x < .3
+            ) {
+                finalColor = mixVehicleColorBlack;
+            }
+
+            if(
+                vOriginalPosition.y < -0.35
+                && vOriginalPosition.x < -1.2
+                && vUv.x > .75
+                && vUv.x < .9
+            ) {
+                finalColor = mixVehicleColorBlack;
+            }
 
             float saturation = 2.25;
             float avg = (finalColor.r + finalColor.g + finalColor.b) / 3.0;
             vec3 gray = vec3(avg, avg, avg);
-            // gl_FragColor = vec4(mix(gray, finalColor.rgb, saturation), finalColor.a) * (1.0 + vInstanceId/200.0);
             gl_FragColor = vec4(mix(gray, finalColor.rgb, saturation), finalColor.a);
-
-
-            // gl_FragColor = finalColor;
         }
         `,
-        // side: DoubleSide
     }), [
         width, 
         data.position.texture,
@@ -648,11 +437,8 @@ const Cars = ({width = 1}) => {
     ]);
 
     useFrame(({
-        clock,
-        // gl
+        clock
     }) => {
-
-        // computer renderer
         gpgpuRenderer.compute();
 
         shaderMaterial.uniforms.time.value = clock.elapsedTime;
@@ -668,9 +454,6 @@ const Cars = ({width = 1}) => {
             .getCurrentRenderTarget(data.direction.variables.directionVariable).texture;
         data.direction.variables.directionVariable.material.uniforms.uTime.value = clock.elapsedTime; // seconds as float -- not miliseconds
         data.direction.variables.directionVariable.material.uniforms.uDeltaTime.value = clock.getDelta();
-        // console.log(clock.elapsedTime)
-        // data.direction.variables.directionVariable.material.uniforms.uActiveLightNumber.value = lightsTime.activeLightNumber;
-        // data.direction.variables.directionVariable.material.uniforms.uActiveLightTimeLeft.value = lightsTime.activeLightTimeLeft;
 
         // destination
         shaderMaterial.uniforms.gDestinationMap.value = gpgpuRenderer
@@ -686,106 +469,13 @@ const Cars = ({width = 1}) => {
             material={shaderMaterial}
         >
             <boxGeometry args={[2.5, carSize, 5.0, 10, 10, 10]} />
-            {/* <boxGeometry args={[1, 1, .5, 1, 1, 1]} /> */}
         </instancedMesh>
     )
 }
 
-type PointsProps = {
-    points: Vector3[]
-}
-
-// debug mesh for cross walk points
-const CrosswalkPoints: React.FC<PointsProps> = ({points = []}) => {
-    return (
-        points.map((cwp, cwpindex) => {
-            return (
-                <mesh key={cwpindex} position={cwp}>
-                    <boxGeometry args={[.5, .5, .5]} />
-                    <meshBasicMaterial color={0x0000ff} />
-                </mesh>
-            )            
-        })
-    )
-}
-
-
-
-type VehiclePath = {
-    pathLine: Line;
-    crosswalkPoints?: Vector3[]
-}
-
-const VehiclePath: React.FC<VehiclePath> = ({
-    pathLine,
-    crosswalkPoints = undefined
-}) => {
-    return (
-        <>
-            <primitive object={pathLine} />
-            {crosswalkPoints && <CrosswalkPoints points={crosswalkPoints}/>}
-        </>
-    )
-}
-
-// const vehiclePath0Turning = vehicleTurnPath(pathData.vehiclePath0Turning);
-// const vehcilePath0Straight = vehicleStraightPath(pathData.vehiclePath0Straight);
-// const vehiclePath1Turning = vehicleTurnPath(pathData.vehiclePath1Turning);
-// const vehcilePath1Straight = vehicleStraightPath(pathData.vehiclePath1Straight);
-
 const WalkingCars = () => {
     return (
-        <>
-            {/* <VehiclePath 
-                pathLine={pathData.vehiclePath0TurningData.line} 
-                crosswalkPoints={pathData.vehiclePath0TurningData.crosswalkPoints}
-            />
-            <VehiclePath 
-                pathLine={pathData.vehiclePath1StraightData.line} 
-                crosswalkPoints={pathData.vehiclePath1StraightData.crosswalkPoints}
-            />
-            <VehiclePath 
-                pathLine={pathData.vehiclePath2StraightData.line} 
-                crosswalkPoints={pathData.vehiclePath2StraightData.crosswalkPoints}
-            />
-            <VehiclePath 
-                pathLine={pathData.vehiclePath3StraightData.line} 
-                crosswalkPoints={pathData.vehiclePath3StraightData.crosswalkPoints}
-            />
-            <VehiclePath 
-                pathLine={pathData.vehiclePath4StraightData.line} 
-                crosswalkPoints={pathData.vehiclePath4StraightData.crosswalkPoints}
-            />
-            <VehiclePath 
-                pathLine={pathData.vehiclePath5StraightData.line} 
-                crosswalkPoints={pathData.vehiclePath5StraightData.crosswalkPoints}
-            />
-            <VehiclePath 
-                pathLine={pathData.vehiclePath6StraightData.line} 
-                crosswalkPoints={pathData.vehiclePath6StraightData.crosswalkPoints}
-            />
-            <VehiclePath 
-                pathLine={pathData.vehiclePath7TurningData.line} 
-                crosswalkPoints={pathData.vehiclePath7TurningData.crosswalkPoints}
-            />
-            <VehiclePath 
-                pathLine={pathData.vehiclePath8TurningData.line} 
-                crosswalkPoints={pathData.vehiclePath8TurningData.crosswalkPoints}
-            />
-            <VehiclePath 
-                pathLine={pathData.vehiclePath9TurningData.line} 
-                crosswalkPoints={pathData.vehiclePath9TurningData.crosswalkPoints}
-            />
-            <VehiclePath 
-                pathLine={pathData.vehiclePath10TurningData.line} 
-                crosswalkPoints={pathData.vehiclePath10TurningData.crosswalkPoints}
-            />
-            <VehiclePath 
-                pathLine={pathData.vehiclePath11TurningData.line} 
-                crosswalkPoints={pathData.vehiclePath11TurningData.crosswalkPoints}
-            /> */}
-            <Cars width={11} />
-        </>
+        <Cars width={11} />
     )
 }
 
