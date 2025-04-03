@@ -487,10 +487,10 @@ const WalkingBuildings = () => {
             </mesh>
 
             {/* bottom left */}
-            <mesh position={[-92.5, 20, 92.5]}>
+            {/* <mesh position={[-92.5, 20, 92.5]}>
                 <boxGeometry args={[115, 40, 115]} />
                 <meshBasicMaterial color={0x00ff00} />
-            </mesh>
+            </mesh> */}
             {/* top right */}
             <mesh position={[122.5, 25, -92.5]}>
                 <boxGeometry args={[40, 50, 115]} />

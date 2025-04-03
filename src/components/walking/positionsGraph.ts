@@ -526,13 +526,20 @@ const positionsGraph: GraphNode[] = [
         width: 10.0,
         height: 10.0,
         connections: [
-            'SouthWest-Corner'
+            'SouthWest-Corner',
+            'SouthWest-WestStreet-CornerEnd'
         ],
         termination: [
             'NorthWest-NorthStreet-CornerEnd'
         ],
         walkConditions: {
             'SouthWest-Corner': {
+                northSouth: true,
+                northSouthTurning: true,
+                westTurning: true,
+                noTraffic: true
+            },
+            'SouthWest-WestStreet-CornerEnd': {
                 northSouth: true,
                 northSouthTurning: true,
                 westTurning: true,
@@ -573,13 +580,20 @@ const positionsGraph: GraphNode[] = [
         width: 10.0,
         height: 10.0,
         connections: [
-            'SouthWest-Corner'
+            'SouthWest-Corner',
+            'SouthWest-SouthStreet-CornerEnd'
         ],
         termination: [
-            'SouthEast-EastStreet-CornerEnd'
+            'SouthEast-EastStreet-CornerEnd',
         ],
         walkConditions: {
             'SouthWest-Corner': {
+                northSouth: true,
+                northSouthTurning: true,
+                westTurning: true,
+                noTraffic: true
+            },
+            'SouthWest-SouthStreet-CornerEnd': {
                 northSouth: true,
                 northSouthTurning: true,
                 westTurning: true,

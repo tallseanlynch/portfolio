@@ -137,7 +137,7 @@ const StreetLines = ({position = new Vector3(), rotation = new Euler()}) => {
 
 const LargeGroundPlane = () => {
     return (
-        <mesh position={[0, 0, 0]}>
+        <mesh position={[0, 0, 0]} onClick={e => console.log(e.point)}>
             <primitive object={rotatedGroundPlaneGeometry} />
             <meshBasicMaterial color={roadColor} />
         </mesh>

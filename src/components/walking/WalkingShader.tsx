@@ -499,6 +499,7 @@ const WalkingPeople = ({
       <WalkingLights />
       <WalkingBoundries />
       <WalkingPark />
+      {/* <WalkingPark groupPosition={new Vector3(-170,.2,50)}/> */}
 
       {/* <primitive object={testUVShaderMaterial} /> */}
 

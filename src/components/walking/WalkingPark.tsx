@@ -58,6 +58,43 @@ const ParkGrass = () => {
     )
 }
 
+
+const rotatedGrassGeometry1 = new PlaneGeometry(125, 125, 1, 1);
+rotatedGrassGeometry1.rotateX(-Math.PI / 2);
+
+const ParkGrass1 = () => {
+    return (
+        <group>
+            <mesh position={[-100, .25, 100]}>
+                <primitive object={rotatedGrassGeometry1} />
+                <meshBasicMaterial color={parkGrassColor} />
+            </mesh>
+        </group>
+    )
+}
+
+const parkPathColor1 = new Color(0x91b500);
+const parkPathShape1 = new Shape()
+    .moveTo(0, 0)
+    .lineTo(30, 0)
+    .lineTo(112, -90)
+    .lineTo(112, -115)
+
+const parkPathShapeGeometry1 = new ShapeGeometry(parkPathShape1);
+parkPathShapeGeometry1.rotateX(-Math.PI / 2);
+
+const ParkPath1 = () => {
+    return (
+        <>
+            <mesh position={[-150, .3, 37.5]}>
+                <primitive object={parkPathShapeGeometry1} />
+                <meshBasicMaterial color={parkPathColor1} side={DoubleSide}/>
+            </mesh>
+        </>
+    )
+}
+
+
 const parkTreesColor = new Color(0x4f772d);
 const parkTreeTrunkColor = new Color(0xa04000);
 const parkTreeBColor = new Color(0x57cc99);
@@ -478,11 +515,193 @@ const treeRotationsC0 = [
     new Euler(0, Math.PI * .25, 0)
 ]
 
-const WalkingPark = () => {
+const treePositionsC1 = [
+    new Vector3(-60, 0, 55),
+    new Vector3(-95, 0, 45),
+    new Vector3(-45, 0, 70),
+    new Vector3(-70, 0, 85),
+    new Vector3(-70, 0, 50),
+    new Vector3(-90, 0, 65)
+]
+
+const treeRotationsC1 = [
+    new Euler(0, 0, 0),
+    new Euler(0, 0, 0),
+    new Euler(0, -Math.PI * .5, 0),
+    new Euler(0, 0, 0),
+    new Euler(0, -Math.PI * .5, 0),
+    new Euler(0, Math.PI * .25, 0)
+]
+
+const treePositionsC2 = [
+    new Vector3(-60, 0, 95),
+    new Vector3(-95, 0, 130),
+    new Vector3(-115, 0, 120),
+    new Vector3(-120, 0, 85),
+    new Vector3(-100, 0, 110),
+    new Vector3(-110, 0, 105)
+]
+
+const treeRotationsC2 = [
+    new Euler(0, 0, 0),
+    new Euler(0, -Math.PI * .5, 0),
+    new Euler(0, Math.PI * .25, 0),
+    new Euler(0, 0, 0),
+    new Euler(0, 0, 0),
+    new Euler(0, -Math.PI * .5, 0)
+]
+
+const treePositionsC3 = [
+    new Vector3(-111, 0, 43),
+    new Vector3(-80, 0, 73),
+    new Vector3(-56, 0, 77),
+    new Vector3(-130, 0, 70),
+    new Vector3(-65, 0, 40),
+    new Vector3(-62, 0, 131)
+]
+
+const treeRotationsC3 = [
+    new Euler(0, 0, 0),
+    new Euler(0, -Math.PI * .5, 0),
+    new Euler(0, Math.PI * .25, 0),
+    new Euler(0, 0, 0),
+    new Euler(0, 0, 0),
+    new Euler(0, -Math.PI * .5, 0)
+]
+
+const treePositionsB2 = [
+    new Vector3(-50, 0, 55),
+    new Vector3(-85, 0, 45),
+    new Vector3(-55, 0, 70),
+    new Vector3(-50, 0, 85),
+    new Vector3(-50, 0, 40),
+    new Vector3(-70, 0, 55)
+]
+
+const treeRotationsB2 = [
+    new Euler(0, -Math.PI * .5, 0),
+    new Euler(0, Math.PI * .25, 0),
+    new Euler(0, 0, 0),
+    new Euler(0, 0, 0),
+    new Euler(0, -Math.PI * .5, 0),
+    new Euler(0, 0, 0)
+]
+
+const treePositionsB3 = [
+    new Vector3(-70, 0, 95),
+    new Vector3(-95, 0, 130),
+    new Vector3(-115, 0, 120),
+    new Vector3(-90, 0, 105),
+    new Vector3(-100, 0, 90),
+    new Vector3(-110, 0, 95)
+]
+
+const treeRotationsB3 = [
+    new Euler(0, 0, 0),
+    new Euler(0, -Math.PI * .5, 0),
+    new Euler(0, Math.PI * .25, 0),
+    new Euler(0, 0, 0),
+    new Euler(0, 0, 0),
+    new Euler(0, -Math.PI * .5, 0)
+]
+
+const treePositionsB4 = [
+    new Vector3(-70, 10, 95),
+    new Vector3(-95, 5, 130),
+    new Vector3(-115, 15, 120),
+    new Vector3(-90, 10, 105),
+    new Vector3(-100, 10, 90),
+    new Vector3(-110, 15, 95)
+]
+
+const treeRotationsB4 = [
+    new Euler(0, 0, 0),
+    new Euler(0, -Math.PI * .5, 0),
+    new Euler(0, Math.PI * .25, 0),
+    new Euler(0, 0, 0),
+    new Euler(0, 0, 0),
+    new Euler(0, -Math.PI * .5, 0)
+].reverse()
+
+const treePositionsB5 = [
+    new Vector3(-38, 0, 112),
+    new Vector3(-45, 0, 95),
+    new Vector3(-40, 0, 90),
+    new Vector3(-40, 0, 105),
+    new Vector3(-44, 0, 60),
+    new Vector3(-60, 0, 45)
+]
+
+const treeRotationsB5 = [
+    new Euler(0, Math.PI * .25, 0),
+    new Euler(0, 0, 0),
+    new Euler(0, -Math.PI * .5, 0),
+    new Euler(0, 0, 0),
+    new Euler(0, 0, 0),
+    new Euler(0, -Math.PI * .5, 0)
+].reverse()
+
+
+const treePositionsA2 = [
+    new Vector3(-50, 0, 105),
+    new Vector3(-85, 0, 55),
+    new Vector3(-65, 0, 70),
+    new Vector3(-60, 0, 85),
+    new Vector3(-40, 0, 45),
+    new Vector3(-75, 0, 65)
+]
+
+const treeRotationsA2 = [
+    new Euler(0, -Math.PI * .5, 0),
+    new Euler(0, Math.PI * .25, 0),
+    new Euler(0, 0, 0),
+    new Euler(0, 0, 0),
+    new Euler(0, -Math.PI * .5, 0),
+    new Euler(0, 0, 0)
+]
+
+const treePositionsA3 = [
+    new Vector3(-50, 0, 95),
+    new Vector3(-75, 0, 120),
+    new Vector3(-95, 0, 120),
+    new Vector3(-85, 0, 110),
+    new Vector3(-100, 0, 100),
+    new Vector3(-120, 0, 95)
+]
+
+const treeRotationsA3 = [
+    new Euler(0, 0, 0),
+    new Euler(0, -Math.PI * .5, 0),
+    new Euler(0, Math.PI * .25, 0),
+    new Euler(0, 0, 0),
+    new Euler(0, 0, 0),
+    new Euler(0, -Math.PI * .5, 0)
+]
+
+const treePositionsA4 = [
+    new Vector3(-42, 0, 52),
+    new Vector3(-42, 0, 80),
+    new Vector3(-40, 0, 120),
+    new Vector3(-45, 0, 110),
+    new Vector3(-100, 0, 100),
+    new Vector3(-45, 10, 110)
+]
+
+const treeRotationsA4 = [
+    new Euler(0, Math.PI * .25, 0),
+    new Euler(0, 0, 0),
+    new Euler(0, 0, 0),
+    new Euler(0, -Math.PI * .5, 0),
+    new Euler(0, 0, 0),
+    new Euler(0, -Math.PI * .5, 0)
+]
+
+
+const WalkingPark = ({groupPosition = new Vector3(0,0,0)}) => {
 
     return (
-        <group>
-            <ParkGrass />            
+        <group position={groupPosition}>
+            <ParkGrass />
             <ParkPath />
             {/* <TreeGenerator /> */}
             <ParkTreesA treePositions={treePositionsA0} treeRotations={treeRotationsA0}/>
@@ -490,6 +709,19 @@ const WalkingPark = () => {
             <ParkTreesB treePositions={treePositionsB0} treeRotations={treeRotationsB0}/>
             <ParkTreesB treePositions={treePositionsB1} treeRotations={treeRotationsB1}/>
             <ParkTreesC treePositions={treePositionsC0} treeRotations={treeRotationsC0}/>
+
+            <ParkGrass1 />
+            <ParkPath1 />
+            <ParkTreesA treePositions={treePositionsA2} treeRotations={treeRotationsA2}/>
+            <ParkTreesA treePositions={treePositionsA3} treeRotations={treeRotationsA3}/>
+            <ParkTreesA treePositions={treePositionsA4} treeRotations={treeRotationsA4}/>
+            <ParkTreesB treePositions={treePositionsB2} treeRotations={treeRotationsB2}/>
+            <ParkTreesB treePositions={treePositionsB3} treeRotations={treeRotationsB3}/>
+            <ParkTreesB treePositions={treePositionsB4} treeRotations={treeRotationsB4}/>
+            <ParkTreesB treePositions={treePositionsB5} treeRotations={treeRotationsB5}/>
+            <ParkTreesC treePositions={treePositionsC1} treeRotations={treeRotationsC1}/>
+            <ParkTreesC treePositions={treePositionsC2} treeRotations={treeRotationsC2}/>
+            <ParkTreesC treePositions={treePositionsC3} treeRotations={treeRotationsC3}/>
         </group>
     )
 };
