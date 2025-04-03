@@ -34,10 +34,10 @@ const WalkingBoundry = ({groupPosition, groupRotation}) => {
 const WalkingBoundries = () => {
     return (
         <>
-            <WalkingBoundry groupPosition={new Vector3(-119, 50, 0)} groupRotation={new Euler(0, 0, 0)} />
-            <WalkingBoundry groupPosition={new Vector3(119, 50, 0)} groupRotation={new Euler(0, Math.PI, 0)} />
-            <WalkingBoundry groupPosition={new Vector3(0, 50, 119)} groupRotation={new Euler(0, Math.PI * .5, 0)} />
-            <WalkingBoundry groupPosition={new Vector3(0, 50, -119)} groupRotation={new Euler(0, -Math.PI * .5, 0)} />
+            <WalkingBoundry groupPosition={new Vector3(-119, -40, 0)} groupRotation={new Euler(0, 0, 0)} />
+            <WalkingBoundry groupPosition={new Vector3(119, -40, 0)} groupRotation={new Euler(0, Math.PI, 0)} />
+            <WalkingBoundry groupPosition={new Vector3(0, -40, 119)} groupRotation={new Euler(0, Math.PI * .5, 0)} />
+            <WalkingBoundry groupPosition={new Vector3(0, -40, -119)} groupRotation={new Euler(0, -Math.PI * .5, 0)} />
         </>
     )
 };

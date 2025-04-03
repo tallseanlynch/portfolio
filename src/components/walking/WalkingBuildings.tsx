@@ -67,6 +67,7 @@ const building0Shader = {
                 finalColor = mix(blackColor, baseColorB, .8);
             }
 
+            // gl_FragColor = mix(finalColor, baseGlassColor, .5);
             gl_FragColor = finalColor;
         }
     `,
@@ -933,8 +934,8 @@ const WalkingBuildings = () => {
                 <shaderMaterial {...building8Shader} />
                 {/* <meshBasicMaterial color={0xff0000} /> */}
             </mesh>
-            <mesh position={[-55.5, 14, -85.5]}>
-                <boxGeometry args={[25, 30, 30]} />
+            <mesh position={[-60.5, 14, -85.5]}>
+                <boxGeometry args={[15, 30, 30]} />
                 <shaderMaterial {...building9Shader} />
                 {/* <meshBasicMaterial color={0xfff000} /> */}
             </mesh>

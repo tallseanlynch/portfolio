@@ -1,3 +1,6 @@
+import { InsectsClouds } from '../insects/InsectsClouds';
+import { InsectsSkyDome } from '../insects/InsectsSkyDome';
+import { whiteColor, skyColorLight } from '../insects/insectsColors';
 import { usePedestrianGPGPU } from './usePedestrianGPGPU';
 import { WalkingBoundries } from './WalkingBoundries';
 import { WalkingBuildings } from './WalkingBuildings';
@@ -499,6 +502,16 @@ const WalkingPeople = ({
       <WalkingLights />
       <WalkingBoundries />
       <WalkingPark />
+      <InsectsClouds 
+        whiteColor={whiteColor}
+        skyColor={skyColorLight}
+        instanceNumber={800}
+        instanceOrigin={new Vector3(0,100,0)}
+        placementScale={500}
+        instanceScale={5}                  
+      />
+      <InsectsSkyDome />
+
       {/* <WalkingPark groupPosition={new Vector3(-170,.2,50)}/> */}
 
       {/* <primitive object={testUVShaderMaterial} /> */}
@@ -565,8 +578,7 @@ const WalkingShaderCanvas = () => {
       }}
       linear
       camera={{
-        position: [0, 50, 75],
-        far: 500
+        position: [0, 50, 75]
       }}
     >
       <ambientLight intensity={0.5} />

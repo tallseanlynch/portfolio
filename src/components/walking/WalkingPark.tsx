@@ -711,6 +711,117 @@ const treeRotationsA4 = [
     new Euler(0, -Math.PI * .5, 0)
 ]
 
+//----
+
+const treePositionsA5 = [
+    new Vector3(-135, 0, -43),
+    new Vector3(-90, 0, -41),
+    new Vector3(-88, 0, -60),
+    new Vector3(-51, 0, -43),
+    new Vector3(-42, 0, -64),
+    new Vector3(-42, 0, -110)
+]
+
+const treeRotationsA5 = [
+    new Euler(0, Math.PI * .25, 0),
+    new Euler(0, 0, 0),
+    new Euler(0, 0, 0),
+    new Euler(0, -Math.PI * .5, 0),
+    new Euler(0, 0, 0),
+    new Euler(0, -Math.PI * .5, 0)
+]
+
+const treePositionsA6 = [
+    new Vector3(-39, 0, -113),
+    new Vector3(-87, 0, -70),
+    new Vector3(-88, 0, -48),
+    new Vector3(-79, 0, -40),
+    new Vector3(-42, 0, -41),
+    new Vector3(-40.5, 0, -90)
+]
+
+const treeRotationsA6 = [
+    new Euler(0, Math.PI * .25, 0),
+    new Euler(0, 0, 0),
+    new Euler(0, 0, 0),
+    new Euler(0, -Math.PI * .5, 0),
+    new Euler(0, 0, 0),
+    new Euler(0, -Math.PI * .5, 0)
+]
+
+const treePositionsB6 = [
+    new Vector3(-125, 0, -45),
+    new Vector3(-106, 0, -42),
+    new Vector3(-81, 0, -70),
+    new Vector3(-79, 0, -51),
+    new Vector3(-41, 0, -47),
+    new Vector3(-72, 0, -41)
+]
+
+const treeRotationsB6 = [
+    new Euler(0, Math.PI * .25, 0),
+    new Euler(0, 0, 0),
+    new Euler(0, -Math.PI * .5, 0),
+    new Euler(0, 0, 0),
+    new Euler(0, 0, 0),
+    new Euler(0, -Math.PI * .5, 0)
+].reverse()
+
+const treePositionsB7 = [
+    new Vector3(-83, 0, -42),
+    new Vector3(-42, 0, -54),
+    new Vector3(-73, 0, -68),
+    new Vector3(-90, 0, -68),
+    new Vector3(-40, 0, -105),
+    new Vector3(-113, 0, -46)
+]
+
+const treeRotationsB7 = [
+    new Euler(0, Math.PI * .25, 0),
+    new Euler(0, 0, 0),
+    new Euler(0, -Math.PI * .5, 0),
+    new Euler(0, 0, 0),
+    new Euler(0, 0, 0),
+    new Euler(0, -Math.PI * .5, 0)
+].reverse()
+
+
+const treePositionsC4 = [
+    new Vector3(-40, 0, -122),
+    new Vector3(-54, 0, -108),
+    new Vector3(-117, 0, -44),
+    new Vector3(-78, 0, -78),
+    new Vector3(-75, 0, -55),
+    new Vector3(-85, 0, -82)
+]
+
+const treeRotationsC4 = [
+    new Euler(0, 0, 0),
+    new Euler(0, -Math.PI * .5, 0),
+    new Euler(0, 0, 0),
+    new Euler(0, 0, 0),
+    new Euler(0, 0, 0),
+    new Euler(0, -Math.PI * .5, 0)
+]
+
+const treePositionsC5 = [
+    new Vector3(-48, 0, -79),
+    new Vector3(-45, 0, -95),
+    new Vector3(-45, 0, -79),
+    new Vector3(-64, 0, -43),
+    new Vector3(-100, 0, -42),
+    new Vector3(-96, 0, -43)
+]
+
+const treeRotationsC5 = [
+    new Euler(0, 0, 0),
+    new Euler(0, -Math.PI * .5, 0),
+    new Euler(0, 0, 0),
+    new Euler(0, 0, 0),
+    new Euler(0, 0, 0),
+    new Euler(0, -Math.PI * .5, 0)
+]
+
 
 const WalkingPark = ({groupPosition = new Vector3(0,0,0)}) => {
 
@@ -737,6 +848,13 @@ const WalkingPark = ({groupPosition = new Vector3(0,0,0)}) => {
             <ParkTreesC treePositions={treePositionsC1} treeRotations={treeRotationsC1}/>
             <ParkTreesC treePositions={treePositionsC2} treeRotations={treeRotationsC2}/>
             <ParkTreesC treePositions={treePositionsC3} treeRotations={treeRotationsC3}/>
+
+            <ParkTreesA treePositions={treePositionsA5} treeRotations={treeRotationsA5}/>
+            <ParkTreesA treePositions={treePositionsA6} treeRotations={treeRotationsA6}/>
+            <ParkTreesB treePositions={treePositionsB6} treeRotations={treeRotationsB6}/>
+            <ParkTreesB treePositions={treePositionsB7} treeRotations={treeRotationsB7}/>
+            <ParkTreesC treePositions={treePositionsC4} treeRotations={treeRotationsC4}/>
+            <ParkTreesC treePositions={treePositionsC5} treeRotations={treeRotationsC5}/>
 
             <ParkGrass2 />
         </group>
