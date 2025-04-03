@@ -27,7 +27,7 @@ const WalkingShaderCanvas = () => {
       }}
       linear
       camera={{
-        position: [0, 50, 75]
+        position: [-60, 10, 0]
       }}
     >
       <OrbitControls 
