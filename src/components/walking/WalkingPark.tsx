@@ -73,6 +73,21 @@ const ParkGrass1 = () => {
     )
 }
 
+const rotatedGrassGeometry2 = new PlaneGeometry(125, 125, 1, 1);
+rotatedGrassGeometry2.rotateX(-Math.PI / 2);
+
+const ParkGrass2 = () => {
+    return (
+        <group>
+            <mesh position={[-100, .25, -100]}>
+                <primitive object={rotatedGrassGeometry2} />
+                <meshBasicMaterial color={parkGrassColor} />
+            </mesh>
+        </group>
+    )
+}
+
+
 const parkPathColor1 = new Color(0x91b500);
 const parkPathShape1 = new Shape()
     .moveTo(0, 0)
@@ -722,6 +737,8 @@ const WalkingPark = ({groupPosition = new Vector3(0,0,0)}) => {
             <ParkTreesC treePositions={treePositionsC1} treeRotations={treeRotationsC1}/>
             <ParkTreesC treePositions={treePositionsC2} treeRotations={treeRotationsC2}/>
             <ParkTreesC treePositions={treePositionsC3} treeRotations={treeRotationsC3}/>
+
+            <ParkGrass2 />
         </group>
     )
 };
