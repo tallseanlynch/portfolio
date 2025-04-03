@@ -73,13 +73,13 @@ const ParkTreesB = ({treePositions, treeRotations}) => {
             const geometry = new TubeGeometry( curve, 8, .25 - (si * .0125), 8, false );
             sectionGeometries.push(geometry);    
             const leafSphere = new SphereGeometry(1.5, 8, 8);
-            leafSphere.attributes.position.array.forEach((p, pi) => {
+            for(let pi = 0; pi < leafSphere.attributes.position.array.length; pi++) {
                 if(pi % 3 === 1){
                     if(leafSphere.attributes.position.array[pi] > 0) {
                         leafSphere.attributes.position.array[pi] *= leafSphere.attributes.position.array[pi];
                     }
                 }
-            })
+            }
             leafSphere.scale(1, 2, 1);
             leafSphere.translate(
                 vector3s[vector3s.length -1].x,
@@ -124,13 +124,13 @@ const ParkTreesC = ({treePositions, treeRotations}) => {
             const geometry = new TubeGeometry( curve, 8, .25 - (si * .0125), 8, false );
             sectionGeometries.push(geometry);    
             const leafSphere = new SphereGeometry(1.5, 8, 8);
-            leafSphere.attributes.position.array.forEach((p, pi) => {
+            for(let pi = 0; pi < leafSphere.attributes.position.array.length; pi++) {
                 if(pi % 3 === 1){
                     if(leafSphere.attributes.position.array[pi] > 0) {
                         leafSphere.attributes.position.array[pi] *= leafSphere.attributes.position.array[pi];
                     }
                 }
-            })
+            }
             leafSphere.scale(3.5, 2.1, 2.75);
             const leafClone0 = leafSphere.clone()
             leafSphere.translate(
