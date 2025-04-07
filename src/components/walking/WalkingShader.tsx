@@ -1,3 +1,4 @@
+import { isMobileDevice } from '../../assets/js/util';
 import { InsectsClouds } from '../insects/InsectsClouds';
 import { InsectsSkyDome } from '../insects/InsectsSkyDome';
 import { whiteColor, skyColorLight } from '../insects/insectsColors';
@@ -17,6 +18,8 @@ import {
   Vector3
 } from 'three';
 
+const isMobile = isMobileDevice();
+
 const WalkingShaderCanvas = () => {
   return (
     <Canvas
@@ -34,10 +37,8 @@ const WalkingShaderCanvas = () => {
         maxDistance={120}
         maxPolarAngle={Math.PI * .49}
       />
-      <ambientLight intensity={0.5} />
-      <pointLight position={[10, 10, 10]} />
       <WalkingPeople 
-        width={75} 
+        width={isMobile ? 25 : 75} 
       />
       <WalkingBuildings />
       <WalkingCars />

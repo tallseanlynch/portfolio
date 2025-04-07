@@ -1,3 +1,4 @@
+import { isMobileDevice } from '../../assets/js/util';
 import { peopleGeometry } from './personModel';
 import { usePedestrianGPGPU } from './usePedestrianGPGPU';
 import { useFrame } from '@react-three/fiber';
@@ -64,6 +65,7 @@ const WalkingPeople = ({
 
   const shaderMaterial = useMemo(() => new ShaderMaterial({
     uniforms: {
+      uIsMobileDevice: { value: isMobileDevice() },
       gPositionMap: { value: data.position.texture},
       gDirectionMap: { value: data.direction.texture},
       gDestinationMap: { value: data.destination.texture },
@@ -125,6 +127,8 @@ const WalkingPeople = ({
     `,
     fragmentShader: `
       precision highp float;
+
+      uniform bool uIsMobileDevice;
       uniform vec3 uColors[${colors.length}];
       uniform vec3 uColorsBottom[${colorsBottom.length}];
 
@@ -136,6 +140,7 @@ const WalkingPeople = ({
       varying vec2 vUv;
 
       void main() {
+
         float colorsLength = ${colors.length}.0;
         float colorsBottomLength = ${colorsBottom.length}.0;
         vec4 positionColor = vgPosition;
@@ -146,50 +151,65 @@ const WalkingPeople = ({
         vec3 directionCalc = vec3(vgDirection.xyz);
         float instanceIdColor = (instanceId / ${width * width}.0) + .1;
 
-        vec3 personHue = vec3(250.0, 215.0, 195.0) / 256.0;
-        personHue = personHue * instanceIdColor;
-        finalColor = vec4(personHue, 1.0);
+        if(uIsMobileDevice == true) {
+          // vec4 personHue = vec4(250.0, 215.0, 195.0, 256.0) / 256.0;
+          // personHue = personHue * instanceIdColor;
 
-        float modColor = mod((instanceId + instanceId) / (vUv.x * 10.0), colorsLength);
-        // float modColor = mod(instanceId, colorsLength);
-        int modColorInt = int(modColor);
-        if(vOriginalPosition.y > 0.5 && vOriginalPosition.y < 1.125) {
-          finalColor = vec4(uColors[modColorInt], 1.0);
+          // float modColor = instanceIdColor * colorsLength;
+          // int modColorInt = int(modColor);
+          // finalColor = mix(vec4(uColors[modColorInt], 1.0), personHue, .25);
+
+          finalColor = vec4(instanceIdColor, instanceIdColor, instanceIdColor, 1.0);
         }
 
-        float modColorBottom = mod((instanceId + instanceId) / (vUv.x * 10.0), colorsBottomLength);
-        int modColorBottomInt = int(modColorBottom);
+        if(uIsMobileDevice == false) {
 
-        if(vOriginalPosition.y < 0.5 && vOriginalPosition.x < .5 && vOriginalPosition.x > -.5) {
-          finalColor = vec4(uColorsBottom[modColorBottomInt], 1.0);
-        }
+          vec3 personHue = vec3(250.0, 215.0, 195.0) / 256.0;
+          personHue = personHue * instanceIdColor;
+          finalColor = vec4(personHue, 1.0);
 
-        // hair
-        float modColorHair = mod((instanceId) + instanceId / ((vUv.y + vUv.x) * 10.0), colorsBottomLength);
-        int modColorHairInt = int(modColorHair);
+          float modColor = mod((instanceId + instanceId) / (vUv.x * 10.0), colorsLength);
+          // float modColor = mod(instanceId, colorsLength);
+          int modColorInt = int(modColor);
+          if(vOriginalPosition.y > 0.5 && vOriginalPosition.y < 1.125) {
+            finalColor = vec4(uColors[modColorInt], 1.0);
+          }
 
-        if(vOriginalPosition.y > 1.4) {
-          finalColor = vec4(uColorsBottom[modColorHairInt], 1.0);
-        }
+          float modColorBottom = mod((instanceId + instanceId) / (vUv.x * 10.0), colorsBottomLength);
+          int modColorBottomInt = int(modColorBottom);
 
-        if(vOriginalPosition.y > 1.3 - vUv.y * .25 && vOriginalPosition.z < 0.0) {
-          finalColor = vec4(uColorsBottom[modColorHairInt], 1.0);
-        }
+          if(vOriginalPosition.y < 0.5 && vOriginalPosition.x < .5 && vOriginalPosition.x > -.5) {
+            finalColor = vec4(uColorsBottom[modColorBottomInt], 1.0);
+          }
 
-        if(
-          vOriginalPosition.x > .1 && vOriginalPosition.x < .2 && 
-          vOriginalPosition.y > 1.25 && vOriginalPosition.y < 1.3 && 
-          vOriginalPosition.z > 0.23
-        ) {
-          finalColor = mix(vec4(personHue, 1.0), vec4(1.0, 1.0, 1.0, 1.0), .5);
-        }
+          // hair
+          float modColorHair = mod((instanceId) + instanceId / ((vUv.y + vUv.x) * 10.0), colorsBottomLength);
+          int modColorHairInt = int(modColorHair);
 
-        if(
-          vOriginalPosition.x < -.1 && vOriginalPosition.x > -.2 && 
-          vOriginalPosition.y > 1.25 && vOriginalPosition.y < 1.3 && 
-          vOriginalPosition.z > 0.23
-        ) {
-          finalColor = mix(vec4(personHue, 1.0), vec4(1.0, 1.0, 1.0, 1.0), .5);
+          if(vOriginalPosition.y > 1.4) {
+            finalColor = vec4(uColorsBottom[modColorHairInt], 1.0);
+          }
+
+          if(vOriginalPosition.y > 1.3 - vUv.y * .25 && vOriginalPosition.z < 0.0) {
+            finalColor = vec4(uColorsBottom[modColorHairInt], 1.0);
+          }
+
+          if(
+            vOriginalPosition.x > .1 && vOriginalPosition.x < .2 && 
+            vOriginalPosition.y > 1.25 && vOriginalPosition.y < 1.3 && 
+            vOriginalPosition.z > 0.23
+          ) {
+            finalColor = mix(vec4(personHue, 1.0), vec4(1.0, 1.0, 1.0, 1.0), .5);
+          }
+
+          if(
+            vOriginalPosition.x < -.1 && vOriginalPosition.x > -.2 && 
+            vOriginalPosition.y > 1.25 && vOriginalPosition.y < 1.3 && 
+            vOriginalPosition.z > 0.23
+          ) {
+            finalColor = mix(vec4(personHue, 1.0), vec4(1.0, 1.0, 1.0, 1.0), .5);
+          }
+        
         }
 
         float saturation = 2.25;
