@@ -95,28 +95,34 @@ const Cars = ({width = 1}) => {
 
             vVehicleConfig = mod(vInstanceId + xCoor * 11.5, 4.0);
             vVehicleConfig = vVehicleConfig - fract(vVehicleConfig);
+            int config = int(vVehicleConfig);
 
-            if(vVehicleConfig == 0.0) {
-                if(vOriginalPosition.z > 1.0 && vOriginalPosition.y > .25) {
-                    vPosition.y = 2.0;
-                }
+            // config == 0
+            float stepVehicleConfig0 = step(vVehicleConfig, .9);
+            float stepVehicleConfig1 = step(.9, vVehicleConfig) * step(vVehicleConfig, 1.9);
+            float stepVehicleConfig3 = step(2.9, vVehicleConfig) * step(vVehicleConfig, 3.9);
 
-                if(vOriginalPosition.z < -1.5 && vOriginalPosition.y > .25) {
-                    vPosition.y = 2.0;
-                }            
-            }
+            float step0a = step(1.0, vOriginalPosition.z);
+            float step0b = step(.25, vOriginalPosition.y);
+            float condition0a = stepVehicleConfig0 * step0a * step0b;
+            vPosition.y = mix(vPosition.y, 2.0, condition0a);
 
-            if(vVehicleConfig == 1.0) {
-                if(vOriginalPosition.z > 1.0 && vOriginalPosition.y > .25) {
-                    vPosition.y = 2.0;
-                }
-            }
+            float step0c = step(vOriginalPosition.z, -1.5);
+            float step0d = step(.25, vOriginalPosition.y);
+            float condition0b = stepVehicleConfig0 * step0c * step0d;
+            vPosition.y = mix(vPosition.y, 2.0, condition0b);
 
-            if(vVehicleConfig == 3.0) {
-                if(vOriginalPosition.z < .5 && vOriginalPosition.y > .225) {
-                    vPosition.y = 2.0;
-                }
-            }
+            // config == 1
+            float step1a = step(1.0, vOriginalPosition.z);
+            float step1b = step(.25, vOriginalPosition.y);
+            float condition1a = stepVehicleConfig1 * step1a * step1b;
+            vPosition.y = mix(vPosition.y, 2.0, condition1a);
+
+            // config == 3
+            float step3a = step(vOriginalPosition.z, .5);
+            float step3b = step(.225, vOriginalPosition.y);
+            float condition3a = stepVehicleConfig3 * step3a * step3b;
+            vPosition.y = mix(vPosition.y, 2.0, condition3a);
 
             gl_Position = projectionMatrix * modelViewMatrix * vPosition;
         }
@@ -141,286 +147,276 @@ const Cars = ({width = 1}) => {
             vec3 destinationCalc = vec3(vgDestination.xyz);
             vec3 directionCalc = vec3(vgDirection.xyz);
 
-            float modCarColor = mod(vInstanceId, carColorsLength);
+            float numCars = ${width * width}.0;
+            int numCarsInt = int(numCars);
+
+            // float modCarColor = mod(vInstanceId, carColorsLength);
+            float modCarColor = (vInstanceId / numCars) * carColorsLength;
             int modCarColorInt = int(modCarColor);
+            
 
             vec4 white = vec4(1.0, 1.0, 1.0, 1.0);
             vec4 black = vec4(0.0, 0.0, 0.0, 1.0);
             vec4 vehicleColor = vec4(uCarColors[modCarColorInt] * 1.25, 1.0);
             vec4 mixVehicleColorBlack = mix(vehicleColor, black, .75 + vgPosition.y);
+            // finalColor = vec4(uCarColors[4], 1.0);
+            finalColor = vehicleColor;
 
-            if(vVehicleConfig == 0.0) {
-                finalColor = vehicleColor;
+            float colorFill = 0.0;
+            int config = int(vVehicleConfig);
 
-                if(
-                    vOriginalPosition.y > 0.2 && vOriginalPosition.x < -1.245 && 
-                    vUv.y > .5 && vUv.y < .95 && 
-                    vUv.x - vUv.y * .2 > .025 && vUv.x < 0.4
-                ) {
-                    finalColor = mixVehicleColorBlack;
-                }
+            float stepVehicleConfig0 = step(vVehicleConfig, .9);
+            float stepVehicleConfig1 = step(.9, vVehicleConfig) * step(vVehicleConfig, 1.9);
+            float stepVehicleConfig2 = step(1.9, vVehicleConfig) * step(vVehicleConfig, 2.9);
+            float stepVehicleConfig3 = step(2.9, vVehicleConfig) * step(vVehicleConfig, 3.9);
 
-                if(
-                    vOriginalPosition.y > 0.2 && vOriginalPosition.x < -1.245 && 
-                    vUv.y > .5 && vUv.y < .95 && 
-                    vUv.x > .45 && vUv.x + vUv.y * .3 < .95
-                ) {
-                    finalColor = mixVehicleColorBlack;
-                }
+            // if(config == 0) {
 
-                if(
-                    vOriginalPosition.y > 0.2 && vOriginalPosition.x > 1.245 && 
-                    vUv.y > .5 && vUv.y < .95 && 
-                    vUv.x - vUv.y * .3 > .05 && vUv.x < 0.55
-                ) {
-                    finalColor = mixVehicleColorBlack;
-                }
+            float step0a = step(0.2, vOriginalPosition.y);
+            float step0b = step(vOriginalPosition.x, -1.245);
+            float step0c = step(.5, vUv.y);
+            float step0d = step(vUv.y, .95);
+            float step0e = step(.025, vUv.x - vUv.y * .2);
+            float step0f = step(vUv.x, 0.4);
+            float condition0a = stepVehicleConfig0 * step0a * step0b * step0c * step0d * step0e * step0f;
+            colorFill += condition0a;
 
-                if(
-                    vOriginalPosition.y > 0.2 && vOriginalPosition.x > 1.245 && 
-                    vUv.y > .5 && vUv.y < .95 && 
-                    vUv.x > .6 && vUv.x + vUv.y * .2 < .975
-                ) {
-                    finalColor = mixVehicleColorBlack;
-                }
+            float step0g = step(0.2, vOriginalPosition.y);
+            float step0h = step(vOriginalPosition.x, -1.245);
+            float step0i = step(.5, vUv.y);
+            float step0j = step(vUv.y, .95);
+            float step0k = step(.45, vUv.x);
+            float step0l = step(vUv.x + vUv.y * .3, .95);
+            float condition0b = stepVehicleConfig0 * step0g * step0h * step0i * step0j * step0k * step0l;
+            colorFill += condition0b;
 
-                if(
-                    vOriginalPosition.y > 0.2 
-                    && vOriginalPosition.z < -1.5
-                    && vOriginalPosition.z > -2.0
-                    && vOriginalPosition.x > -.975
-                    && vOriginalPosition.x < .975
-                    && vUv.x > .05
-                    && vUv.x < .95
-                ) {
-                    finalColor = mixVehicleColorBlack;
-                }
+            float step0m = step(.2, vOriginalPosition.y);
+            float step0n = step(1.245, vOriginalPosition.x);
+            float step0o = step(.5, vUv.y);
+            float step0p = step(vUv.y, .95);
+            float step0q = step(.05, vUv.x - vUv.y * .3);
+            float step0r = step(vUv.x, .55);
+            float condition0c = stepVehicleConfig0 * step0m * step0n * step0o * step0p * step0q * step0r;
+            colorFill += condition0c;
 
-                if(
-                    vOriginalPosition.y > 0.2
-                    && vOriginalPosition.z > 1.0
-                    && vOriginalPosition.z < 1.5
-                    && vOriginalPosition.x > -.975
-                    && vOriginalPosition.x < .975
-                ) {
-                    finalColor = mixVehicleColorBlack;
-                }
+            float step0s = step(.2, vOriginalPosition.y);
+            float step0t = step(1.245, vOriginalPosition.x);
+            float step0u = step(.5, vUv.y);
+            float step0v = step(vUv.y, .95);
+            float step0w = step(.6, vUv.x);
+            float step0x = step(vUv.x + vUv.y * .2, .975);
+            float condition0d = stepVehicleConfig0 * step0s * step0t * step0u * step0v * step0w * step0x;
+            colorFill += condition0d;
 
-            }
+            float step0y = step(0.2, vOriginalPosition.y);
+            float step0z = step(vOriginalPosition.z, -1.1);
+            float step0aa = step(-1.5, vOriginalPosition.z);
+            float step0ab = step(-.975, vOriginalPosition.x);
+            float step0ac = step(vOriginalPosition.x, .975);
+            float step0ad = step(.05, vUv.x);
+            float step0ae = step(vUv.x, .95);
+            float condition0e = stepVehicleConfig0 * step0y * step0z * step0aa * step0ab * step0ac * step0ad * step0ae;
+            colorFill += condition0e;
 
-            if(vVehicleConfig == 1.0) {
-                finalColor = vehicleColor;
+            float step0af = step(0.2, vOriginalPosition.y);
+            float step0ag = step(.6, vOriginalPosition.z);
+            float step0ah = step(vOriginalPosition.z, 1.0);
+            float step0ai = step(-.975, vOriginalPosition.x);
+            float step0aj = step(vOriginalPosition.x, .975);
+            float condition0f = stepVehicleConfig0 * step0af * step0ag * step0ah * step0ai * step0aj;
+            colorFill += condition0f;
+                    
 
-                if(
-                    vOriginalPosition.y > 0.2 && vOriginalPosition.x < -1.245 && 
-                    vUv.y > .5 && vUv.y < .95 && 
-                    vUv.x > .025 && vUv.x < 0.4
-                ) {
-                    finalColor = mixVehicleColorBlack;
-                }
+            // config == 1
 
-                if(
-                    vOriginalPosition.y > 0.2 && vOriginalPosition.x < -1.245 && 
-                    vUv.y > .5 && vUv.y < .95 && 
-                    vUv.x > .45 && vUv.x + vUv.y * .3 < .95
-                ) {
-                    finalColor = mixVehicleColorBlack;
-                }
+            float step1a = step(.2, vOriginalPosition.y);
+            float step1b = step(vOriginalPosition.x, -1.245);
+            float step1c = step(.5, vUv.y);
+            float step1d = step(vUv.y, .95);
+            float step1e = step(.025, vUv.x);
+            float step1f = step(vUv.x, .4);
+            float condition1a = stepVehicleConfig1 * step1a * step1b * step1c * step1d * step1e * step1f;
+            colorFill += condition1a;
 
+            float step1g = step(.2, vOriginalPosition.y);
+            float step1h = step(vOriginalPosition.x, -1.245);
+            float step1i = step(.5, vUv.y);
+            float step1j = step(vUv.y, .95);
+            float step1k = step(.45, vUv.x);
+            float step1l = step(vUv.x + vUv.y * .3, .95);
+            float condition1b = stepVehicleConfig1 * step1g * step1h * step1i * step1j * step1k * step1l;
+            colorFill += condition1b;
 
-                if(
-                    vOriginalPosition.y > 0.2 && vOriginalPosition.x > 1.245 && 
-                    vUv.y > .5 && vUv.y < .95 && 
-                    vUv.x - vUv.y * .3 > .05 && vUv.x < 0.55
-                ) {
-                    finalColor = mixVehicleColorBlack;
-                }
+            float step1m = step(.2, vOriginalPosition.y);
+            float step1n = step(1.245, vOriginalPosition.x);
+            float step1o = step(.5, vUv.y);
+            float step1p = step(vUv.y, .95);
+            float step1q = step(.05, vUv.x - vUv.y * .3);
+            float step1r = step(vUv.x, .55);
+            float condition1c = stepVehicleConfig1 * step1m * step1n * step1o * step1p * step1q * step1r;
+            colorFill += condition1c;
 
-                if(
-                    vOriginalPosition.y > 0.2 && vOriginalPosition.x > 1.245 && 
-                    vUv.y > .5 && vUv.y < .95 && 
-                    vUv.x > .6 && vUv.x < .975
-                ) {
-                    finalColor = mixVehicleColorBlack;
-                }
+            float step1s = step(.2, vOriginalPosition.y);
+            float step1t = step(1.245, vOriginalPosition.x);
+            float step1u = step(.5, vUv.y);
+            float step1v = step(vUv.y, .95);
+            float step1w = step(.6, vUv.x);
+            float step1x = step(vUv.x, .975);
+            float condition1d = stepVehicleConfig1 * step1s * step1t * step1u * step1v * step1w * step1x;
+            colorFill += condition1d;
 
-                if(
-                    vOriginalPosition.y > 0.2 
-                    && vOriginalPosition.y < .65 
-                    && vOriginalPosition.z < -2.49
-                    // && vOriginalPosition.z > -2.0
-                    && vOriginalPosition.x > -.975
-                    && vOriginalPosition.x < .975
-                ) {
-                    finalColor = mixVehicleColorBlack;
-                }
+            float step1y = step(.2, vOriginalPosition.y);
+            float step1z = step(vOriginalPosition.y, .65);
+            float step1aa = step(vOriginalPosition.z, -2.49);
+            float step1ab = step(-.975, vOriginalPosition.x);
+            float step1ac = step(vOriginalPosition.x, .975);
+            float condition1e = stepVehicleConfig1 * step1y * step1z * step1aa * step1ab * step1ac;
+            colorFill += condition1e;
 
-                if(
-                    vOriginalPosition.y > 0.2
-                    && vOriginalPosition.z > 1.0
-                    && vOriginalPosition.z < 1.5
-                    && vOriginalPosition.x > -.975
-                    && vOriginalPosition.x < .975
-                ) {
-                    finalColor = mixVehicleColorBlack;
-                }
-
-            }
-
-            if(vVehicleConfig == 2.0) {
-                finalColor = vehicleColor;
-
-                if(
-                    vOriginalPosition.y > 0.2 && vOriginalPosition.x < -1.245 && 
-                    vUv.y > .5 && vUv.y < .95 && 
-                    vUv.x > .025 && vUv.x < 0.4
-                ) {
-                    finalColor = mixVehicleColorBlack;
-                }
-
-                if(
-                    vOriginalPosition.y > 0.2 && vOriginalPosition.x < -1.245 && 
-                    vUv.y > .5 && vUv.y < .95 && 
-                    vUv.x > .45 && vUv.x < .95
-                ) {
-                    finalColor = mixVehicleColorBlack;
-                }
+            float step1ad = step(.2, vOriginalPosition.y);
+            float step1ae = step(.6, vOriginalPosition.z);
+            float step1af = step(vOriginalPosition.z, 1.0);
+            float step1ag = step(-.975, vOriginalPosition.x);
+            float step1ah = step(vOriginalPosition.x, .975);
+            float condition1f = stepVehicleConfig1 * step1ad * step1ae * step1af * step1ag * step1ah;
+            colorFill += condition1f;
 
 
-                if(
-                    vOriginalPosition.y > 0.2 && vOriginalPosition.x > 1.245 && 
-                    vUv.y > .5 && vUv.y < .95 && 
-                    vUv.x > .05 && vUv.x < 0.55
-                ) {
-                    finalColor = mixVehicleColorBlack;
-                }
+            // config == 2
 
-                if(
-                    vOriginalPosition.y > 0.2 && vOriginalPosition.x > 1.245 && 
-                    vUv.y > .5 && vUv.y < .95 && 
-                    vUv.x > .6 && vUv.x < .975
-                ) {
-                    finalColor = mixVehicleColorBlack;
-                }
+            float step2a = step(.2, vOriginalPosition.y);
+            float step2b = step(vOriginalPosition.x, -1.245);
+            float step2c = step(.5, vUv.y);
+            float step2d = step(vUv.y, .95);
+            float step2e = step(.025, vUv.x);
+            float step2f = step(vUv.x, .4);
+            float condition2a = stepVehicleConfig2 * step2a * step2b * step2c * step2d * step2e * step2f;
+            colorFill += condition2a;
 
-                if(
-                    vOriginalPosition.y > 0.2 
-                    && vOriginalPosition.y < .65 
-                    && vOriginalPosition.z < -2.49
-                    && vOriginalPosition.x > -.975
-                    && vOriginalPosition.x < .975
-                ) {
-                    finalColor = mixVehicleColorBlack;
-                }
+            float step2g = step(.2, vOriginalPosition.y);
+            float step2h = step(vOriginalPosition.x, -1.245);
+            float step2i = step(.5, vUv.y);
+            float step2j = step(vUv.y, .95);
+            float step2k = step(.45, vUv.x);
+            float step2l = step(vUv.x, .95);
+            float condition2b = stepVehicleConfig2 * step2g * step2h * step2i * step2j * step2k * step2l;
+            colorFill += condition2b;
 
-                if(
-                    vOriginalPosition.y > 0.2 
-                    && vOriginalPosition.y < .65 
-                    && vOriginalPosition.z > 2.0
-                    && vOriginalPosition.x > -.975
-                    && vOriginalPosition.x < .975                    
-                ) {
-                    finalColor = mixVehicleColorBlack;
-                }
+            float step2m = step(.2, vOriginalPosition.y);
+            float step2n = step(1.245, vOriginalPosition.x);
+            float step2o = step(.5, vUv.y);
+            float step2p = step(vUv.y, .95);
+            float step2q = step(.05, vUv.x);
+            float step2r = step(vUv.x, .55);
+            float condition2c = stepVehicleConfig2 * step2m * step2n * step2o * step2p * step2q * step2r;
+            colorFill += condition2c;
 
-                if(
-                    vOriginalPosition.y > 0.2
-                    && vOriginalPosition.z > 1.0
-                    && vOriginalPosition.z < 1.5
-                    && vOriginalPosition.x > -.975
-                    && vOriginalPosition.x < .975
-                ) {
-                    finalColor = mixVehicleColorBlack;
-                }
-            }
+            float step2s = step(.2, vOriginalPosition.y);
+            float step2t = step(1.245, vOriginalPosition.x);
+            float step2u = step(.5, vUv.y);
+            float step2v = step(vUv.y, .95);
+            float step2w = step(.6, vUv.x);
+            float step2x = step(vUv.x, .975);
+            float condition2d = stepVehicleConfig2 * step2s * step2t * step2u * step2v * step2w * step2x;
+            colorFill += condition2d;
 
-            if(vVehicleConfig == 3.0) {
-                finalColor = vehicleColor;
-                if(
-                    vOriginalPosition.y > 0.2 && vOriginalPosition.x < -1.245 && 
-                    vUv.y > .5 && vUv.y < .95 && 
-                    vUv.x > .65 && vUv.x < .95
-                ) {
-                    finalColor = mixVehicleColorBlack;
-                }
+            float step2y = step(.2, vOriginalPosition.y);
+            float step2z = step(vOriginalPosition.y, .65);
+            float step2aa = step(vOriginalPosition.z, -2.49);
+            float step2ab = step(-.975, vOriginalPosition.x);
+            float step2ac = step(vOriginalPosition.x, .975);
+            float condition2e = stepVehicleConfig2 * step2y * step2z * step2aa * step2ab * step2ac;
+            colorFill += condition2e;
 
-                if(
-                    vOriginalPosition.y > 0.2 && vOriginalPosition.x > 1.245 && 
-                    vUv.y > .5 && vUv.y < .95 && 
-                    vUv.x > .05 && vUv.x < 0.35
-                ) {
-                    finalColor = mixVehicleColorBlack;
-                }
+            float step2ad = step(.2, vOriginalPosition.y);
+            float step2ae = step(vOriginalPosition.y, .65);
+            float step2af = step(2.0, vOriginalPosition.z);
+            float step2ag = step(-.975, vOriginalPosition.x);
+            float step2ah = step(vOriginalPosition.x, .975);
+            float condition2f = stepVehicleConfig2 * step2ad * step2ae * step2af * step2ag * step2ah;
+            colorFill += condition2f;
 
-                if(
-                    vOriginalPosition.y > 0.2 
-                    && vOriginalPosition.y < .65 
-                    && vOriginalPosition.z < -2.49
-                    && vOriginalPosition.x > -.975
-                    && vOriginalPosition.x < .975
-                ) {
-                    finalColor = mixVehicleColorBlack;
-                }
+            float step2ai = step(.2, vOriginalPosition.y);
+            float step2aj = step(1.0, vOriginalPosition.z);
+            float step2ak = step(vOriginalPosition.z, 1.5);
+            float step2al = step(-.975, vOriginalPosition.x);
+            float step2am = step(vOriginalPosition.x, .975);
+            float condition2g = stepVehicleConfig2 * step2ai * step2aj * step2ak * step2al * step2am;
+            colorFill += condition2g;
 
-                if(
-                    vOriginalPosition.y > 0.2 
-                    && vOriginalPosition.y < .65 
-                    && vOriginalPosition.z > 2.0
-                    && vOriginalPosition.x > -.975
-                    && vOriginalPosition.x < .975
-                ) {
-                    finalColor = mixVehicleColorBlack;
-                }
 
-                if(
-                    vOriginalPosition.y > 0.2
-                    && vOriginalPosition.z > 0.2
-                    && vOriginalPosition.z < .45
-                    && vOriginalPosition.x > -.975
-                    && vOriginalPosition.x < .975
-                ) {
-                    finalColor = mixVehicleColorBlack;
-                }
+            // config == 3
 
-            }
+            float step3a = step(.2, vOriginalPosition.y);
+            float step3b = step(vOriginalPosition.x, -1.245);
+            float step3c = step(.5, vUv.y);
+            float step3d = step(vUv.y, .95);
+            float step3e = step(.65, vUv.x);
+            float step3f = step(vUv.x, .95);
+            float condition3a = stepVehicleConfig3 * step3a * step3b * step3c * step3d * step3e * step3f;
+            colorFill += condition3a;
+
+            float step3g = step(.2, vOriginalPosition.y);
+            float step3h = step(1.245, vOriginalPosition.x);
+            float step3i = step(.5, vUv.y);
+            float step3j = step(vUv.y, .95);
+            float step3k = step(.05, vUv.x);
+            float step3l = step(vUv.x, .35);
+            float condition3b = stepVehicleConfig3 * step3g * step3h * step3i * step3j * step3k * step3l;
+            colorFill += condition3b;
+
+            float step3r = step(.2, vOriginalPosition.y);
+            float step3s = step(vOriginalPosition.y, .65);
+            float step3t = step(2.0, vOriginalPosition.z);
+            float step3u = step(-.975, vOriginalPosition.x);
+            float step3v = step(vOriginalPosition.x, .975);
+            float condition3d = stepVehicleConfig3 * step3r * step3s * step3t * step3u * step3v;
+            colorFill += condition3d;
+
+            float step3w = step(.2, vOriginalPosition.y);
+            float step3x = step(.5, vOriginalPosition.z);
+            float step3y = step(vOriginalPosition.z, .9);
+            float step3z = step(-.975, vOriginalPosition.x);
+            float step3aa = step(vOriginalPosition.x, .975);
+            float condition3e = stepVehicleConfig3 * step3w * step3x * step3y * step3z * step3aa;
+            colorFill += condition3e;
+
 
             // all vehicles
             // wheels
-            if(
-                vOriginalPosition.y < -0.35
-                && vOriginalPosition.x > 1.2
-                && vUv.x > .15
-                && vUv.x < .3
-            ) {
-                finalColor = mixVehicleColorBlack;
-            }
 
-            if(
-                vOriginalPosition.y < -0.35
-                && vOriginalPosition.x > 1.2
-                && vUv.x > .75
-                && vUv.x < .9
-            ) {
-                finalColor = mixVehicleColorBlack;
-            }
+            float stepWa = step(vOriginalPosition.y, -.35);
+            float stepWb = step(1.2, vOriginalPosition.x);
+            float stepWc = step(.15, vUv.x);
+            float stepWd = step(vUv.x, .3);
+            float conditionW0 = stepWa * stepWb * stepWc * stepWd;
+            colorFill += conditionW0;
 
-            if(
-                vOriginalPosition.y < -0.35
-                && vOriginalPosition.x < -1.2
-                && vUv.x > .15
-                && vUv.x < .3
-            ) {
-                finalColor = mixVehicleColorBlack;
-            }
+            float stepWe = step(vOriginalPosition.y, -0.35);
+            float stepWf = step(1.2, vOriginalPosition.x);
+            float stepWg = step(.75, vUv.x);
+            float stepWh = step(vUv.x, .9);
+            float conditionW1 = stepWe * stepWf * stepWg * stepWh;
+            colorFill += conditionW1;
 
-            if(
-                vOriginalPosition.y < -0.35
-                && vOriginalPosition.x < -1.2
-                && vUv.x > .75
-                && vUv.x < .9
-            ) {
-                finalColor = mixVehicleColorBlack;
-            }
+            float stepWi = step(vOriginalPosition.y, -0.35);
+            float stepWj = step(vOriginalPosition.x, -1.2);
+            float stepWk = step(.15, vUv.x);
+            float stepWl = step(vUv.x, .3);
+            float conditionW2 = stepWi * stepWj * stepWk * stepWl;
+            colorFill += conditionW2;
+
+            float stepWm = step(vOriginalPosition.y, -.35);
+            float stepWn = step(vOriginalPosition.x, -1.2);
+            float stepWo = step(.75, vUv.x);
+            float stepWp = step(vUv.x, .9);
+            float conditionW3 = stepWm * stepWn * stepWo * stepWp;
+            colorFill += conditionW3;
+
+
+            float colorCondition = step(0.9, colorFill);
+            finalColor = mix(vehicleColor, mixVehicleColorBlack, colorCondition);
+
 
             float saturation = 2.25;
             float avg = (finalColor.r + finalColor.g + finalColor.b) / 3.0;

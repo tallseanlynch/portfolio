@@ -307,12 +307,12 @@ function useVehicleGPGPU(count: number) {
 
         // gpugpu variables initialization
         const positionVariable = gpgpuRenderer.addVariable('uPosition', simulationPositionFragmentShader, positionTexture);
-        positionVariable.material.uniforms.uSize = { value: size };        
+        positionVariable.material.uniforms.uSize = { value: count };        
         positionVariable.material.uniforms.uTime = { value: 0 };
         positionVariable.material.uniforms.uDeltaTime = { value: 0 };
 
         const directionVariable = gpgpuRenderer.addVariable('uDirection', simulationDirectionFragmentShader, directionTexture);
-        directionVariable.material.uniforms.uSize = { value: size };        
+        directionVariable.material.uniforms.uSize = { value: count };        
         directionVariable.material.uniforms.uTime = { value: 0 };
         directionVariable.material.uniforms.uDeltaTime = { value: 0 };
         directionVariable.material.uniforms.uLightTimes = { value: uniformData.lightsUniformArray };
@@ -322,7 +322,7 @@ function useVehicleGPGPU(count: number) {
         directionVariable.material.uniforms.uPathBuffer = { value: pathBuffer };
 
         const destinationVariable = gpgpuRenderer.addVariable('uDestination', simulationDestinationFragmentShader, destinationTexture);
-        destinationVariable.material.uniforms.uSize = { value: size };        
+        destinationVariable.material.uniforms.uSize = { value: count };        
         destinationVariable.material.uniforms.uTime = { value: 0 };
         destinationVariable.material.uniforms.uDeltaTime = { value: 0 };
         destinationVariable.material.uniforms.uPathBuffer = { value: pathBuffer };

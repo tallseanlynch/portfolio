@@ -2,7 +2,7 @@ import { BoxGeometry } from 'three';
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js'
 
 const personTorso = new BoxGeometry(1, .75, .5, 1, 1, 1);
-const personHead = new BoxGeometry(.5, .5, .5, 1, 1, 1);
+const personHead = new BoxGeometry(.5, .5, .25, 1, 1, 1);
 personHead.translate(0, .5, 0);
 const personLegA = new BoxGeometry(.25, .75, .5, 1, 1, 1);
 personLegA.translate(-.37, -.75, 0);
@@ -24,4 +24,12 @@ const peopleGeometry = mergeGeometries([
 ]);
 peopleGeometry.translate(0, .725, 0);
 
-export { peopleGeometry };
+export { 
+  peopleGeometry,
+  personArmA,
+  personArmB,
+  personHead,
+  personLegA,
+  personLegB,
+  personTorso
+};

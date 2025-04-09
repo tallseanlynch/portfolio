@@ -114,6 +114,9 @@ const simulationDirectionFragmentShader = `
                     vec3 collisionMixDirectionDestination = mix(mixDirectionDestination, collisionReflection, (1.0 - ((checkDistanceMin - checkDistance) / checkDistanceMin)) * .075125 * lessThanCheckDistanceModifier);
                     velocity = vec4(collisionMixDirectionDestination, velocity.w);
                 }
+                if(checkDistance < .1 && checkDistance > .001) {
+                    velocity.w = 0.0;
+                }
             }
         }
 
@@ -243,17 +246,18 @@ const getPersonPosition = (graphPosition, destination = false) => {
 }
 
 function usePedestrianGPGPU(count: number) {
-    const size = Math.ceil(Math.sqrt(count));
+    // const size = Math.ceil(Math.sqrt(count));
+    const size = count * count;
     const gl = useThree((state) => state.gl);
 
     const [gpgpuRenderer, data] = useMemo(() => {
-        const gpgpuRenderer = new GPUComputationRenderer(size, size, gl);
+        const gpgpuRenderer = new GPUComputationRenderer(count, count, gl);
 
         const positionTexture = gpgpuRenderer.createTexture();
         const directionTexture = gpgpuRenderer.createTexture();
         const destinationTexture = gpgpuRenderer.createTexture();
 
-        for (let i = 0; i < count; i++) {
+        for (let i = 0; i < size; i++) {
             const i4 = i * 4;
 
             const graphPosition = positionsGraph[i % positionsGraph.length];
@@ -286,14 +290,14 @@ function usePedestrianGPGPU(count: number) {
 
         // gpugpu variables initialization
         const positionVariable = gpgpuRenderer.addVariable('uPosition', simulationPositionFragmentShader, positionTexture);
-        positionVariable.material.uniforms.uSize = { value: size };        
+        positionVariable.material.uniforms.uSize = { value: count };        
         positionVariable.material.uniforms.uTime = { value: 0 };
         positionVariable.material.uniforms.uDeltaTime = { value: 0 };
         positionVariable.material.uniforms.uGraphRows = { value: graphArrays.graphPositions.length };
         positionVariable.material.uniforms.uGraphCols = { value: 10 };
 
         const directionVariable = gpgpuRenderer.addVariable('uDirection', simulationDirectionFragmentShader, directionTexture);
-        directionVariable.material.uniforms.uSize = { value: size };        
+        directionVariable.material.uniforms.uSize = { value: count };        
         directionVariable.material.uniforms.uTime = { value: 0 };
         directionVariable.material.uniforms.uDeltaTime = { value: 0 };
         directionVariable.material.uniforms.uConnectionsData = { value: graphArrays.dataConnections };
@@ -303,7 +307,7 @@ function usePedestrianGPGPU(count: number) {
         directionVariable.material.uniforms.uLightTimesTotalLength = { value: uniformData.lightsTotalLengthOfTimeUniformInt };
     
         const destinationVariable = gpgpuRenderer.addVariable('uDestination', simulationDestinationFragmentShader, destinationTexture);
-        destinationVariable.material.uniforms.uSize = { value: size };        
+        destinationVariable.material.uniforms.uSize = { value: count };        
         destinationVariable.material.uniforms.uTime = { value: 0 };
         destinationVariable.material.uniforms.uDeltaTime = { value: 0 };
         destinationVariable.material.uniforms.uGraphRows = { value: graphArrays.graphPositions.length };
@@ -344,7 +348,7 @@ function usePedestrianGPGPU(count: number) {
                 }
             }
         ];
-    }, [count, gl, size]);
+    }, [gl, size, count]);
 
     useEffect(() => {
         return () => {
