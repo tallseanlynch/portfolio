@@ -1,4 +1,3 @@
-import { isMobileDevice } from '../../assets/js/util';
 import { peopleGeometry } from './personModel';
 import { usePedestrianGPGPU } from './usePedestrianGPGPU';
 import { useFrame } from '@react-three/fiber';
@@ -65,7 +64,6 @@ const WalkingPeople = ({
 
   const shaderMaterial = useMemo(() => new ShaderMaterial({
     uniforms: {
-      uIsMobileDevice: { value: isMobileDevice() },
       gPositionMap: { value: data.position.texture},
       gDirectionMap: { value: data.direction.texture},
       gDestinationMap: { value: data.destination.texture },
@@ -94,14 +92,23 @@ const WalkingPeople = ({
         int index = gl_InstanceID;
         instanceId = float(index);
         float floatIndex = float(index);
-        float xCoor = mod(floatIndex, ${width}.0);
-        float yCoor = mod(floatIndex / ${width}.0, ${width}.0);
+        float uvUnit = 1.0 / ${width}.0;
+        float uvInstancedId = instanceId / ${width}.0;
+        float uvX = fract(uvInstancedId);
+        float uvY = floor(uvInstancedId) * uvUnit;
+
+        float xCoor = uvX;
+        float yCoor = uvY;
+
+        // float xCoor = mod(floatIndex, ${width}.0);
+        // float yCoor = mod(floatIndex / ${width}.0, ${width}.0);
 
         // possible alternative to test
         // float xCoor = float(int(floatIndex) % int(${width}));
         // float yCoor = floor(floatIndex / ${width}.0);
 
-        vec2 uv = vec2(xCoor / ${width}.0, yCoor / ${width}.0);
+        // vec2 uv = vec2(xCoor / ${width}.0, yCoor / ${width}.0);
+        vec2 uv = vec2(uvX, uvY);
         vUv = uv;
         vec4 gDirectionData = texture2D(gDirectionMap, uv);        
         vec4 gPositionData = texture2D(gPositionMap, uv);
@@ -126,13 +133,8 @@ const WalkingPeople = ({
 
         vPosition = rotationMatrix * vPosition;
         vPosition.x = vPosition.x + gPositionData.x;
-        vPosition.y = vPosition.y + gPositionData.y;
+        vPosition.y = vPosition.y;
         vPosition.z = vPosition.z + gPositionData.z;
-
-        // vPosition = rotationMatrix * vPosition;
-        // vPosition.x = (-50.0 + vPosition.x + xCoor * .1) + gPositionData.x * .1;
-        // vPosition.y = vPosition.y;
-        // vPosition.z = ((-50.0 + vPosition.z + yCoor) + sin(time * yCoor / 10.0) * 5.0) + gPositionData.y * .1;
 
         gl_Position = projectionMatrix * modelViewMatrix * vPosition;
       }
@@ -160,14 +162,14 @@ const WalkingPeople = ({
         vec3 positionCalc = vec3(vgPosition.xyz);
         vec3 destinationCalc = vec3(vgDestination.xyz);
         vec3 directionCalc = vec3(vgDirection.xyz);
-        float instanceIdColor = (instanceId / ${width * width}.0) + .1;
+        float instanceIdColor = (instanceId / ${width * width}.0);
         float numPeopleId = (instanceId / ${width * width}.0);
 
         vec3 personHue = vec3(250.0, 215.0, 195.0) / 256.0;
         personHue = personHue * instanceIdColor;
         finalColor = vec4(personHue, 1.0);
 
-        float modColor = numPeopleId * colorsLength;
+        float modColor = (numPeopleId * colorsLength) + .001;
         int modColorInt = int(modColor);
 
         float step0a = step(0.5, vOriginalPosition.y);
@@ -175,11 +177,7 @@ const WalkingPeople = ({
         float condition0a = step0a * step0b;
         finalColor = mix(finalColor, vec4(uColors[modColorInt], 1.0), condition0a);
 
-        // if(vOriginalPosition.y > 0.5 && vOriginalPosition.y < 1.125) {
-        //   finalColor = vec4(uColors[modColorInt], 1.0);
-        // }
-
-        float modColorBottom = numPeopleId * colorsBottomLength;
+        float modColorBottom = (numPeopleId * colorsBottomLength) + .001;
         int modColorBottomInt = int(modColorBottom);
 
         float step1a = step(vOriginalPosition.y, .5);
@@ -188,56 +186,18 @@ const WalkingPeople = ({
         float condition1a = step1a * step1b * step1c;
         finalColor = mix(finalColor, vec4(uColorsBottom[modColorBottomInt], 1.0), condition1a);
 
-        // if(vOriginalPosition.y < 0.5 && vOriginalPosition.x < .5 && vOriginalPosition.x > -.5) {
-        //   finalColor = vec4(uColorsBottom[modColorBottomInt], 1.0);
-        // }
-
         // hair
-        float modColorHair = numPeopleId * .9 * colorsBottomLength;
+        float modColorHair = (numPeopleId * .9 * colorsBottomLength) + .001;
         int modColorHairInt = int(modColorHair);
 
         float step2a = step(1.4, vOriginalPosition.y);
         float condition2a = step2a;
         finalColor = mix(finalColor, vec4(uColorsBottom[modColorHairInt], 1.0), condition2a);
 
-        // if(vOriginalPosition.y > 1.4) {
-        //   finalColor = vec4(uColorsBottom[modColorHairInt], 1.0);
-        // }
-
         float step3a = step(1.3 - vUv.y * .25, vOriginalPosition.y);
         float step3b = step(vOriginalPosition.z, 0.0);
         float condition3a = step3a * step3b;
         finalColor = mix(finalColor, vec4(uColorsBottom[modColorHairInt], 1.0), condition3a);
-
-        // if(vOriginalPosition.y > 1.3 - vUv.y * .25 && vOriginalPosition.z < 0.0) {
-        //   finalColor = vec4(uColorsBottom[modColorHairInt], 1.0);
-        // }
-
-        // vec4 eyeColor = mix(vec4(personHue, 1.0), vec4(1.0, 1.0, 1.0, 1.0), .5);
-
-        // float step4a = step(.1, vOriginalPosition.x);
-        // float step4b = step(vOriginalPosition.x, .2);
-        // float step4c = step(1.25, vOriginalPosition.y);
-        // float step4d = step(vOriginalPosition.y, 1.3);
-        // float step4e = step(.23, vOriginalPosition.z);
-        // float condition4a = step4a * step4b * step4c * step4d * step4e;
-        // finalColor = mix(finalColor, eyeColor, condition4a);
-
-        // if(
-        //   vOriginalPosition.x > .1 && vOriginalPosition.x < .2 && 
-        //   vOriginalPosition.y > 1.25 && vOriginalPosition.y < 1.3 && 
-        //   vOriginalPosition.z > 0.23
-        // ) {
-        //   finalColor = mix(vec4(personHue, 1.0), vec4(1.0, 1.0, 1.0, 1.0), .5);
-        // }
-
-        // if(
-        //   vOriginalPosition.x < -.1 && vOriginalPosition.x > -.2 && 
-        //   vOriginalPosition.y > 1.25 && vOriginalPosition.y < 1.3 && 
-        //   vOriginalPosition.z > 0.23
-        // ) {
-        //   finalColor = mix(vec4(personHue, 1.0), vec4(1.0, 1.0, 1.0, 1.0), .5);
-        // }
 
         float saturation = 2.25;
         float avg = (finalColor.r + finalColor.g + finalColor.b) / 3.0;
@@ -253,8 +213,6 @@ const WalkingPeople = ({
     data.direction.texture,
     data.destination.texture
   ]);
-
-  console.log(shaderMaterial);
 
   useFrame(({
     clock

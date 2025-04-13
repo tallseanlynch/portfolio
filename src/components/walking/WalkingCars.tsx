@@ -7,7 +7,11 @@ import { useFrame } from '@react-three/fiber';
 const carSize = 1.5;
 
 const Cars = ({width = 1}) => {
-    const { gpgpuRenderer, data } = useVehicleGPGPU(width);
+    const { 
+        gpgpuRenderer, 
+        data, 
+        // startingPositionsDebugVector3 
+    } = useVehicleGPGPU(width);
     const instancedMeshRef = useRef<InstancedMesh>();
     const numCars = width * width;
     const matrixPositionObject =  new Object3D;
@@ -63,9 +67,21 @@ const Cars = ({width = 1}) => {
             int index = gl_InstanceID;
             vInstanceId = float(index);
             float floatIndex = float(index);
-            float xCoor = mod(floatIndex, ${width}.0);
-            float yCoor = mod(floatIndex / ${width}.0, ${width}.0);
-            vec2 textureUv = vec2(xCoor / ${width}.0, yCoor / ${width}.0);
+
+            float uvModUnit = (1.0 / ${width}.0) / 100.0;
+            // float xCoor = mod(floatIndex, ${width}.0) + uvModUnit;
+            // float yCoor = mod(floatIndex / ${width}.0, ${width}.0) + uvModUnit;
+            // vec2 textureUv = vec2(xCoor / ${width}.0, yCoor / ${width}.0);
+
+            float uvUnit = 1.0 / ${width}.0;
+            float uvInstancedId = vInstanceId / ${width}.0;
+
+            float uvX = fract(uvInstancedId) + uvModUnit;
+            float uvY = (floor(uvInstancedId) * uvUnit) + uvModUnit;
+            float xCoor = uvX;
+            float yCoor = uvY;
+            vec2 textureUv = vec2(uvX, uvY);
+
             vUv = uv;
             vec4 gDirectionData = texture2D(gDirectionMap, textureUv);        
             vec4 gPositionData = texture2D(gPositionMap, textureUv);
@@ -151,7 +167,7 @@ const Cars = ({width = 1}) => {
             int numCarsInt = int(numCars);
 
             // float modCarColor = mod(vInstanceId, carColorsLength);
-            float modCarColor = (vInstanceId / numCars) * carColorsLength;
+            float modCarColor = (vInstanceId / numCars) * carColorsLength + .001;
             int modCarColorInt = int(modCarColor);
             
 
@@ -417,6 +433,13 @@ const Cars = ({width = 1}) => {
             float colorCondition = step(0.9, colorFill);
             finalColor = mix(vehicleColor, mixVehicleColorBlack, colorCondition);
 
+            // finalColor = vec4(0.0, 0.0, 0.0, 1.0);
+            // finalColor = vehicleColor;
+
+            // vec3 finalColorDest = vec3(vgDestination.y, vgDestination.y, vgDestination.y) / 23.0;
+            // finalColor = vec4(finalColorDest, 1.0);
+
+            // gl_FragColor = finalColor;
 
             float saturation = 2.25;
             float avg = (finalColor.r + finalColor.g + finalColor.b) / 3.0;
@@ -456,22 +479,31 @@ const Cars = ({width = 1}) => {
             .getCurrentRenderTarget(data.destination.variables.destinationVariable).texture;
         data.destination.variables.destinationVariable.material.uniforms.uTime.value = clock.elapsedTime;
         data.destination.variables.destinationVariable.material.uniforms.uDeltaTime.value = clock.getDelta();
+
     });
 
     return (
-        <instancedMesh 
-            ref={instancedMeshRef} 
-            args={[null as any, null as any, numCars]} 
-            material={shaderMaterial}
-        >
-            <boxGeometry args={[2.5, carSize, 5.0, 10, 10, 10]} />
-        </instancedMesh>
+        <>
+            <instancedMesh 
+                ref={instancedMeshRef} 
+                args={[null as any, null as any, numCars]} 
+                material={shaderMaterial}
+            >
+                <boxGeometry args={[2.5, carSize, 5.0, 10, 10, 10]} />
+            </instancedMesh>
+            {/* {startingPositionsDebugVector3.map((v, vi) => (
+                <mesh position={v} key={vi}>
+                    <boxGeometry args={[.5, .5, .5]} />
+                    <meshBasicMaterial color={0xff0000}/>
+                </mesh>
+            ))} */}
+        </>
     )
 }
 
 const WalkingCars = () => {
     return (
-        <Cars width={11} />
+        <Cars width={10} />
     )
 }
 

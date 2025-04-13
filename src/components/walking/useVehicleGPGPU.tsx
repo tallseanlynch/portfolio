@@ -14,14 +14,33 @@ import { useEffect, useMemo } from 'react';
 import { GPUComputationRenderer } from 'three/examples/jsm/misc/GPUComputationRenderer.js';
 import { Vector3 } from 'three';
 
+// console.log({ 
+//     pathBuffer, 
+//     pathBufferLengths,
+//     pathBufferIndexes,
+//     pathBufferTotalLength,
+//     crosswalkPointsBufferIndexes,
+//     crosswalkPointsBufferLanes,
+//     crosswalkPointsBufferLocal,
+//     trafficConditionsBuffer
+// });
+
 const simulationPositionFragmentShader = `
+    precision highp float;
     uniform int uSize;
     uniform float uTime;
     uniform float uDeltaTime;
 
     void main() {
-        float time = uTime;
+        // float time = uTime;
+        // vec2 uv = gl_FragCoord.xy / resolution.xy;
+
+        float uvModUnit = (1.0 / float(uSize)) / 100.0;
+
         vec2 uv = gl_FragCoord.xy / resolution.xy;
+        uv.x += uvModUnit;
+        uv.y += uvModUnit;
+
         vec4 positionData = texture(uPosition, uv);
         vec4 directionData = texture(uDirection, uv);
         vec4 destinationData = texture(uDestination, uv);
@@ -39,19 +58,26 @@ const simulationPositionFragmentShader = `
 
         float destinationPathIndex = destinationData.w;
         float distanceToDestination = distance(positionDataCalc, destinationDataCalc);
-        if(destinationData.w < 1.0 && distanceToDestination > 100.0) {
-            finalPosition = vec4(
+
+        float step0a = step(destinationData.w, .9);
+        float step0b = step(100.0, distanceToDestination);
+        float condition0a = step0a * step0b;
+        finalPosition = mix(
+            finalPosition, 
+            vec4(
                 destinationDataCalc.x,
                 0.1,
                 destinationDataCalc.z,
                 positionData.w
-            );
-        }
+            ),
+            condition0a
+        );
 
         gl_FragColor = finalPosition;
     }
 `
 const simulationDirectionFragmentShader = `
+    precision highp float;
     uniform int uSize;
     uniform float uTime; // seconds as float
     uniform float uDeltaTime;
@@ -80,7 +106,12 @@ const simulationDirectionFragmentShader = `
             }
         }
 
+        float uvModUnit = (1.0 / float(uSize)) / 100.0;
+
         vec2 uv = gl_FragCoord.xy / resolution.xy;
+        uv.x += uvModUnit;
+        uv.y += uvModUnit;
+        
         vec4 positionData = texture(uPosition, uv);
         vec4 directionData = texture(uDirection, uv);
         vec4 destinationData = texture(uDestination, uv);
@@ -94,9 +125,10 @@ const simulationDirectionFragmentShader = `
 
         float distanceToDestination = distance(positionDataCalc, destinationDataCalc);
         vec3 mixDirectionDestination = directionDataCalc;        
-        if(distanceToDestination > 1.0) {
-            mixDirectionDestination = mix(directionDataCalc, directionToDestination, interpolationFactor);        
-        }
+
+        float step0a = step(.99, distanceToDestination);
+        float condition0a = step0a;
+        mixDirectionDestination = mix(directionDataCalc, directionToDestination, interpolationFactor * condition0a);        
 
         float velocityValue = 2.0 + uv.x * 1.5;
         vec4 velocity = vec4(mixDirectionDestination, 2.0 + uv.x * 1.5);        
@@ -116,44 +148,46 @@ const simulationDirectionFragmentShader = `
         for(int i = 0; i < uSize; i++) {
             for(int j = 0; j < uSize; j++) {
                 vec2 checkUV = vec2(float(i), float(j)) / resolution.xy;
+                checkUV.x += uvModUnit;
+                checkUV.y += uvModUnit;
                 vec4 checkVehiclePosition = texture(uPosition, checkUV);
                 vec4 checkVehicleDirection = texture(uDestination, checkUV);
                 vec3 checkVehiclePositionCalc = vec3(checkVehiclePosition.xyz);
                 float checkDistance = distance(positionDataCalc, checkVehiclePositionCalc);
-                if(
-                    checkDistance < checkDistanceMin && 
-                    checkDistance > 0.001 && 
-                    distanceToDestination > .1
-                ) {
-                    lowestCheckDistance = checkDistance;
-                    numberOfPotentialCollisions += 1;
 
-                    vec3 frontCheckPosition = positionDataCalc + normalize(directionDataCalc) * .001;
-                    vec3 backCheckPosition = positionDataCalc + normalize(directionDataCalc) * -.001;
+                float step1a = step(checkDistance, checkDistanceMin);
+                float step1b = step(.001, checkDistance);
+                float step1c = step(.1, distanceToDestination);
+                float condition1a = step1a * step1b * step1c;
 
-                    float frontDistance = distance(frontCheckPosition, checkVehiclePositionCalc);
-                    float backDistance = distance(backCheckPosition, checkVehiclePositionCalc);
+                lowestCheckDistance = checkDistance;
+                numberOfPotentialCollisions += 1;
 
-                    vec3 frontCollisonCheckPosition0 = positionDataCalc + normalize(directionDataCalc) * 4.0;// - uv.x * 3.0;
-                    vec3 frontCollisonCheckPosition1 = positionDataCalc + normalize(directionDataCalc) * 8.0;// - uv.x * 2.0;
-                    vec3 frontCollisonCheckPosition2 = positionDataCalc + normalize(directionDataCalc) * 12.0;// - uv.y * 1.5;
+                vec3 frontCheckPosition = positionDataCalc + normalize(directionDataCalc) * .001;
+                vec3 backCheckPosition = positionDataCalc + normalize(directionDataCalc) * -.001;
 
-                    isFrontCollision = frontDistance < backDistance;
-                    float frontCollisionCheckDistance = 4.0;
-                    if(isFrontCollision) {
-                        float frontCollisionDistance0 = distance(frontCollisonCheckPosition0, checkVehiclePositionCalc);
-                        float frontCollisionDistance1 = distance(frontCollisonCheckPosition1, checkVehiclePositionCalc);
-                        float frontCollisionDistance2 = distance(frontCollisonCheckPosition2, checkVehiclePositionCalc);
-                        if(
-                            frontCollisionDistance0 < frontCollisionCheckDistance || 
-                            frontCollisionDistance1 < frontCollisionCheckDistance || 
-                            frontCollisionDistance2 < frontCollisionCheckDistance
-                        ) {
-                            velocityValue = 0.0;
-                        }
-                    }
+                float frontDistance = distance(frontCheckPosition, checkVehiclePositionCalc);
+                float backDistance = distance(backCheckPosition, checkVehiclePositionCalc);
 
-                }
+                vec3 frontCollisonCheckPosition0 = positionDataCalc + normalize(directionDataCalc) * 4.0;// - uv.x * 3.0;
+                vec3 frontCollisonCheckPosition1 = positionDataCalc + normalize(directionDataCalc) * 8.0;// - uv.x * 2.0;
+                vec3 frontCollisonCheckPosition2 = positionDataCalc + normalize(directionDataCalc) * 12.0;// - uv.y * 1.5;
+
+                float frontCollisionCheckDistance = 4.0;
+
+                float step2a = step(frontDistance, backDistance);
+                float condition2a = step2a;
+
+                float frontCollisionDistance0 = distance(frontCollisonCheckPosition0, checkVehiclePositionCalc);
+                float frontCollisionDistance1 = distance(frontCollisonCheckPosition1, checkVehiclePositionCalc);
+                float frontCollisionDistance2 = distance(frontCollisonCheckPosition2, checkVehiclePositionCalc);
+
+                float step3a = step(frontCollisionDistance0, frontCollisionCheckDistance);
+                float step3b = step(frontCollisionDistance1, frontCollisionCheckDistance);
+                float step3c = step(frontCollisionDistance2, frontCollisionCheckDistance);
+                float condition3a = step(0.9, step3a + step3b + step3c);
+
+                velocityValue = mix(velocityValue, 0.0, condition1a * condition2a * condition3a);
             }
         }
 
@@ -168,21 +202,30 @@ const simulationDirectionFragmentShader = `
         );
         float distanceToCrosswalkPointAVec3 = distance(crosswalkPointAVec3, positionDataCalc);
 
-        if((distanceToCrosswalkPointAVec3 < 2.0 && activeLightTimeLeft < 10) || (distanceToCrosswalkPointAVec3 < 2.0 && trafficConditionsBooleanNumber == 0)) {
-            velocityValue = 0.0;
-            crossWalkStop = true;
-        }
+        float step3a = step(distanceToCrosswalkPointAVec3, 2.0);
+        float step3b = step(float(activeLightTimeLeft), float(10));
+        float condition3a = step3a * step3b;
+
+        float step3c = step(distanceToCrosswalkPointAVec3, 2.0);
+        float step3d = step(float(trafficConditionsBooleanNumber), 0.9);
+        float condition3b = step3c * step3d;
+
+        float condition3c = step(0.9, condition3a + condition3b);
+        
+        velocityValue = mix(velocityValue, 0.0, condition3c);
 
         float mixVelocity = mix(directionData.w, velocityValue, .06);
         velocity.w = mixVelocity;
-        if(crossWalkStop == true) {
-            velocity.w = 0.0;        
-        }
+
+        velocity.w = mix(velocity.w, 0.0, condition3c);
+
         gl_FragColor = velocity;
     }
 `
 
 const simulationDestinationFragmentShader = `
+    precision highp float;
+    
     uniform int uSize;
     uniform float uTime;
     uniform float uDeltaTime;
@@ -197,7 +240,12 @@ const simulationDestinationFragmentShader = `
     }
 
     void main() {
+        // vec2 uv = gl_FragCoord.xy / resolution.xy;
+        float uvModUnit = (1.0 / float(uSize)) / 100.0;
+
         vec2 uv = gl_FragCoord.xy / resolution.xy;
+        uv.x += uvModUnit;
+        uv.y += uvModUnit;
         vec4 destinationData = texture(uDestination, uv);
         vec4 positionData = texture(uPosition, uv);
 
@@ -208,31 +256,37 @@ const simulationDestinationFragmentShader = `
 
         float distanceFromDestination = distance(destinationDataCalc, positionDataCalc);
 
-        float currentPathNumber = destinationData.y; // current path number
+        float currentPathNumber = floor(destinationData.y + .1); // current path number
         int currentPathNumberInt = int(currentPathNumber);
 
         float currentPathIndex = destinationData.w; // current path index
         int currentPathIndexInt = int(currentPathIndex);
 
-        if(distanceFromDestination <= 1.0) {
-            float modNextPathIndex = mod(currentPathIndex + 1.0, float(uPathBufferLengths[currentPathNumberInt]) / 3.0);
-            int nextPathIndexInt = int(modNextPathIndex);//currentPathIndexInt + 1;
+        float step0a = step(distanceFromDestination, 1.0);
+        float condition0a = step0a;
 
-            int pathBufferPathIndex = int(uPathBufferIndexes[currentPathNumberInt]);
-            vec3 pathIndexVector3 = vec3(
-                uPathBuffer[pathBufferPathIndex + (nextPathIndexInt * 3)],
-                uPathBuffer[pathBufferPathIndex + (nextPathIndexInt * 3) + 1],
-                uPathBuffer[pathBufferPathIndex + (nextPathIndexInt * 3) + 2]
-            );
+        float modNextPathIndex = mod(currentPathIndex + 1.0, float(uPathBufferLengths[currentPathNumberInt]) / 3.0);
+        int nextPathIndexInt = int(floor(modNextPathIndex));//currentPathIndexInt + 1;
+        if(uPathBufferLengths[currentPathNumberInt] / 3 == nextPathIndexInt) {
+            nextPathIndexInt = 0;
+        }
+        int pathBufferPathIndex = int(uPathBufferIndexes[currentPathNumberInt]);
+        vec3 pathIndexVector3 = vec3(
+            uPathBuffer[pathBufferPathIndex + (nextPathIndexInt * 3)],
+            uPathBuffer[pathBufferPathIndex + (nextPathIndexInt * 3) + 1],
+            uPathBuffer[pathBufferPathIndex + (nextPathIndexInt * 3) + 2]
+        );
 
-            finalDestination = vec4(
+        finalDestination = mix(
+            finalDestination,
+            vec4(
                 pathIndexVector3.x,
                 currentPathNumber,
                 pathIndexVector3.z,
                 float(nextPathIndexInt)
-            );
-
-        }
+            ),
+            condition0a
+        );
 
         gl_FragColor = finalDestination;
     }
@@ -250,13 +304,15 @@ function useVehicleGPGPU(count: number) {
     const size = count * count;
     const gl = useThree((state) => state.gl);
 
-    const [gpgpuRenderer, data] = useMemo(() => {
+    const [gpgpuRenderer, data, startingPositionsDebugVector3] = useMemo(() => {
         const gpgpuRenderer = new GPUComputationRenderer(count, count, gl);
 
         const positionTexture = gpgpuRenderer.createTexture();
         const directionTexture = gpgpuRenderer.createTexture();
         const destinationTexture = gpgpuRenderer.createTexture();
         const lanes = new Array(24).fill(0);
+
+        const startingPositionsDebugVector3: Vector3[] = [];
 
         for (let i = 0; i < size; i++) {
             const i4 = i * 4;
@@ -291,6 +347,7 @@ function useVehicleGPGPU(count: number) {
             (positionTexture.image.data as any)[i4 + 3] = 1.0; // w - graphPosition number
 
             lanes[crosswalkPointsBufferLanes[modPositionLane]] += 1;
+            startingPositionsDebugVector3.push(startingPosition.clone());
 
             // velocities
             (directionTexture.image.data as any)[i4 + 0] = (Math.random() - 0.5); // x
@@ -359,6 +416,7 @@ function useVehicleGPGPU(count: number) {
                     },
                 }
             },
+            startingPositionsDebugVector3
         ];
     }, [gl, size, count]);
 
@@ -371,7 +429,7 @@ function useVehicleGPGPU(count: number) {
         };
     }, [gpgpuRenderer, data]);
 
-    return { gpgpuRenderer, data };
+    return { gpgpuRenderer, data, startingPositionsDebugVector3 };
 }
 
 export { useVehicleGPGPU };

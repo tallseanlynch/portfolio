@@ -38,7 +38,7 @@ const WalkingShaderCanvas = () => {
         maxPolarAngle={Math.PI * .49}
       />
       <WalkingPeople 
-        width={isMobile ? 40 : 75} 
+        width={isMobile ? 50 : 75} 
       />
       <WalkingBuildings />
       <WalkingCars />
